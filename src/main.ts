@@ -1,0 +1,388 @@
+import "@fontsource/barlow/latin-400.css";
+import "@fontsource/barlow/latin-500.css";
+import "@fontsource/barlow/latin-600.css";
+import "@fontsource/barlow/latin-700.css";
+import "@fontsource/barlow/latin-800.css";
+import "@fontsource/barlow-condensed/latin-500.css";
+import "@fontsource/barlow-condensed/latin-600.css";
+import "@fontsource/barlow-condensed/latin-700.css";
+import "./ui/style.css";
+import { COURSES, EQUIPMENT } from "./game/course";
+import {
+  FIXED_DT,
+  FixedClock,
+  initialState,
+  stepPhysics,
+} from "./game/physics";
+import { Race, replayAt, formatTime } from "./game/race";
+import { PoleSimulation } from "./game/poles";
+import { Input } from "./game/input";
+import { Progress } from "./game/storage";
+import { SkiAudio } from "./game/audio";
+import { createRenderer } from "./render/engine";
+import { UI, type Settings } from "./ui/ui";
+import type { Frame, Controls } from "./game/types";
+
+async function boot() {
+  const settings: Settings = {
+    course: "SL",
+    equipment: "SL",
+    quality: "high",
+    weather: "clear",
+    sound: true,
+    ghost: true,
+    edges: true,
+    suit: "#eb552d",
+  };
+  if (new URLSearchParams(location.search).get("quality") === "low")
+    settings.quality = "low";
+  const progress = new Progress(),
+    ui = new UI(document.querySelector("#app")!, settings, progress),
+    input = new Input(),
+    audio = new SkiAudio();
+  const renderer = await createRenderer(document.querySelector("#game")!);
+  renderer.build(COURSES.SL, EQUIPMENT.SL, settings.quality, settings.weather);
+  let state = initialState(),
+    previous = { ...state },
+    race = new Race(COURSES.SL, "SL"),
+    paused = false,
+    playing = false,
+    replaying = false,
+    replayTime = 0,
+    resultShown = false,
+    best = false,
+    hudTimer = 0,
+    lastCountdown = 4;
+  let poles = new PoleSimulation(COURSES.SL);
+  const clock = new FixedClock();
+  let lastFrames: Frame[] = [];
+  let lastResult: ReturnType<typeof Object.assign> | null = null;
+  const snapshot = (time: number): Frame => ({
+    t: time,
+    x: state.x,
+    z: state.z,
+    heading: state.heading,
+    edge: state.edge,
+    height: state.height,
+    tuck: input.sample().tuck ? 1 : 0,
+    fallen: state.fallen,
+  });
+  const build = () => {
+    renderer.build(
+      COURSES[settings.course],
+      EQUIPMENT[settings.equipment],
+      settings.quality,
+      settings.weather,
+    );
+    renderer.athlete.paint(settings.suit);
+    ui.updateCourse();
+    audio.setEnabled(settings.sound);
+  };
+  function start(training = false) {
+    state = initialState();
+    previous = { ...state };
+    race = new Race(COURSES[settings.course], settings.equipment, training);
+    race.start();
+    poles = new PoleSimulation(race.course);
+    playing = true;
+    replaying = false;
+    paused = false;
+    resultShown = false;
+    lastCountdown = 4;
+    clock.reset();
+    renderer.menu = false;
+    renderer.cameraReady = false;
+    renderer.effects.reset();
+    ui.setRace(true);
+    ui.text("race-message", "");
+    ui.text(
+      "split",
+      training
+        ? "Entraînement · sans classement"
+        : "Passez entre les deux piquets de chaque porte",
+    );
+    void audio
+      .start()
+      .catch(() => ui.toast("Le son est indisponible dans ce navigateur."));
+  }
+  ui.start = start;
+  ui.restart = () => start(race.training);
+  ui.pause = () => {
+    if (!playing || paused) return;
+    paused = true;
+    input.clear();
+    audio.update(0, 0, 0, false);
+    ui.paused();
+  };
+  ui.resume = () => {
+    paused = false;
+    clock.reset();
+  };
+  ui.home = () => {
+    playing = false;
+    paused = false;
+    replaying = false;
+    renderer.menu = true;
+    state = initialState();
+    previous = { ...state };
+    clock.reset();
+    renderer.effects.reset();
+    ui.setRace(false);
+    ui.text("race-message", "");
+  };
+  ui.replay = () => {
+    if (!lastFrames.length) return;
+    replaying = true;
+    replayTime = 0;
+    paused = false;
+    playing = true;
+    renderer.menu = false;
+    renderer.cameraMode = 3;
+    renderer.cameraReady = false;
+    ui.setRace(true);
+    ui.text("countdown", "");
+    ui.toast("Replay · C : caméra · Échap : pause · R : nouvelle course");
+  };
+  ui.settingsChanged = () => {
+    build();
+    if (playing) start(race.training);
+  };
+  input.onAction = (key) => {
+    if (key === "KeyR" && playing) ui.restart();
+    if (key === "KeyC" && playing) ui.toast(renderer.changeCamera());
+    if (key === "Escape" && playing) {
+      if (paused) {
+        ui.close();
+        ui.resume();
+      } else if (race.phase !== "finished" || replaying) ui.pause();
+    }
+    if (key === "Enter" && !playing && ui.modal.hidden) start();
+  };
+  document.addEventListener(
+    "pointerdown",
+    () => {
+      void audio.start().catch(() => {});
+    },
+    { once: true },
+  );
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+      if (playing) ui.pause();
+      void audio.ctx?.suspend();
+    } else if (audio.ctx) void audio.ctx.resume();
+  });
+  window.addEventListener("blur", () => {
+    if (playing && race.phase !== "finished") ui.pause();
+  });
+  document.querySelectorAll<HTMLElement>("[data-touch]").forEach((b) => {
+    const clear = () => {
+      input.touchSteer = 0;
+      input.touchBrake = false;
+    };
+    b.addEventListener("pointerdown", (e) => {
+      b.setPointerCapture(e.pointerId);
+      if (b.dataset.touch === "brake") input.touchBrake = true;
+      else input.touchSteer = b.dataset.touch === "left" ? 1 : -1;
+    });
+    b.addEventListener("pointerup", clear);
+    b.addEventListener("pointercancel", clear);
+  });
+  function fixed(dt: number, control: Controls) {
+    if (race.phase === "countdown") {
+      race.tickCountdown(dt);
+      const count = Math.ceil(race.countdown);
+      if (count !== lastCountdown) {
+        audio.tone(count === 0 ? 880 : 440);
+        lastCountdown = count;
+      }
+      return;
+    }
+    if (race.phase !== "racing") return;
+    previous = { ...state };
+    stepPhysics(
+      state,
+      control,
+      EQUIPMENT[settings.equipment],
+      race.course,
+      dt,
+      settings.weather === "snow" ? 0.82 : 1,
+    );
+    poles.update(previous, state, dt);
+    if (poles.lastImpacts)
+      audio.impact(Math.hypot(state.vx, state.vz), state.edge);
+    const oldGate = race.nextGate;
+    race.update(previous, state, dt, control.tuck);
+    if (race.nextGate !== oldGate) {
+      const passed = race.gateStatus[race.nextGate - 1] === "passed";
+      audio.tone(passed ? 680 : 180, 0.08);
+      if (!passed)
+        ui.toast(
+          `Porte ${race.nextGate} manquée${race.training ? "" : " · disqualification"}`,
+        );
+    }
+  }
+  const display = () => {
+    ui.text("time", formatTime(replaying ? replayTime : race.time));
+    ui.text("speed", String(Math.round(Math.hypot(state.vx, state.vz) * 3.6)));
+    ui.text(
+      "gates",
+      `${race.nextGate - race.missed} / ${race.course.gates.length}`,
+    );
+    ui.text(
+      "race-status",
+      replaying
+        ? "REPLAY"
+        : race.missed
+          ? race.training
+            ? "ENTRAÎNEMENT"
+            : "DISQUALIFIÉ"
+          : state.fallen > 0
+            ? "DÉSÉQUILIBRE"
+            : "EN PISTE",
+    );
+    ui.text(
+      "remaining",
+      String(Math.max(0, Math.round(race.course.length - state.z))),
+    );
+    ui.text(
+      "edge-label",
+      settings.edges
+        ? `CARRES ${Math.round((Math.abs(state.edge) * 180) / Math.PI)}°`
+        : "",
+    );
+    ui.text(
+      "countdown",
+      race.phase === "countdown"
+        ? String(Math.ceil(race.countdown))
+        : race.time < 0.8 && race.phase === "racing"
+          ? "GO"
+          : "",
+    );
+    if (race.splits.length)
+      ui.text(
+        "split",
+        `INTER ${race.splits.length}  ${formatTime(race.splits[race.splits.length - 1])}`,
+      );
+    (document.querySelector("#progress") as HTMLElement).style.width =
+      `${Math.min(100, (state.z / race.course.length) * 100)}%`;
+    (document.querySelector("#speed-bar") as HTMLElement).style.width =
+      `${Math.min(100, Math.hypot(state.vx, state.vz) * 3.6)}%`;
+  };
+  renderer.app.on("update", (realDt: number) => {
+    const dt = Math.min(realDt, 0.1),
+      control = input.sample();
+    let alpha = 1;
+    let frame = snapshot(race.time);
+    if (playing && !paused) {
+      if (replaying) {
+        replayTime += dt;
+        const f = replayAt(lastFrames, replayTime);
+        if (f) {
+          frame = f;
+          const prevZ = state.z;
+          state = {
+            ...state,
+            x: f.x,
+            z: f.z,
+            heading: f.heading,
+            edge: f.edge,
+            height: f.height,
+            fallen: f.fallen,
+            vz: (f.z - prevZ) / Math.max(0.001, dt),
+            vx: 0,
+          };
+        }
+        if (replayTime >= lastFrames[lastFrames.length - 1].t) {
+          replaying = false;
+          playing = false;
+          ui.results(race.result!, best, race.training);
+        }
+      } else {
+        alpha = clock.advance(realDt, (d) => fixed(d, control));
+        frame = snapshot(race.time);
+        if (race.phase === "racing") {
+          frame.x = previous.x + (state.x - previous.x) * alpha;
+          frame.z = previous.z + (state.z - previous.z) * alpha;
+        }
+      }
+    }
+    if (race.phase === "finished" && !resultShown && !replaying) {
+      resultShown = true;
+      lastFrames = [...race.frames];
+      lastResult = race.result;
+      best = !race.training && progress.record(race.result!, race.frames);
+      audio.tone(1100, 0.5);
+      ui.results(race.result!, best, race.training);
+    }
+    const ghost =
+      playing && !replaying && settings.ghost && race.phase === "racing"
+        ? replayAt(
+            progress.data.ghosts[settings.course]?.frames ?? [],
+            race.time,
+          )
+        : null;
+    renderer.update(
+      state,
+      frame,
+      realDt,
+      playing && !paused && !replaying && race.phase === "racing",
+      ghost,
+    );
+    renderer.world.updateGates(race.gateStatus, poles.poles);
+    audio.update(
+      Math.hypot(state.vx, state.vz),
+      state.edge,
+      state.slip,
+      playing && !paused && race.phase === "racing",
+    );
+    audio.menu(!playing);
+    audio.crowd(
+      playing && !paused ? 1 - Math.abs(race.course.length - state.z) / 100 : 0,
+    );
+    hudTimer += dt;
+    if (hudTimer > 0.05) {
+      display();
+      hudTimer = 0;
+    }
+  });
+  ui.text(
+    "renderer-info",
+    `${renderer.app.graphicsDevice.deviceType.toUpperCase()} / PLAYCANVAS`,
+  );
+  document.querySelector("#loading")!.remove();
+  renderer.app.start();
+  // Explicitly development-only observability. Never included in the production bundle.
+  if (import.meta.env.DEV) {
+    Object.assign(window, {
+      __ski: {
+        getState: () => ({
+          ...state,
+          phase: race.phase,
+          time: race.time,
+          gate: race.nextGate,
+          missed: race.missed,
+          paused,
+          course: race.course.id,
+          fps: renderer.fps,
+          renderer: renderer.app.graphicsDevice.deviceType,
+        }),
+        start,
+        step: (n: number, control: Controls) => {
+          for (let i = 0; i < n; i++) fixed(FIXED_DT, control);
+        },
+        getCourse: () => race.course,
+        getResult: () => lastResult,
+      },
+    });
+  }
+}
+boot().catch((error) => {
+  console.error(error);
+  const loading = document.querySelector("#loading")!;
+  loading.innerHTML =
+    '<div class="error-panel"><h1>La montagne attend.</h1><p>Le moteur 3D n’a pas pu démarrer. Vérifiez que l’accélération graphique est activée et utilisez un navigateur récent compatible WebGL 2 ou WebGPU.</p><button class="primary" id="retry">Réessayer</button><p id="error-detail"></p></div>';
+  document.querySelector("#error-detail")!.textContent = String(error);
+  document
+    .querySelector("#retry")!
+    .addEventListener("click", () => location.reload());
+});
