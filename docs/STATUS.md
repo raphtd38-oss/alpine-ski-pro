@@ -199,3 +199,9 @@ Le 16 novembre 2026, à partir de la photo Saalbach 2025 et des demandes du joue
 Le moteur est raccordé à 9 modèles GLB Alpine Snow Village et 3 cartes PBR Snow 02 (Poly Haven), avec origine et droits dans ASSETS.md. Les chalets primitifs sont remplacés lorsque les modèles sont disponibles, des arbres et rochers détaillés enrichissent les abords de piste, et la forêt procédurale groupée assure un fond à moindre coût. Le niveau de qualité limite les instances et les ombres.
 
 Les téléchargements doivent réussir dans GitHub Actions pour être présents dans l'artefact publié ; sinon les décors d'origine restent utilisables. Le skieur, la physique déterministe, le chrono et les collisions ne sont pas modifiés. Le skieur photoréaliste, les animations mocap, les textures KTX2 et le LOD dynamique ne sont pas encore livrés. FPS réels non mesurés.
+
+## 16 novembre 2026 — boîte à outils 3D et ressources pour les développeurs
+
+Ajout de docs/RESOURCE_CATALOG.md (Poly Haven, ambientCG, Kenney, Mixamo, Quaternius, Blender, Material Maker, glTF Transform, Khronos) et docs/ASSET_WORKFLOW.md. AGENTS.md et .github/copilot-instructions.md demandent aux futurs développeurs d'utiliser cette connaissance. Scripts disponibles : recherche API CC0 sans compte, audit hors ligne des GLB/licences/poids, diagnostic des logiciels locaux, optimisation GLB non destructive via CLI facultative, export GLB Blender en batch. Des commandes npm rendent ces aides accessibles ; la CI exige désormais le pack CC0 complet et un audit avant compilation.
+
+Ce lot outille les prochaines améliorations mais n'importe pas un nouveau skieur photoréaliste, de nouveaux clips mocap, un transcodeur KTX2 ou un logiciel installé sur l'ordinateur du joueur. N'annoncer un déploiement réussi qu'après vérification GitHub Actions.
