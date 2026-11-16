@@ -22,6 +22,8 @@ jobs:
       - run: npm ci
       - name: Bundle licensed alpine GLB and PBR textures
         run: npm run assets:alpine
+      - name: Audit licensed 3D assets and require complete production pack
+        run: npm run assets:audit -- --require-pack
       - run: npm test
       - run: npm run build
       - run: npx playwright install --with-deps chromium
