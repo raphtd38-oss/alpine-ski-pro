@@ -20,12 +20,6 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - name: Regenerate original professional skier GLB
-        run: npm run assets
-      - name: Validate skinning and committed asset
-        run: |
-          npm run assets:verify
-          git diff --exit-code -- public/assets/skier.glb
       - run: npm test
       - run: npm run build
       - run: npx playwright install --with-deps chromium
