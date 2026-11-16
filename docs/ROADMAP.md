@@ -53,3 +53,10 @@ Le but est un simulateur de ski de grande qualité, amélioré sur le même dép
 - Essayer en haute résolution sur un véritable PC : suivre les FPS, la qualité visuelle et les changements de résolution après 20–30 s de slalom.
 - Tester le cas faible GPU : les images doivent rester lisibles et la physique ne doit pas ralentir artificiellement ; relever les FPS réels.
 - Comparer 60 Hz et écrans à fréquence élevée. Aucun cap logiciel n'est imposé ; ajuster le seuil de qualité seulement avec des mesures réelles.
+
+## Après essai joueur de la V1
+
+- Recueillir les sensations de trajectoire, difficulté des portes SL, équilibre carving/dérapage et fluidité sur GPU réel.
+- Refinement avec retours du joueur : intégration d'un modèle humain mieux skinné, IK en 3D, textures PBR plus abouties, performance du spray sur scènes complexes.
+- Générer les quatre sons ElevenLabs additionnels lorsque le service est de nouveau disponible et importer les MP3 localement après vérification des droits.
+- Déployer GitHub Pages dès que le propriétaire a configuré Source → GitHub Actions, vérifier URL et sécurité de l'audio.
