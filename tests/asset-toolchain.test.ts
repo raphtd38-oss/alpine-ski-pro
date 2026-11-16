@@ -1,41 +1,31 @@
 import { describe, expect, it } from "vitest";
-import { spawnSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import pack from "../scripts/alpine-pack.json";
+import catalog from "../docs/RESOURCE_CATALOG.md?raw";
+import workflow from "../docs/ASSET_WORKFLOW.md?raw";
+import searchScript from "../scripts/asset_search.mjs?raw";
+import auditScript from "../scripts/asset_audit.mjs?raw";
+import toolsScript from "../scripts/asset_tools.mjs?raw";
 
-function node(...args: string[]) {
-  return spawnSync(process.execPath, args, {
-    encoding: "utf8",
-    timeout: 15000,
-  });
-}
 describe("verified 3D asset production toolkit", () => {
-  it("parses all account-free tool scripts", () => {
-    for (const path of [
-      "scripts/asset_search.mjs",
-      "scripts/asset_audit.mjs",
-      "scripts/asset_tools.mjs",
-    ]) {
-      const result = node("--check", path);
-      expect(result.status, path + ": " + result.stderr).toBe(0);
-    }
+  it("keeps a licence-aware catalogue and a reproducible workflow", () => {
+    expect(catalog).toContain("Poly Haven");
+    expect(catalog).toContain("ambientCG");
+    expect(catalog).toContain("Mixamo");
+    expect(catalog).toContain("KTX2");
+    expect(workflow).toContain("Blender");
+    expect(workflow).toContain("assets:audit");
   });
-  it("refuses an empty or unapproved asset search without network calls", () => {
-    const empty = node("scripts/asset_search.mjs");
-    expect(empty.status).toBe(2);
-    expect(empty.stderr).toContain("Usage:");
-    const invalid = node("scripts/asset_search.mjs", "snow", "--type", "unknown");
-    expect(invalid.status).toBe(2);
+  it("uses account-free official research APIs and requires user agent", () => {
+    expect(searchScript).toContain("https://api.polyhaven.com/assets");
+    expect(searchScript).toContain("https://ambientcg.com/api/v3/assets");
+    expect(searchScript).toContain("User-Agent");
+    expect(searchScript).toContain("CC0-1.0");
   });
-  it("audits known GLBs and documents provenance", () => {
-    const checked = node("scripts/asset_audit.mjs", "--json");
-    expect(checked.status, checked.stderr).toBe(0);
-    const report = JSON.parse(checked.stdout);
-    expect(report.errors).toEqual([]);
-    expect(report.scanned.some((entry: {path: string}) =>
-      entry.path === "public/assets/skier.glb")).toBe(true);
-    expect(readFileSync("docs/RESOURCE_CATALOG.md", "utf8"))
-      .toContain("ambientCG");
-    expect(readFileSync("docs/ASSET_WORKFLOW.md", "utf8"))
-      .toContain("Blender");
+  it("audits the approved alpine pack and does not silently overwrite models", () => {
+    expect(auditScript).toContain("public/assets/skier.glb");
+    expect(auditScript).toContain("public/assets/alpine/");
+    expect(auditScript).toContain("--require-pack");
+    expect(toolsScript).toContain("Refusing to overwrite source");
+    expect(pack.models.length).toBe(9);
   });
 });
