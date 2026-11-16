@@ -78,3 +78,9 @@ Le moteur de ski utilise des unités SI. La simulation avance par pas fixes et l
 La branche `feat/playable-slalom` contient la version jouable. **Publication encore bloquée : l’activation de Pages exige le réglage propriétaire Settings → Pages → Source : GitHub Actions.** La connexion GitHub et le workflow ont reçu HTTP 403 lors de cette activation. Le workflow `Verify and publish` effectue installation reproductible, tests unitaires, compilation et tests Chromium avant d'autoriser GitHub Pages. Il publie cette branche de développement et `main` ; les pull requests sont uniquement vérifiées. Une PR permet de relire et fusionner le travail ultérieurement.
 
 Lire [l'état de reprise](docs/STATUS.md), [les priorités](docs/ROADMAP.md) et [les crédits et licences](docs/ASSETS.md). Ne pas confondre un workflow en cours avec un déploiement déjà réussi.
+
+## Mode Fluidité automatique (sans limite à 40 FPS)
+
+La case **« Fluidité automatique »** est activée par défaut dans Paramètres. Le jeu laisse le navigateur afficher autant d'images que l'écran et le GPU le permettent : aucun verrou fixe à 40 ou 60 FPS. Si la cadence reste inférieure à environ 52 FPS, la résolution interne du rendu PlayCanvas baisse doucement (sans modifier la taille de l'interface, la physique à 120 Hz ni le niveau des décors) ; les ombres ne sont allégées qu'en dernier recours. Lorsque la fluidité remonte durablement, la résolution et les ombres reviennent progressivement vers la qualité choisie (Élevé par défaut). Des seuils et délais évitent les oscillations constantes. L'indicateur en course montre les FPS mesurés et le pourcentage de résolution par rapport au maximum choisi. La case peut être désactivée pour un rendu fixe.
+
+Ce mode optimise la fluidité sans garantir un nombre de FPS sur un PC spécifique ; le navigateur, l'écran et l'accélération graphique restent les limites matérielles. Le nombre de FPS relevé dans Chromium avec SwiftShader n'est pas un benchmark GPU.
