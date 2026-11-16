@@ -2,7 +2,7 @@
 
 Un jeu de ski alpin original, entièrement dans le navigateur, construit avec **PlayCanvas Engine 2.24, TypeScript et Vite**.
 
-**V1.0 : base de slalom jouable et testée, avec physique 120 Hz, carving progressif, caméra et animations plus souples, sons dynamiques et qualité graphique adaptative. La qualité n'est pas photoréaliste et les autres disciplines restent moins testées.**
+**V1.1 : base de slalom jouable et testée, enrichie d'une nouvelle surface de neige, avec physique 120 Hz, carving progressif, caméra et animations plus souples, sons dynamiques et qualité graphique adaptative. La qualité n'est pas photoréaliste et les autres disciplines restent moins testées.**
 
 🎮 **Alpine Ski Pro V1 publié** : https://raphtd38-oss.github.io/alpine-ski-pro/ — GitHub Actions a confirmé le déploiement réussi le 16 novembre 2026. Alternative de test navigateur via StackBlitz : https://stackblitz.com/github/raphtd38-oss/alpine-ski-pro?startScript=dev (compatibilité à vérifier selon le navigateur).
 
@@ -100,3 +100,7 @@ La glisse, les carres de carving, le dérapage glacé et le vent sont maintenant
 - Quatre nouveaux MP3 ElevenLabs **non disponibles** : génération refusée avant démarrage car le service était occupé ; l'audio additionnel de la V1 utilise Web Audio en attendant (voir `docs/ASSETS.md`).
 
 Les améliorations sont des travaux originaux. Rien de propriétaire n'a été copié depuis CarveMania.
+
+## Mise à jour V1.1 : sensation de neige
+
+Le damage de la piste utilise maintenant un matériau PBR procédural (albedo, micro-normales, rugosité) avec des bandes moins artificielles. Certaines zones compactées sont légèrement bleutées et offrent une adhérence un peu différente, cohérente avec la simulation à 120 Hz et le mixage des sons de carving. Un indicateur de neige en course aide à repérer ces zones. La variabilité est déterministe et volontairement modeste afin de conserver la jouabilité du SL. Les nouvelles générations ElevenLabs restent indisponibles, les sons Web Audio actuels restent présents.

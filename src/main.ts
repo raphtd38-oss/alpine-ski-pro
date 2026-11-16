@@ -8,6 +8,7 @@ import "@fontsource/barlow-condensed/latin-600.css";
 import "@fontsource/barlow-condensed/latin-700.css";
 import "./ui/style.css";
 import { COURSES, EQUIPMENT } from "./game/course";
+import { sampleSnowSurface } from "./game/surface";
 import {
   FIXED_DT,
   FixedClock,
@@ -217,7 +218,7 @@ async function boot() {
       EQUIPMENT[settings.equipment],
       race.course,
       dt,
-      settings.weather === "snow" ? 0.82 : 1,
+      sampleSnowSurface(state.x, state.z, race.course, settings.weather).grip,
     );
     poles.update(previous, state, dt);
     if (poles.lastImpacts)
@@ -241,6 +242,10 @@ async function boot() {
       );
     ui.text("time", formatTime(replaying ? replayTime : race.time));
     ui.text("speed", String(Math.round(Math.hypot(state.vx, state.vz) * 3.6)));
+    const surface = sampleSnowSurface(state.x, state.z, race.course, settings.weather);
+    ui.text("surface-label",
+      surface.ice > 0.38 ? "NEIGE TRÈS DURE" :
+        surface.packed > 0.65 ? "NEIGE COMPACTÉE" : "NEIGE DAMÉE");
     ui.text("fps-meter", `${Math.round(renderer.fps)} FPS · RENDU ${Math.round(renderer.renderScale * 100)}%`);
     ui.text(
       "gates",
@@ -360,7 +365,7 @@ async function boot() {
       state.edge,
       state.slip,
       playing && !paused && race.phase === "racing",
-      settings.weather === "snow" ? 0.82 : 1,
+      sampleSnowSurface(state.x, state.z, race.course, settings.weather).grip,
     );
     audio.menu(!playing);
     audio.crowd(

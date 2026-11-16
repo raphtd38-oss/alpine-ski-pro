@@ -1,6 +1,8 @@
 import * as pc from "playcanvas";
 import { formatTime } from "../game/race";
 import { terrainHeight, gradient } from "../game/course";
+import { sampleSnowSurface } from "../game/surface";
+import { snowTexel } from "./snow-texture";
 import type { PoleState } from "../game/poles";
 import type { Course, Quality, Weather } from "../game/types";
 import { material, meshEntity, shape, beam, rng, color } from "./geometry";
@@ -43,56 +45,53 @@ export class World {
     return m;
   }
   snowTexture() {
-    const c = document.createElement("canvas");
-    c.width = c.height = 512;
-    const ctx = c.getContext("2d")!;
-    const im = ctx.createImageData(512, 512),
-      random = rng(19);
-    for (let y = 0; y < 512; y++)
-      for (let x = 0; x < 512; x++) {
-        const v = 235 + random() * 20 - (x % 12 < 2 ? 12 : 0);
-        const i = (y * 512 + x) * 4;
-        im.data[i] = v;
-        im.data[i + 1] = v + 2;
-        im.data[i + 2] = v + 4;
-        im.data[i + 3] = 255;
+    // CPU-generated PBR maps are created once at level load, not every frame.
+    // They provide soft grooming ridges, micro-normal sparkle and varying
+    // roughness with no external assets or extra draw calls.
+    const size = 512;
+    const albedo = document.createElement("canvas");
+    const normal = document.createElement("canvas");
+    const rough = document.createElement("canvas");
+    for (const canvas of [albedo, normal, rough])
+      canvas.width = canvas.height = size;
+    const ac = albedo.getContext("2d")!;
+    const nc = normal.getContext("2d")!;
+    const rc = rough.getContext("2d")!;
+    const ai = ac.createImageData(size, size);
+    const ni = nc.createImageData(size, size);
+    const ri = rc.createImageData(size, size);
+    for (let y = 0; y < size; y++)
+      for (let x = 0; x < size; x++) {
+        const i = (y * size + x) * 4;
+        const texel = snowTexel(x, y);
+        const [r, g, b] = texel.diffuse;
+        const [nx, ny, nz] = texel.normal;
+        ai.data.set([r, g, b, 255], i);
+        ni.data.set([nx, ny, nz, 255], i);
+        ri.data.set([texel.roughness, texel.roughness, texel.roughness, 255], i);
       }
-    ctx.putImageData(im, 0, 0);
-    const t = new pc.Texture(this.app.graphicsDevice, {
-      name: "Original groomed snow",
-      mipmaps: true,
-    });
-    t.setSource(c);
-    t.addressU = t.addressV = pc.ADDRESS_REPEAT;
-    t.anisotropy = 8;
-    const normalCanvas = document.createElement("canvas");
-    normalCanvas.width = normalCanvas.height = 512;
-    const nc = normalCanvas.getContext("2d")!,
-      ni = nc.createImageData(512, 512);
-    for (let y = 0; y < 512; y++)
-      for (let x = 0; x < 512; x++) {
-        const i = (y * 512 + x) * 4;
-        ni.data[i] =
-          128 + Math.sin((x * Math.PI) / 6) * 24 + (random() - 0.5) * 12;
-        ni.data[i + 1] = 128 + (random() - 0.5) * 12;
-        ni.data[i + 2] = 252;
-        ni.data[i + 3] = 255;
-      }
+    ac.putImageData(ai, 0, 0);
     nc.putImageData(ni, 0, 0);
-    const nt = new pc.Texture(this.app.graphicsDevice, {
-      name: "Original snow micro-normal",
-      mipmaps: true,
-    });
-    nt.setSource(normalCanvas);
-    nt.addressU = nt.addressV = pc.ADDRESS_REPEAT;
-    nt.anisotropy = 8;
-    this.resources.push(nt);
-    this.snow.normalMap = nt;
+    rc.putImageData(ri, 0, 0);
+    const tex = (canvas: HTMLCanvasElement, name: string) => {
+      const texture = new pc.Texture(this.app.graphicsDevice, {
+        name,
+        mipmaps: true,
+      });
+      texture.setSource(canvas);
+      texture.addressU = texture.addressV = pc.ADDRESS_REPEAT;
+      texture.anisotropy = 8;
+      this.resources.push(texture);
+      return texture;
+    };
+    this.snow.diffuseMap = tex(albedo, "Soft groomed snow albedo");
+    this.snow.normalMap = tex(normal, "Fine grain snow normals");
+    this.snow.glossMap = tex(rough, "Compacted snow PBR roughness");
+    this.snow.glossMapChannel = "r";
+    this.snow.glossInvert = true;
+    this.snow.gloss = 1;
     this.snow.bumpiness = 0.32;
-    this.snow.diffuseMap = t;
-    this.snow.diffuseMapTiling.set(1, 1);
     this.snow.update();
-    this.resources.push(t);
   }
   terrain() {
     const p: number[] = [],
@@ -115,10 +114,12 @@ export class World {
         );
         const n =
           Math.sin(x * 1.2 + z * 0.38) * Math.sin(z * 0.63 + x * 0.2) * 0.018;
+        // Broad, subtle blue-grey compressed patches match the grip field.
+        const icy = sampleSnowSurface(x, z, this.course).ice;
         col.push(
-          1 - edge * 0.11 + n,
-          1 - edge * 0.075 + n,
-          1 - edge * 0.04 + n,
+          1 - edge * 0.11 + n - icy * 0.075,
+          1 - edge * 0.075 + n - icy * 0.036,
+          1 - edge * 0.04 + n - icy * 0.012,
           1,
         );
       }
