@@ -130,3 +130,12 @@ Le projet n'est **pas terminé**. Pas de certification FIS, pas de sponsoring Au
 - Pointe, poignée antidérapante et protège-main de slalom modélisés à partir de primitives PlayCanvas ; ils suivent l'animation des bâtons existants.
 - Ajout d'un contrôle unitaire des dimensions des composants du matériel. Aucune modification aux forces physiques, au chronomètre ou à l'enregistrement des courses.
 - Publication uniquement après succès de tous les tests GitHub Actions.
+
+## V1.4 — référence vidéo CarveMania / Giant Slalom (16 novembre 2026)
+
+- Vidéo utilisateur inspectée directement : 55,21 s, 1920x1038 à 30 i/s, son AAC, course Giant Slalom en montagne. Observations : piste large, massifs réalistes stylisés, forêt sombre, filets orange, portes rouges/bleues souples, traces sur neige, caméra arrière et chronométrage.
+- Modification réelle `src/render/world.ts` : piquets à texture de fibre de verre, fanions ALPINE SKI PRO détaillés pour GS/SG/DH attachés aux charnières physiques, flutter dépendant de l'impact, sapins verts plus contrastés.
+- Nouveaux modules `src/render/gate-textures.ts`, `src/game/gates-visual.ts`, `src/game/pole-sound.ts` ; calculs visuels et audio testés séparément.
+- Mixage des impacts `src/game/audio.ts` : bruit de ressort et de contact original, variation de hauteur/volume avec vitesse; froissement synthétique pour drapeaux; ancienne piste ElevenLabs conservée.
+- Une création ElevenLabs supplémentaire de carving de 7 secondes a abouti sur le flow de l'utilisateur (70 crédits). Le contenu audio n'a pas pu être téléchargé dans l'environnement de développement ; **ne pas prétendre qu'il est livré dans le jeu**.
+- Tests CI (build et Playwright) à vérifier avant fusion/publication; aucune copie du code ou des assets du jeu de référence.
