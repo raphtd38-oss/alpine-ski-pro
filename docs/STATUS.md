@@ -51,3 +51,13 @@ Le projet n'est **pas terminé**. Pas de certification FIS, pas de sponsoring Au
 - GitHub Actions a confirmé installation, 13 tests de la version initiale, build et 2 tests navigateur réussis sur ses machines. La tentative configure-pages a échoué HTTP 403. Activation Pages toujours nécessaire dans https://github.com/raphtd38-oss/alpine-ski-pro/settings/pages ; Source = GitHub Actions. Après activation, relancer le job deploy ou pousser un nouveau commit.
 - PR de suivi : https://github.com/raphtd38-oss/alpine-ski-pro/pull/1 . Pas de fusion automatique.
 - Build de production vérifié dans Chromium (WebGL 2) : HUD actif, chronomètre en marche, aucune erreur JavaScript et aucun accès `window.__ski` dans le bundle. Capture `production.png` et navigation mobile `mobile.png`.
+
+## Amélioration proposée — 16 novembre 2026 (branche feat/realistic-snow-effects)
+
+- Traces des deux skis désormais construites perpendiculairement à la trajectoire réelle, avec l'orientation de chaque ski aux échantillons successifs. Les sillons suivent mieux les grandes courbes et la pente.
+- Suppression de l'allocation `Array.splice` à chaque segment de trace : écriture directe dans le tampon circulaire, sans modifier la physique ni les règles de portes.
+- Projections de neige orientées dans le sens opposé au carving et vers l'arrière, émission limitée par le temps écoulé plutôt que par le nombre d'images, limite de particules selon la qualité graphique.
+- Envoi du maillage dynamique des particules plafonné à 30 Hz, mise en veille lorsqu'il n'y a plus de projections, effacement des traces lors d'un saut/recommencement.
+- Quatre tests unitaires ajoutés dans `tests/snow.test.ts` ; vérifier les résultats du workflow CI sur la PR avant fusion.
+- Code original, aucun modèle, texture, son ou code tiers copié des dépôts GitHub consultés (leurs licences ne sont pas toutes permissives).
+- **Non fusionné :** modification sur branche séparée pour revue ; ce travail ne constitue pas un rendu photoréaliste ni une validation FPS sur GPU réel.
