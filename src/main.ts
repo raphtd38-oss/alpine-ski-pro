@@ -54,6 +54,7 @@ async function boot() {
     playing = false,
     replaying = false,
     replayTime = 0,
+    replaySpeed = 1,
     resultShown = false,
     best = false,
     hudTimer = 0,
@@ -100,6 +101,8 @@ async function boot() {
     renderer.menu = false;
     renderer.cameraReady = false;
     renderer.effects.reset();
+    if (renderer.world.trainingGuide) renderer.world.trainingGuide.enabled = training;
+    ui.setReplayUI(false);
     ui.setRace(true);
     ui.text("race-message", "");
     ui.text(
@@ -134,6 +137,8 @@ async function boot() {
     previous = { ...state };
     clock.reset();
     renderer.effects.reset();
+    if (renderer.world.trainingGuide) renderer.world.trainingGuide.enabled = false;
+    ui.setReplayUI(false);
     ui.setRace(false);
     ui.text("race-message", "");
   };
@@ -141,14 +146,25 @@ async function boot() {
     if (!lastFrames.length) return;
     replaying = true;
     replayTime = 0;
+    replaySpeed = 1;
     paused = false;
     playing = true;
     renderer.menu = false;
     renderer.cameraMode = 3;
     renderer.cameraReady = false;
+    if (renderer.world.trainingGuide) renderer.world.trainingGuide.enabled = false;
     ui.setRace(true);
+    ui.setReplayUI(true);
     ui.text("countdown", "");
     ui.toast("Replay · C : caméra · Échap : pause · R : nouvelle course");
+  };
+  ui.onReplaySpeed = (speed) => {
+    if (replaying && [0.5, 1, 2].includes(speed)) replaySpeed = speed;
+  };
+  ui.onReplaySeek = (fraction) => {
+    if (!replaying || !lastFrames.length) return;
+    replayTime = Math.max(0, Math.min(1, fraction)) *
+      lastFrames[lastFrames.length - 1].t;
   };
   ui.settingsChanged = () => {
     if (!writeSettings(settings))
@@ -306,26 +322,30 @@ async function boot() {
     let frame = snapshot(race.time);
     if (playing && !paused) {
       if (replaying) {
-        replayTime += dt;
+        replayTime += dt * replaySpeed;
         const f = replayAt(lastFrames, replayTime);
         if (f) {
           frame = f;
-          const prevZ = state.z;
+          const prevZ = state.z, prevX = state.x;
+          const elapsed = Math.max(0.001, dt * replaySpeed);
           state = {
             ...state,
             x: f.x,
             z: f.z,
             heading: f.heading,
             edge: f.edge,
+            flex: f.flex ?? 0,
             height: f.height,
             fallen: f.fallen,
-            vz: (f.z - prevZ) / Math.max(0.001, dt),
-            vx: 0,
+            vz: Math.max(0, Math.min(70, (f.z - prevZ) / elapsed)),
+            vx: Math.max(-40, Math.min(40, (f.x - prevX) / elapsed)),
           };
+          ui.updateReplayTime(replayTime, lastFrames[lastFrames.length - 1].t);
         }
         if (replayTime >= lastFrames[lastFrames.length - 1].t) {
           replaying = false;
           playing = false;
+          ui.setReplayUI(false);
           ui.results(race.result!, best, race.training);
         }
       } else {
@@ -364,7 +384,7 @@ async function boot() {
       Math.hypot(state.vx, state.vz),
       state.edge,
       state.slip,
-      playing && !paused && race.phase === "racing",
+      playing && !paused && (replaying || race.phase === "racing"),
       sampleSnowSurface(state.x, state.z, race.course, settings.weather).grip,
     );
     audio.menu(!playing);
