@@ -26,6 +26,7 @@ export class Renderer {
   course!: Course;
   cameraMode = 0;
   cameraReady = false;
+  smoothedLook: pc.Vec3 | null = null;
   quality: Quality = "high";
   weather: Weather = "clear";
   menu = true;
@@ -120,6 +121,7 @@ export class Renderer {
     this.effects = new SnowEffects(this.app, c, quality);
     configureWeather(this.app, this.camera, weather);
     this.cameraReady = false;
+    this.smoothedLook = null;
   }
   update(
     s: SkierState,
@@ -185,26 +187,27 @@ export class Renderer {
       look = target.clone().add(new pc.Vec3(s.vx * 0.12, -0.45, 6.5));
     }
     eye.y = Math.max(eye.y, terrainHeight(eye.x, eye.z, this.course) + 0.7);
-    if (!this.cameraReady || this.cameraMode === 2) {
+    // Smooth both camera position and focal target. A moving target without
+    // focus damping looks jittery even when the skier's position is interpolated.
+    const snap = !this.cameraReady || this.cameraMode === 2;
+    if (snap) {
       this.camera.setPosition(eye);
+      this.smoothedLook = look.clone();
       this.cameraReady = true;
-    } else
+    } else {
+      const chaseBlend = 1 - Math.exp(-dt * (this.menu ? 2 : 7));
+      const focusBlend = 1 - Math.exp(-dt * (this.menu ? 2 : 9));
       this.camera.setPosition(
-        this.camera
-          .getPosition()
-          .clone()
-          .lerp(
-            this.camera.getPosition(),
-            eye,
-            1 - Math.exp(-dt * (this.menu ? 2 : 7)),
-          ),
+        this.camera.getPosition().clone().lerp(eye, chaseBlend),
       );
-    this.camera.lookAt(look);
-    this.camera.camera!.fov = this.menu
-      ? 62
-      : this.cameraMode === 2
-        ? 76
-        : 58 + Math.min(8, speed * 0.18);
+      if (!this.smoothedLook) this.smoothedLook = look.clone();
+      else this.smoothedLook.lerp(this.smoothedLook, look, focusBlend);
+    }
+    this.camera.lookAt(this.smoothedLook!);
+    const targetFov = this.menu ? 62 : this.cameraMode === 2
+      ? 76 : 58 + Math.min(8, speed * 0.18);
+    this.camera.camera!.fov += (targetFov - this.camera.camera!.fov) *
+      (1 - Math.exp(-dt * 5));
     this.athlete.root.enabled = this.menu || this.cameraMode !== 2;
   }
   changeCamera() {
