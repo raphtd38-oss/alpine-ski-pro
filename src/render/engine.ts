@@ -1,6 +1,7 @@
 import * as pc from "playcanvas";
 import { Athlete } from "./athlete";
 import { World, configureWeather } from "./world";
+import { AlpineAssets } from "./alpine-assets";
 import { SnowEffects } from "./effects";
 import { terrainHeight } from "../game/course";
 import type {
@@ -20,6 +21,7 @@ export class Renderer {
   camera: pc.Entity;
   sun: pc.Entity;
   world!: World;
+  alpineAssets!: AlpineAssets;
   athlete!: Athlete;
   ghost!: Athlete;
   effects!: SnowEffects;
@@ -87,6 +89,8 @@ export class Renderer {
       this.app.assets.add(this.asset);
       this.app.assets.load(this.asset);
     });
+    this.alpineAssets = new AlpineAssets(this.app);
+    await this.alpineAssets.load();
   }
   build(c: Course, e: Equipment, quality: Quality, weather: Weather, adaptive = true) {
     this.world?.destroy();
@@ -117,7 +121,7 @@ export class Renderer {
       quality === "ultra" ? 4096 : quality === "high" ? 2048 : 1024;
     this.sun.light!.shadowResolution = this.baseShadowResolution;
     this.sun.light!.intensity = weather === "clear" ? 1.7 : 0.8;
-    this.world = new World(this.app, c, quality);
+    this.world = new World(this.app, c, quality, this.alpineAssets);
     this.athlete = new Athlete(this.app, this.asset, e);
     this.ghost = new Athlete(this.app, this.asset, e, true);
     this.ghost.root.enabled = false;
