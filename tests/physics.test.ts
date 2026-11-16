@@ -209,3 +209,24 @@ it("shows continuous hundredths across minute boundaries", () => {
   expect(formatTime(60.018)).toBe("01:00.01");
   expect(formatTime(0)).toBe("00:00.00");
 });
+
+it("adds believable carve energy loss and lateral slide when grip is overloaded", () => {
+  const straight = { ...initialState(), vz: 20 };
+  const hardCarve = { ...straight };
+  for (let i = 0; i < 90; i++) {
+    stepPhysics(straight, neutral, EQUIPMENT.SL, COURSES.SL, FIXED_DT);
+    stepPhysics(
+      hardCarve,
+      { ...neutral, steer: 0.9 },
+      EQUIPMENT.SL,
+      COURSES.SL,
+      FIXED_DT,
+      0.82,
+    );
+  }
+  expect(hardCarve.slip).toBeGreaterThan(straight.slip);
+  expect(Math.hypot(hardCarve.vx, hardCarve.vz)).toBeLessThan(
+    Math.hypot(straight.vx, straight.vz),
+  );
+  expect(Number.isFinite(hardCarve.x + hardCarve.heading)).toBe(true);
+});
