@@ -1,6 +1,7 @@
 import * as pc from "playcanvas";
 import { formatTime } from "../game/race";
 import { terrainHeight, gradient } from "../game/course";
+import { trainingLineX } from "../game/guide";
 import { sampleSnowSurface } from "../game/surface";
 import { snowTexel } from "./snow-texture";
 import type { PoleState } from "../game/poles";
@@ -9,6 +10,7 @@ import { material, meshEntity, shape, beam, rng, color } from "./geometry";
 export class World {
   root = new pc.Entity("Alpine world");
   gateEntities: pc.Entity[] = [];
+  trainingGuide: pc.Entity | null = null;
   resources: pc.Texture[] = [];
   materials: pc.StandardMaterial[] = [];
   timingSign: { canvas: HTMLCanvasElement; texture: pc.Texture } | null = null;
@@ -31,6 +33,7 @@ export class World {
     this.dark = this.mat("Graphite", "#152b3a", 0.3, 0.35);
     this.snowTexture();
     this.terrain();
+    this.buildTrainingGuide();
     this.mountains();
     this.forest();
     this.gates();
@@ -141,6 +144,38 @@ export class World {
       uv,
     );
     // Fine piste strips follow the exact ground surface and make corduroy readable at close range.
+  }
+  buildTrainingGuide() {
+    // An original narrow glowing line is visible in training only.
+    // A single batched mesh keeps its draw cost constant along the slope.
+    const positions: number[] = [];
+    const indices: number[] = [];
+    const step = 1.5;
+    for (let z = 3, n = 0; z <= this.course.length; z += step, n++) {
+      const zz = Math.min(this.course.length, z);
+      const x = trainingLineX(this.course, zz);
+      const y = terrainHeight(x, zz, this.course) + 0.032;
+      const width = 0.07;
+      positions.push(x - width, y, zz, x + width, y, zz);
+      if (n > 0) {
+        const a = 2 * (n - 1);
+        indices.push(a, a + 2, a + 1, a + 1, a + 2, a + 3);
+      }
+    }
+    const mat = this.mat("Training advisory racing line", "#60dce0", 0.05, 0.6);
+    mat.emissive.set(0.07, 0.25, 0.27);
+    mat.opacity = 0.50;
+    mat.blendType = pc.BLEND_NORMAL;
+    mat.depthWrite = false;
+    mat.cull = pc.CULLFACE_NONE;
+    mat.update();
+    this.trainingGuide = meshEntity(
+      this.app.graphicsDevice, this.root,
+      "Training centreline, not competition assistance",
+      positions, indices, mat,
+    );
+    this.trainingGuide.render!.castShadows = false;
+    this.trainingGuide.enabled = false;
   }
   mountains() {
     const mat = this.mat("Snow and granite massif", "#eef3f6");
