@@ -7,12 +7,15 @@ import { snowTexel } from "./snow-texture";
 import { gatePoleCanvas, gateBannerCanvas } from "./gate-textures";
 import { gateFlagFlutter, textureFlagWidth } from "../game/gates-visual";
 import { tipVibration, type PoleState } from "../game/poles";
+import { SUPER_G_ROLLERS } from "../game/superg";
 import type { Course, Quality, Weather } from "../game/types";
 import { material, meshEntity, shape, beam, rng, color } from "./geometry";
 export class World {
   root = new pc.Entity("Alpine world");
   gateEntities: pc.Entity[] = [];
   startArch: pc.Entity | null = null;
+  startWands: pc.Entity[] = [];
+  startBooth: pc.Entity | null = null;
   trainingGuide: pc.Entity | null = null;
   resources: pc.Texture[] = [];
   materials: pc.StandardMaterial[] = [];
@@ -49,6 +52,7 @@ export class World {
     this.mountains();
     this.forest();
     this.gates();
+    if (this.course.id === "SG") this.superGMarkers();
     this.fences();
     this.buildings();
     this.finishArena();
@@ -366,22 +370,130 @@ export class World {
         // textured fabric panels tethered to their spring hinges; the cloth
         // moves with a hit rather than remaining frozen in world space.
         if (this.course.id !== "SL") {
+          // A speed-race gate is two separate pole pairs (4 poles total).
+          // Each 0.75 x 0.50 m textile panel spans its own pair, outside
+          // the ski crossing corridor; FIS-style, not FIS-homologated.
+          const partner = shape(
+            pivot, "cylinder", "Second pole of flag pair",
+            [side * 0.80, 0.94, -0.08],
+            [0.034, 1.88, 0.034], m,
+          );
+          partner.render!.castShadows = this.quality !== "low";
           const banner = shape(
-            pivot,
-            "box",
-            "Gate textile flag",
-            [-side * textureFlagWidth(g.width) * 0.36, 1.35, 0.02],
-            [textureFlagWidth(g.width), 0.64, 0.022],
-            textile,
+            pivot, "box", "Gate textile flag",
+            [side * 0.40, 1.45, -0.08],
+            [0.79, 0.5, 0.026], textile,
           );
           banner.render!.castShadows = false;
         }
       }
       this.gateEntities.push(parent);
     }
-    this.arch(3, "DÉPART", false);
+    if (this.course.id === "SG") this.superGStartBooth();
+    else this.arch(3, "DÉPART", false);
     this.arch(this.course.length, "ARRIVÉE", true);
   }
+
+  /** An original start hut inspired by World Cup speed events. This is
+   * competition set dressing, not an official FIS-certified installation. */
+  superGStartBooth() {
+    const root = new pc.Entity("Super-G competition start house");
+    this.startBooth = root;
+    this.root.addChild(root);
+    const h = terrainHeight(0, 0, this.course);
+    const timber = this.mat("Start house weathered timber", "#594a41", 0, 0.28);
+    const painted = this.mat("Start house race blue", "#24445c", 0.08, 0.32);
+    const glass = this.mat("Timer hut safety glass", "#608c9e", 0.25, 0.75);
+    const metal = this.mat("Start timing aluminium", "#aebdc6", 0.75, 0.55);
+    // Open front and rear: the chase camera keeps a clear sightline to skier.
+    for (const z of [-4.5, 4.3])
+      for (const x of [-3.8, 3.8])
+        shape(root, "box", "Start hut structural post",
+          [x, terrainHeight(x, z, this.course) + 1.9, z],
+          [0.23, 3.8, 0.23], timber);
+    for (const z of [-4.5, 4.3]) {
+      shape(root, "box", "Start chalet roof frame",
+        [0, h + 3.9, z], [7.9, 0.18, 0.28], timber);
+      shape(root, "box", "Start timing station fascia",
+        [0, h + 3.45, z], [7.7, 0.52, 0.22], painted);
+    }
+    for (const side of [-1, 1]) {
+      const roof = shape(root, "box", "Insulated pitched start roof",
+        [side * 2.0, h + 4.56, -0.10],
+        [4.45, 0.24, 10.0], this.snow);
+      roof.setEulerAngles(0, 0, side * -21);
+      for (const z of [-2.8, 1.2])
+        shape(root, "box", "Start hut windscreen",
+          [side * 3.83, h + 2.20, z],
+          [0.11, 1.95, 2.7], glass);
+      shape(root, "box", "Gate safety handrail",
+        [side * 2.23, h + 0.8, 5.1],
+        [0.08, 0.09, 2.7], metal);
+    }
+    // Start line and pressure-sensitive hinged timing wands at ski level.
+    const gateZ = 4.05, gateH = terrainHeight(0, gateZ, this.course);
+    for (const side of [-1, 1]) {
+      const hinge = new pc.Entity("Chronometric start wand hinge");
+      hinge.setLocalPosition(side * 1.55, gateH + 0.64, gateZ);
+      root.addChild(hinge);
+      this.startWands.push(hinge);
+      shape(hinge, "cylinder", "Start wand support",
+        [0, -0.30, 0], [0.065, 0.74, 0.065], painted);
+      shape(hinge, "box", "Releasing timing wand",
+        [-side * 0.78, 0, 0], [1.55, 0.032, 0.043], metal);
+      shape(hinge, "box", "Light gate sensor",
+        [0, 0.11, 0], [0.18, 0.16, 0.16], painted);
+    }
+    const header = this.sign("ALPINE SKI PRO   /   SUPER-G",
+      6.4, 0.65, "#183247");
+    shape(root, "box", "Start house illuminated race header",
+      [0, h + 3.48, 4.44], [6.4, 0.65, 0.1], header.m);
+    const slab = this.mat("Starting runway blue ink", "#3e93b9", 0, 0.35);
+    for (const x of [-1.78, 1.78])
+      shape(root, "box", "Timing alignment strip",
+        [x, terrainHeight(x, gateZ, this.course) + 0.02, gateZ],
+        [0.055, 0.025, 1.0], slab);
+  }
+
+  /** Smoothly open hinged chronometric wands after the launch. */
+  updateStartWands(startPush = 0, positionZ = 3) {
+    if (!this.startWands.length) return;
+    const opening = positionZ > 5 ? 1 :
+      Math.max(0, Math.min(1, (1 - startPush) * 3));
+    this.startWands.forEach((wand, i) => {
+      wand.setLocalEulerAngles(0, (i === 0 ? 1 : -1) * opening * 76, 0);
+    });
+  }
+
+  /** Blue terrain marks on the approach to the five speed crests.
+   * One batched geometry, no expensive per-frame decal updates. */
+  superGMarkers() {
+    const p: number[] = [], indices: number[] = [];
+    for (const bump of SUPER_G_ROLLERS) {
+      const z = bump.z - 14;
+      for (let i = 0; i < 32; i++) {
+        const x0 = (i / 32 - 0.5) * 27;
+        const x1 = ((i + 1) / 32 - 0.5) * 27;
+        const y0 = terrainHeight(x0, z, this.course) + 0.044;
+        const y1 = terrainHeight(x1, z, this.course) + 0.044;
+        const n = p.length / 3;
+        p.push(x0, y0, z, x1, y1, z,
+          x1, terrainHeight(x1, z + 0.21, this.course) + 0.044, z + 0.21,
+          x0, terrainHeight(x0, z + 0.21, this.course) + 0.044, z + 0.21);
+        indices.push(n, n + 1, n + 2, n, n + 2, n + 3);
+      }
+      const x = -this.course.width / 2 - 3;
+      const y = terrainHeight(x, z, this.course) + 1.2;
+      const sign = this.sign(bump.name.toUpperCase(), 4.4, 0.7, "#205a83");
+      shape(this.root, "box", "Super-G crest sector marker",
+        [x, y, z - 3], [4.4, 0.7, 0.12], sign.m);
+    }
+    const dye = this.mat("Alpine super-G blue crest dye", "#287eb8", 0, 0.4);
+    const strips = meshEntity(this.app.graphicsDevice, this.root,
+      "Blue dye approach lines to Super-G jumps", p, indices, dye);
+    strips.render!.castShadows = false;
+  }
+
   sign(text: string, width: number, height: number, bg: string) {
     const c = document.createElement("canvas");
     c.width = 1024;
