@@ -112,3 +112,11 @@ Le but est un simulateur de ski de grande qualité, amélioré sur le même dép
 - Mesurer les performances PC/mobile et optimiser le nombre d'instances, puis ajouter un vrai LOD dynamique avec instancing par secteurs.
 - Convertir les cartes JPG photo-PBR en KTX2/BasisU lorsque les décodeurs et tests WebGL2/WebGPU seront prêts.
 - Refaire le coureur avec un rig de meilleure qualité et des animations compétitives autorisées, puis retargeter l'IK sans casser les modes de course.
+
+## Suite de la boîte à outils de ressources 3D
+
+- Tester le moteur de recherche APIs sur les plateformes de développement, puis créer des manifests d'import manuels pour d'autres assets CC0 réellement choisis (glace, roche granitique, bois, nuages).
+- Préparer un rig de ski original dans Blender puis fusionner ses animations / IK avec les 18 articulations compatibles, une fois vérifiés les poids et les droits.
+- Adapter le moteur PlayCanvas aux cartes KTX2 avec décodeur validé et fallback sur les JPG/GLB actuels.
+- Étendre l'audit aux futures animations, modèles externes et sons avec provenance et licences par fichier.
+- Vérifier l'échelle des UV, les niveaux LOD, le draw-call budget et les performances réelles sur GPU/iPhone avant promotion visuelle.
