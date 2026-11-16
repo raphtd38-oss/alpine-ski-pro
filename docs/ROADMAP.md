@@ -97,3 +97,11 @@ Le but est un simulateur de ski de grande qualité, amélioré sur le même dép
 - Ajuster l'appui extérieur et le dosage de dérapage d'après des essais réels à la manette, pas seulement des tests de trajectoire.
 - Refondre ensuite la géométrie humaine et l'IK 3D ; les nouvelles animations V1.5 ne rendent pas le GLB photoréaliste.
 - Intégrer `carving.mp3` seulement si le fichier audio original ElevenLabs est récupéré durablement, puis tester droits, boucle et poids au chargement.
+
+## Suite après la sélection GLB CC0
+
+- Examiner les logs du dernier workflow Actions pour confirmer les téléchargements et la publication des neuf GLB et des trois cartes PBR.
+- Tester la hauteur des chalets, les normales des arbres, le rendu Snow 02 et l'absence de clignotement à toutes les qualités dans un vrai navigateur.
+- Mesurer les performances PC/mobile et optimiser le nombre d'instances, puis ajouter un vrai LOD dynamique avec instancing par secteurs.
+- Convertir les cartes JPG photo-PBR en KTX2/BasisU lorsque les décodeurs et tests WebGL2/WebGPU seront prêts.
+- Refaire le coureur avec un rig de meilleure qualité et des animations compétitives autorisées, puis retargeter l'IK sans casser les modes de course.
