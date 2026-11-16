@@ -10,6 +10,8 @@ test("renders a real 3D scene, responds to keys, pauses, restarts and changes eq
   expect(athlete.athleteBones).toBeGreaterThanOrEqual(17);
   expect(athlete.athleteSurfaces).toBeGreaterThanOrEqual(40);
   expect(athlete.flexiblePoleTips).toBe(44);
+  expect(athlete.pressure).toBe(1);
+  expect(athlete.skid).toBe(0);
   await expect(page.locator("h1")).toContainText("VOTRE");
   await page.screenshot({ path: "test-results/menu.png" });
   await page.locator("#play").click();
