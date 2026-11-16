@@ -383,7 +383,7 @@ async function boot() {
       playing && !paused && !replaying && race.phase === "racing",
       ghost,
     );
-    renderer.world.updateGates(race.gateStatus, poles.poles);
+    renderer.world.updateGates(race.gateStatus, poles.poles, realDt);
     audio.update(
       Math.hypot(state.vx, state.vz),
       state.edge,
