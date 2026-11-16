@@ -1,3 +1,12 @@
+## 1.5.0 — 16 novembre 2026
+
+- Carving : transfert de poids dépendant de la vitesse, adhérence modulée par la charge et vibrations déterministes sur neige dure.
+- Animations : articulation de jambes et chevilles affinée, bassin plus engagé, compensation du torse et réaction aux collisions de piquets.
+- Portes : deuxième section souple, flexion non linéaire et retour élastique ; règles et chronométrage préservés.
+- Audio : frottement granuleux synthétique sur carres fortement sollicitées ; MP3 ElevenLabs carving toujours absent.
+- Replays : nouvelles données de posture enregistrées et interpolées, anciennes sauvegardes compatibles.
+- Tests supplémentaires de simulation, replay et rendu navigateur.
+
 # Historique
 
 ## 0.1.1 — 16 novembre 2026
