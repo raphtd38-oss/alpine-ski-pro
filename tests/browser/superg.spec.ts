@@ -8,7 +8,7 @@ test("World-Cup-style Super-G start house, four-pole flags and terrain crest", a
   await page.locator('header [data-nav="courses"]').click();
   await page.locator('[data-course="SG"]').click();
   const setup = await page.evaluate(() => (window as any).__ski.getState());
-  expect(setup.course).toBe("SG");
+  // Menu selections rebuild the render scene; race.course switches at start.
   expect(setup.startHouse).toBe(true);
   expect(setup.timingWands).toBe(2);
   expect(setup.pairedGatePoles).toBe(68);
@@ -23,6 +23,7 @@ test("World-Cup-style Super-G start house, four-pole flags and terrain crest", a
     api.step(230, neutral);
     return api.getState();
   });
+  expect(state.course).toBe("SG");
   expect(state.phase).toBe("racing");
   expect(state.vz).toBeGreaterThan(2);
   await page.waitForTimeout(300);
