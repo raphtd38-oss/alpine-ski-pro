@@ -4,6 +4,8 @@ import { terrainHeight, gradient } from "../game/course";
 import { trainingLineX } from "../game/guide";
 import { sampleSnowSurface } from "../game/surface";
 import { snowTexel } from "./snow-texture";
+import { gatePoleCanvas, gateBannerCanvas } from "./gate-textures";
+import { gateFlagFlutter, textureFlagWidth } from "../game/gates-visual";
 import type { PoleState } from "../game/poles";
 import type { Course, Quality, Weather } from "../game/types";
 import { material, meshEntity, shape, beam, rng, color } from "./geometry";
@@ -19,6 +21,11 @@ export class World {
   red: pc.StandardMaterial;
   blue: pc.StandardMaterial;
   dark: pc.StandardMaterial;
+  redPole: pc.StandardMaterial;
+  bluePole: pc.StandardMaterial;
+  redFlag: pc.StandardMaterial;
+  blueFlag: pc.StandardMaterial;
+  gateVisualTime = 0;
   constructor(
     public app: pc.Application,
     public course: Course,
@@ -31,6 +38,10 @@ export class World {
     this.red = this.mat("Race vermilion", "#f65135");
     this.blue = this.mat("Race cobalt", "#1679d8");
     this.dark = this.mat("Graphite", "#152b3a", 0.3, 0.35);
+    this.redPole = this.gateMaterial("red", false);
+    this.bluePole = this.gateMaterial("blue", false);
+    this.redFlag = this.gateMaterial("red", true);
+    this.blueFlag = this.gateMaterial("blue", true);
     this.snowTexture();
     this.terrain();
     this.buildTrainingGuide();
@@ -45,6 +56,22 @@ export class World {
   mat(name: string, hex: string, metal = 0, gloss = 0.25) {
     const m = material(name, hex, metal, gloss);
     this.materials.push(m);
+    return m;
+  }
+  gateMaterial(tone: "red" | "blue", flag: boolean) {
+    const source = flag ? gateBannerCanvas(tone) : gatePoleCanvas(tone);
+    const tex = new pc.Texture(this.app.graphicsDevice, {
+      name: `Original ${tone} ${flag ? "race textile" : "slalom fibreglass"}`,
+      mipmaps: true,
+    });
+    tex.setSource(source);
+    tex.anisotropy = 4;
+    this.resources.push(tex);
+    const m = this.mat(`Competition ${tone} ${flag ? "cloth flag" : "pole"}`,
+      "#ffffff", flag ? 0.0 : 0.08, flag ? 0.18 : 0.48);
+    m.diffuseMap = tex;
+    m.cull = pc.CULLFACE_NONE;
+    m.update();
     return m;
   }
   snowTexture() {
@@ -251,7 +278,7 @@ export class World {
     const p: number[] = [],
       idx: number[] = [],
       cols: number[] = [];
-    const mat = this.mat("Snow-laden spruce", "#4c6e71");
+    const mat = this.mat("Snow-laden spruce", "#ffffff");
     mat.diffuseVertexColor = true;
     mat.update();
     const count = { low: 130, medium: 250, high: 380, ultra: 600 }[
@@ -278,16 +305,15 @@ export class World {
             by + (k % 2) * 0.25,
             z + Math.sin(a) * radius,
           );
-          const snow = k % 3 !== 0;
+          // In the reference film the spruces remain dark evergreen with
+          // snow on branch tips, not almost entirely white/blue silhouettes.
+          const snowyBranch = k % 4 === 0 || (level > 3 && k % 4 === 1);
           cols.push(
-            ...(snow
-              ? [
-                  0.72 + level * 0.025,
-                  0.8 + level * 0.02,
-                  0.84 + level * 0.02,
-                  1,
-                ]
-              : [0.075, 0.18, 0.19, 1]),
+            ...(snowyBranch
+              ? [0.74 + level * 0.027, 0.82 + level * 0.022,
+                 0.81 + level * 0.022, 1]
+              : [0.075 + level * 0.014, 0.19 + level * 0.012,
+                 0.17 + level * 0.012, 1]),
           );
           if (k > 0) idx.push(start, start + k + 1, start + k);
         }
@@ -308,7 +334,8 @@ export class World {
     for (const g of this.course.gates) {
       const parent = new pc.Entity(`Gate ${g.id + 1}`);
       this.root.addChild(parent);
-      const m = g.id % 2 === 0 ? this.red : this.blue;
+      const m = g.id % 2 === 0 ? this.redPole : this.bluePole;
+      const textile = g.id % 2 === 0 ? this.redFlag : this.blueFlag;
       for (const side of [-1, 1]) {
         const x = g.x + (side * g.width) / 2,
           h = terrainHeight(x, g.z, this.course);
@@ -324,14 +351,17 @@ export class World {
           m,
         );
         pole.tags.add("pole");
+        // SL retains its real-world flexible bare poles. GS/SG/DH get short
+        // textured fabric panels tethered to their spring hinges; the cloth
+        // moves with a hit rather than remaining frozen in world space.
         if (this.course.id !== "SL") {
           const banner = shape(
-            parent,
+            pivot,
             "box",
-            "Race flag",
-            [x + side * 0.42, h + 1.4, g.z],
-            [0.85, 0.6, 0.025],
-            m,
+            "Gate textile flag",
+            [-side * textureFlagWidth(g.width) * 0.36, 1.35, 0.02],
+            [textureFlagWidth(g.width), 0.64, 0.022],
+            textile,
           );
           banner.render!.castShadows = false;
         }
@@ -807,17 +837,27 @@ export class World {
     texture.upload();
   }
 
-  updateGates(status: string[], poles: PoleState[]) {
+  updateGates(status: string[], poles: PoleState[], dt = 1 / 60) {
+    this.gateVisualTime += Math.min(0.05, Math.max(0, dt));
     this.gateEntities.forEach((g, i) => {
       const hinges = g.children.filter((p) => p.name === "Pole hinge");
       hinges.forEach((hinge, j) => {
         const p = poles[i * 2 + j];
-        if (p)
+        if (p) {
           hinge.setLocalEulerAngles(
             (p.angleX * 180) / Math.PI,
             0,
             (p.angleZ * 180) / Math.PI,
           );
+          const cloth = hinge.children.find((e) => e.name === "Gate textile flag");
+          if (cloth)
+            cloth.setLocalEulerAngles(
+              0,
+              gateFlagFlutter(this.gateVisualTime + i * 0.37,
+                p.angleX, p.omegaX),
+              0,
+            );
+        }
       });
       if (status[i] === "passed") g.tags.add("passed");
     });

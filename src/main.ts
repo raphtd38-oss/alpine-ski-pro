@@ -238,7 +238,10 @@ async function boot() {
     );
     poles.update(previous, state, dt);
     if (poles.lastImpacts)
-      audio.impact(Math.hypot(state.vx, state.vz), state.edge);
+      audio.impact(
+        Math.hypot(state.vx, state.vz), state.edge,
+        race.course.id !== "SL",
+      );
     const oldGate = race.nextGate;
     race.update(previous, state, dt, control.tuck);
     if (race.nextGate !== oldGate) {
@@ -383,7 +386,7 @@ async function boot() {
       playing && !paused && !replaying && race.phase === "racing",
       ghost,
     );
-    renderer.world.updateGates(race.gateStatus, poles.poles);
+    renderer.world.updateGates(race.gateStatus, poles.poles, realDt);
     audio.update(
       Math.hypot(state.vx, state.vz),
       state.edge,
@@ -423,6 +426,20 @@ async function boot() {
           course: race.course.id,
           fps: renderer.fps,
           guideActive: Boolean(renderer.world.trainingGuide?.enabled),
+          gateFlagCount: renderer.world.gateEntities.reduce(
+            (count, gate) => count + gate.children.reduce(
+              (flags, pivot) => flags + pivot.children.filter(
+                (child) => child.name === "Gate textile flag",
+              ).length, 0,
+            ), 0,
+          ),
+          texturedGatePoles: renderer.world.gateEntities.reduce(
+            (count, gate) => count + gate.children.reduce(
+              (poles, pivot) => poles + pivot.children.filter(
+                (child) => child.name === "Flexible slalom pole",
+              ).length, 0,
+            ), 0,
+          ),
           athleteBones: Object.keys(renderer.athlete.joints).length,
           athleteSurfaces: renderer.athlete.rig.findComponents("render").reduce(
             (n, c) => n + (c as import("playcanvas").RenderComponent).meshInstances.length, 0,

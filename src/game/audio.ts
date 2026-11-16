@@ -1,4 +1,5 @@
 import { computeSkiSoundMix, type SkiSoundMix } from "./audio-mix";
+import { poleImpactMix } from "./pole-sound";
 
 /**
  * Multi-layer skiing sound engine, with local ElevenLabs audio where available
@@ -26,6 +27,8 @@ export class SkiAudio {
   menuActive = true;
   crowdProximity = 0;
   lastMix: SkiSoundMix = computeSkiSoundMix(0, 0, 0, false);
+  impactNoise: AudioBuffer | null = null;
+  lastImpactSeconds = -1;
 
   async start() {
     if (!this.ctx) {
@@ -34,6 +37,7 @@ export class SkiAudio {
       this.master.gain.value = this.enabled ? 0.65 : 0;
       this.master.connect(this.ctx.destination);
       const noise = this.makeNoise();
+      this.impactNoise = this.makeImpactNoise();
       this.voices.glide = this.makeVoice(noise, "lowpass", 1200);
       this.voices.carving = this.makeVoice(noise, "bandpass", 1500);
       this.voices.ice = this.makeVoice(noise, "highpass", 2500);
@@ -55,6 +59,18 @@ export class SkiAudio {
       last = (last + (Math.random() - 0.5) * 0.06) / 1.025;
       data[i] = Math.max(-1, Math.min(1, last * 4));
     }
+    return buffer;
+  }
+
+  /** Short broadband fibreglass and fabric impulse for contact with gates.
+   * Generated locally: no sound copied from the reference game.
+   */
+  private makeImpactNoise() {
+    const ctx = this.ctx!;
+    const buffer = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * 0.45), ctx.sampleRate);
+    const samples = buffer.getChannelData(0);
+    for (let i = 0; i < samples.length; i++)
+      samples[i] = (Math.random() * 2 - 1) * (0.8 + 0.2 * Math.random());
     return buffer;
   }
 
@@ -156,27 +172,83 @@ export class SkiAudio {
     this.fade(this.looped[name]?.gain, this.crowdProximity * 0.25, 0.5);
   }
 
-  impact(speed: number, side: number) {
+  impact(speed: number, side: number, banner = false) {
     if (!this.ctx || !this.master) return;
-    const buffer = this.buffers.pole;
-    if (!buffer) {
-      this.tone(140, 0.055);
-      return;
-    }
-    const source = this.ctx.createBufferSource(),
-      gain = this.ctx.createGain(),
-      pan = this.ctx.createStereoPanner();
-    source.buffer = buffer;
-    source.playbackRate.value = 0.93 + Math.random() * 0.14;
-    gain.gain.value = Math.min(0.8, 0.2 + speed * 0.018);
-    pan.pan.value = Math.max(-0.8, Math.min(0.8, side * 0.6));
-    source.connect(gain).connect(pan).connect(this.master);
-    source.start();
-    source.onended = () => {
-      source.disconnect();
-      gain.disconnect();
-      pan.disconnect();
+    const ctx = this.ctx;
+    const now = ctx.currentTime;
+    // Prevent duplicated snaps from closely spaced collision frames.
+    if (now - this.lastImpactSeconds < 0.055) return;
+    this.lastImpactSeconds = now;
+    const mix = poleImpactMix(speed, banner);
+    const pan = ctx.createStereoPanner();
+    pan.pan.value = Math.max(-0.8, Math.min(0.8, side * 0.65));
+    pan.connect(this.master);
+    let playing = 0;
+    const cleanup = () => { if (--playing <= 0) pan.disconnect(); };
+    const noiseBurst = (
+      gainAmount: number, frequency: number, duration: number,
+      delay: number,
+    ) => {
+      if (!this.impactNoise || gainAmount <= 0) return;
+      const source = ctx.createBufferSource();
+      const filter = ctx.createBiquadFilter();
+      const amp = ctx.createGain();
+      source.buffer = this.impactNoise;
+      filter.type = "bandpass";
+      filter.frequency.value = frequency;
+      filter.Q.value = 0.9;
+      const begin = now + delay;
+      amp.gain.setValueAtTime(0.0001, begin);
+      amp.gain.exponentialRampToValueAtTime(
+        Math.max(0.00011, gainAmount), begin + 0.006,
+      );
+      amp.gain.exponentialRampToValueAtTime(0.0001, begin + duration);
+      source.connect(filter).connect(amp).connect(pan);
+      playing++;
+      source.start(begin, Math.random() * 0.12);
+      source.stop(begin + duration + 0.005);
+      source.onended = () => {
+        source.disconnect();
+        filter.disconnect();
+        amp.disconnect();
+        cleanup();
+      };
     };
+    // High-frequency crack, optional fabric snap, and a short spring resonance.
+    noiseBurst(mix.crack, 1400 + Math.min(1500, speed * 26), 0.105, 0);
+    noiseBurst(mix.cloth, 670, 0.23, 0.015);
+    const resonance = ctx.createOscillator();
+    const envelope = ctx.createGain();
+    resonance.type = "triangle";
+    resonance.frequency.setValueAtTime(380 + Math.min(240, speed * 6), now);
+    resonance.frequency.exponentialRampToValueAtTime(135, now + 0.12);
+    envelope.gain.setValueAtTime(Math.max(0.0001, mix.body), now);
+    envelope.gain.exponentialRampToValueAtTime(0.0001, now + 0.16);
+    resonance.connect(envelope).connect(pan);
+    playing++;
+    resonance.start(now);
+    resonance.stop(now + 0.17);
+    resonance.onended = () => {
+      resonance.disconnect();
+      envelope.disconnect();
+      cleanup();
+    };
+    // Keep the original ElevenLabs impact, layered under the new sound.
+    const recording = this.buffers.pole;
+    if (recording) {
+      const source = ctx.createBufferSource(), gain = ctx.createGain();
+      source.buffer = recording;
+      source.playbackRate.value = mix.playbackRate * (0.97 + Math.random() * 0.06);
+      gain.gain.value = Math.min(0.42, 0.13 + speed * 0.008);
+      source.connect(gain).connect(pan);
+      playing++;
+      source.start();
+      source.onended = () => {
+        source.disconnect();
+        gain.disconnect();
+        cleanup();
+      };
+    }
   }
 
   tone(freq: number, duration = 0.12) {

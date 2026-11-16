@@ -132,3 +132,17 @@ Ce personnage est un modèle de compétition **plus réaliste en silhouette et �
 Le modèle de skieur professionnel de la V1.3 est conservé, avec ses 18 articulations et ses animations. Un problème du panier de bâton a été corrigé : l'ancien objet mesurait **3 mètres** de large dans le code et pouvait dénaturer la silhouette en caméra rapprochée. Les nouveaux bâtons ont un panier d'environ 13 cm, une poignée et une pointe métallisée aux proportions réelles, ainsi que des protège-mains de slalom. Les dimensions sont définies dans `src/render/equipment-specs.ts` et contrôlées par les tests.
 
 Tout reste accessible dans un navigateur sans Blender : aucune nouvelle dépendance ni texture externe, et les contrôles/chronos sont préservés.
+
+## V1.4 — ambiance et portes inspirées d'une vidéo de référence fournie par le joueur
+
+L'utilisateur a fourni un enregistrement de 55 s (1920 × 1038, 30 i/s, piste de **Giant Slalom**) montrant une piste ouverte dans une vallée enneigée, de grands massifs, des sapins foncés, des filets orange et des piquets rouges/bleus avec fanions. La V1.4 reproduit **des caractéristiques visuelles et de gameplay génériques**, pas les ressources du jeu filmé :
+
+- **Fibreglass rouge/bleu** : textures procédurales originales sur les piquets en résine, avec dégradés, bandes de contrôle et renforts à la base.
+- **Fanions GS/SG/DH** : nouveaux tissus signés ALPINE SKI PRO, courts et intégrés aux axes flexibles des piquets. Ils battent doucement et réagissent à leur torsion. Le **SL conserve ses simples piquets sans fanion**, comme dans les compétitions réelles.
+- **Forêts** : épicéas plus verts et plus contrastés, avec neige placée sur certaines branches au lieu d'un rendu entièrement bleu-blanc.
+- **Audio de contact** : petit craquement et résonance du piquet générés localement, renforcés par un froissement synthétique de tissu sur les portes GS/SG/DH. Le son original ElevenLabs `pole.mp3` reste superposé, sans reprendre celui de la vidéo.
+- **Physique** : les pivots avec ressort et amortissement déjà présents continuent de contrôler la déformation visuelle et le léger échange d'impulsion; courses, algorithme de carving et timing inchangés pour préserver les records existants.
+
+**ElevenLabs** : une génération originale *carving sur neige dure* de 7 s a abouti sur le flow existant (ID `twV2FljboNunWB9zOUVI`) mais le MP3 n'a pas pu être importé depuis son URL signée dans le dépôt. Le jeu utilise donc toujours son mixage local dynamique et ses sons ElevenLabs préexistants. Le son généré est disponible dans le compte ElevenLabs : https://elevenlabs.io/app/flows/3a7o6vXZTCRaMICykpbt .
+
+Les assets du jeu filmé ne sont pas copiés et aucun photoréalisme AAA n'est annoncé.
