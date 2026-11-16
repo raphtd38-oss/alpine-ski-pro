@@ -198,7 +198,7 @@ export class Renderer {
       const chaseBlend = 1 - Math.exp(-dt * (this.menu ? 2 : 7));
       const focusBlend = 1 - Math.exp(-dt * (this.menu ? 2 : 9));
       this.camera.setPosition(
-        this.camera.getPosition().clone().lerp(eye, chaseBlend),
+        this.camera.getPosition().clone().lerp(this.camera.getPosition(), eye, chaseBlend),
       );
       if (!this.smoothedLook) this.smoothedLook = look.clone();
       else this.smoothedLook.lerp(this.smoothedLook, look, focusBlend);
