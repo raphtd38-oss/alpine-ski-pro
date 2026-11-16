@@ -13,7 +13,10 @@
     "format": "prettier --write src tests scripts/*.mjs *.ts *.json *.html docs/*.md README.md AGENTS.md",
     "assets:verify": "node scripts/check_skier.mjs",
     "prebuild": "npm run assets && npm run assets:verify",
-    "assets:alpine": "node scripts/fetch_alpine_assets.mjs"
+    "assets:alpine": "node scripts/fetch_alpine_assets.mjs",
+    "assets:search": "node scripts/asset_search.mjs",
+    "assets:doctor": "node scripts/asset_tools.mjs doctor",
+    "assets:audit": "node scripts/asset_audit.mjs"
   },
   "dependencies": {
     "@fontsource/barlow": "^5.3.0",
