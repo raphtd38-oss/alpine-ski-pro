@@ -42,6 +42,7 @@ async function boot() {
     EQUIPMENT[settings.equipment],
     settings.quality,
     settings.weather,
+    settings.autoPerformance,
   );
   renderer.athlete.paint(settings.suit);
   audio.setEnabled(settings.sound);
@@ -77,6 +78,7 @@ async function boot() {
       EQUIPMENT[settings.equipment],
       settings.quality,
       settings.weather,
+      settings.autoPerformance,
     );
     renderer.athlete.paint(settings.suit);
     ui.updateCourse();
@@ -239,6 +241,7 @@ async function boot() {
       );
     ui.text("time", formatTime(replaying ? replayTime : race.time));
     ui.text("speed", String(Math.round(Math.hypot(state.vx, state.vz) * 3.6)));
+    ui.text("fps-meter", `${Math.round(renderer.fps)} FPS · RENDU ${Math.round(renderer.renderScale * 100)}%`);
     ui.text(
       "gates",
       `${race.nextGate - race.missed} / ${race.course.gates.length}`,
