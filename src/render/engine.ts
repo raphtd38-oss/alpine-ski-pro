@@ -150,6 +150,9 @@ export class Renderer {
     }
     dt = Math.min(0.1, dt);
     this.athlete.update(f, this.course, dt);
+    if (this.course.id === "SG")
+      this.world.updateStartWands(f.startPush ?? 0, f.z,
+        !this.menu && (active || f.z > 3.15));
     // Keep the banner visible on the start line, hide it once accelerating
     // so it cannot obstruct the chase view; restore it for the next start.
     if (this.world.startArch)
@@ -189,9 +192,11 @@ export class Renderer {
       );
       look = target;
     } else {
-      const distance = this.cameraMode === 1 ? 4.8 : 8.6 + speed * 0.065;
+      const inStartHouse = this.course.id === "SG" && f.z < 12;
+      const distance = inStartHouse ? 5.3 :
+        this.cameraMode === 1 ? 4.8 : 8.6 + speed * 0.065;
       eye = target.clone().sub(forward.clone().mulScalar(distance));
-      eye.y = y + (this.cameraMode === 1 ? 3 : 5);
+      eye.y = y + (inStartHouse ? 2.55 : this.cameraMode === 1 ? 3 : 5);
       look = target.clone().add(new pc.Vec3(s.vx * 0.12, -0.45, 6.5));
     }
     eye.y = Math.max(eye.y, terrainHeight(eye.x, eye.z, this.course) + 0.7);
