@@ -7,7 +7,7 @@ import {
   type Course,
   type Equipment,
 } from "./types";
-import { gradient, terrainHeight } from "./course";
+import { gradient, terrainHeight, courseCenterX } from "./course";
 import { shouldLaunchAtCrest } from "./superg";
 import {
   nextSkid,
@@ -230,8 +230,9 @@ export function stepPhysics(
     }
   }
   const bound = c.width / 2 - 0.7;
-  if (Math.abs(s.x) > bound) {
-    s.x = clamp(s.x, -bound, bound);
+  const centre = courseCenterX(s.z, c);
+  if (Math.abs(s.x - centre) > bound) {
+    s.x = centre + clamp(s.x - centre, -bound, bound);
     s.vx *= -0.15;
     s.vz *= 0.65;
     s.fallen = 1.5;
