@@ -5,11 +5,11 @@
  * its gradient, the carving solver and automatic airborne motion.
  */
 export const SUPER_G_ROLLERS = [
-  { z: 316, width: 17, height: 4.1, name: "Crête des Aiguilles" },
-  { z: 675, width: 18, height: 4.8, name: "Saut du Glacier" },
-  { z: 1085, width: 16, height: 3.7, name: "Dos d'Âne" },
-  { z: 1415, width: 18, height: 4.7, name: "Table de la Combe" },
-  { z: 1685, width: 22, height: 3.2, name: "Cassure du Mur" },
+  { z: 316, width: 14, height: 5.0, name: "Crête des Aiguilles" },
+  { z: 675, width: 15, height: 5.7, name: "Saut du Glacier" },
+  { z: 1085, width: 14, height: 4.9, name: "Dos d'Âne" },
+  { z: 1415, width: 16, height: 5.8, name: "Table de la Combe" },
+  { z: 1685, width: 18, height: 4.5, name: "Cassure du Mur" },
 ] as const;
 const COMPRESSION_ZONES = [
   { z: 245, width: 35, depth: 1.9 },
@@ -41,8 +41,8 @@ export function shouldLaunchAtCrest(
   grounded: boolean,
 ): boolean {
   return (courseId === "SG" || courseId === "DH") &&
-    grounded && speed > 16 && curvature < -0.013 &&
-    1 + (speed * speed * curvature) / 9.81 < 0.18;
+    grounded && speed > 16 && curvature < -0.012 &&
+    1 + (speed * speed * curvature) / 9.81 < 0.65;
 }
 
 /** A short, damped double-pole push, only at the race start. */
