@@ -59,12 +59,16 @@ test("World-Cup-style Super-G start house, four-pole flags and terrain crest", a
     const api = (window as any).__ski;
     const neutral = { steer: 0, tuck: false, brake: false, jump: false };
     for (let i = 0; i < 28000; i++) {
-      if (api.getState().z > api.getCourse().length - 14) break;
-      api.step(1, neutral);
+      const st = api.getState(), c = api.getCourse();
+      if (st.z > c.length - 14) break;
+      const next = c.gates[st.gate] || { x: 0, z: c.length };
+      const heading = Math.atan2(next.x - st.x, Math.max(24, next.z - st.z));
+      const steer = Math.max(-0.95, Math.min(0.95, (heading - st.heading) * 2.5));
+      api.step(1, { ...neutral, steer, brake: st.vz > 30 });
     }
     return api.getState();
   });
-  expect(finalApproach.z).toBeGreaterThan(1900);
+  expect(finalApproach.z, JSON.stringify(finalApproach)).toBeGreaterThan(1900);
   await page.waitForTimeout(60);
   await page.screenshot({ path: "test-results/superg-last-turn.png" });
 
@@ -73,8 +77,12 @@ test("World-Cup-style Super-G start house, four-pole flags and terrain crest", a
     const api = (window as any).__ski;
     const neutral = { steer: 0, tuck: false, brake: false, jump: false };
     for (let i = 0; i < 28000; i++) {
-      if (api.getState().phase === "finished") break;
-      api.step(1, neutral);
+      const st = api.getState(), c = api.getCourse();
+      if (st.phase === "finished") break;
+      const next = c.gates[st.gate] || { x: 0, z: c.length };
+      const heading = Math.atan2(next.x - st.x, Math.max(24, next.z - st.z));
+      const steer = Math.max(-0.95, Math.min(0.95, (heading - st.heading) * 2.5));
+      api.step(1, { ...neutral, steer, brake: st.vz > 30 });
     }
     return api.getState();
   });
