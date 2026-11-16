@@ -5,8 +5,8 @@ import type {
   RacePhase,
   Result,
   SkierState,
-  angleDiff,
 } from "./types";
+import { angleDiff } from "./types";
 export class Race {
   phase: RacePhase = "ready";
   time = 0;
