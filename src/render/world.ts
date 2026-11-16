@@ -418,6 +418,33 @@ export class World {
     }
   }
 
+  /** Original curved textile panel: thin woven fabric rather than a
+   * rectangular box. Tessellation and seam shading are baked once, with
+   * shared 1024px textile materials; hinges retain elastic pole movement. */
+  fabricFlag(parent: pc.Entity, side: number, textile: pc.StandardMaterial) {
+    const p: number[] = [], uv: number[] = [], idx: number[] = [];
+    const nx = 8, ny = 4, width = 0.79, height = 0.5;
+    for (let y = 0; y <= ny; y++)
+      for (let x = 0; x <= nx; x++) {
+        const u = x / nx, v = y / ny;
+        const fold = 0.040 * Math.sin(u * Math.PI) *
+          Math.sin(v * Math.PI * 1.65) +
+          0.012 * Math.sin(u * Math.PI * 4 + v * Math.PI);
+        p.push(side * width * u, 1.20 + height * v,
+          -0.08 + fold);
+        uv.push(u, 1 - v);
+      }
+    for(let y=0;y<ny;y++)
+      for(let x=0;x<nx;x++) {
+        const a = y * (nx+1) + x, b = a + nx + 1;
+        idx.push(a, b, a + 1, a + 1, b, b + 1);
+      }
+    const flag = meshEntity(this.app.graphicsDevice, parent,
+      "Gate textile flag", p, idx, textile, undefined, uv);
+    flag.render!.castShadows = false;
+    return flag;
+  }
+
   gates() {
     for (const g of this.course.gates) {
       const parent = new pc.Entity(`Gate ${g.id + 1}`);
@@ -462,12 +489,7 @@ export class World {
             [0.034, 1.88, 0.034], m,
           );
           partner.render!.castShadows = this.quality !== "low";
-          const banner = shape(
-            pivot, "box", "Gate textile flag",
-            [side * 0.40, 1.45, -0.08],
-            [0.79, 0.5, 0.026], textile,
-          );
-          banner.render!.castShadows = false;
+          this.fabricFlag(pivot, side, textile);
         }
       }
       this.gateEntities.push(parent);
