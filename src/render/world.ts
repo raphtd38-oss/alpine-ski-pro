@@ -6,7 +6,7 @@ import { sampleSnowSurface } from "../game/surface";
 import { snowTexel } from "./snow-texture";
 import { gatePoleCanvas, gateBannerCanvas } from "./gate-textures";
 import { gateFlagFlutter, textureFlagWidth } from "../game/gates-visual";
-import type { PoleState } from "../game/poles";
+import { tipVibration, type PoleState } from "../game/poles";
 import type { Course, Quality, Weather } from "../game/types";
 import { material, meshEntity, shape, beam, rng, color } from "./geometry";
 export class World {
@@ -865,9 +865,11 @@ export class World {
             (e) => e.name === "Pole elastic upper section",
           );
           if (elasticTip) elasticTip.setLocalEulerAngles(
-            ((p.angleX * 0.24 + p.omegaX * 0.022) * 180) / Math.PI,
+            ((p.angleX * 0.24 + p.omegaX * 0.022 +
+              tipVibration(p) * 0.65) * 180) / Math.PI,
             0,
-            ((p.angleZ * 0.24 + p.omegaZ * 0.022) * 180) / Math.PI,
+            ((p.angleZ * 0.24 + p.omegaZ * 0.022 +
+              tipVibration(p) * 0.35) * 180) / Math.PI,
           );
           const cloth = hinge.children.find((e) => e.name === "Gate textile flag");
           if (cloth)
