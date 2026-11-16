@@ -74,14 +74,21 @@ export class PoleSimulation {
         s.vx -= (nx * impulse) / skierMass;
         s.vz = Math.max(0, s.vz - (nz * impulse) / skierMass);
         s.balance = clamp(s.balance - impulse * 0.004, 0, 1);
+        // Trigger an upper-body recoil without disturbing ski-crossing rules.
+        s.poleImpact = Math.max(s.poleImpact, clamp(impulse / 3.6, 0, 1));
         p.impacts++;
         this.lastImpacts++;
       }
       p.contact = inside;
+      // Fibreglass bends more strongly near the limit and settles without
+      // infinite ringing. The dynamics remain deterministic at 120 Hz.
+      const bend = Math.hypot(p.angleX, p.angleZ);
+      const restoring = this.spring * (1 + bend * bend * 0.24);
+      const damping = this.damping * (1 + bend * 0.18);
       p.omegaX +=
-        ((-this.spring * p.angleX - this.damping * p.omegaX) / inertia) * dt;
+        ((-restoring * p.angleX - damping * p.omegaX) / inertia) * dt;
       p.omegaZ +=
-        ((-this.spring * p.angleZ - this.damping * p.omegaZ) / inertia) * dt;
+        ((-restoring * p.angleZ - damping * p.omegaZ) / inertia) * dt;
       p.angleX += p.omegaX * dt;
       p.angleZ += p.omegaZ * dt;
       const tilt = Math.hypot(p.angleX, p.angleZ),
