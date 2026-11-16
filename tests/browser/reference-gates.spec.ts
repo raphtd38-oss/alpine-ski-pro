@@ -9,7 +9,7 @@ test("reference visual upgrade: textured flexible SL poles and decorated GS gate
   expect(sl.course).toBe("SL");
   expect(sl.texturedGatePoles).toBe(44);
   expect(sl.gateFlagCount).toBe(0);
-  await page.locator('[data-nav="courses"]').click();
+  await page.locator('header [data-nav="courses"]').click();
   await page.locator('[data-course="GS"]').click();
   await page.locator("#play").click();
   await page.waitForFunction(() => {
