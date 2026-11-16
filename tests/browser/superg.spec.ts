@@ -10,6 +10,7 @@ test("World-Cup-style Super-G start house, four-pole flags and terrain crest", a
   const setup = await page.evaluate(() => (window as any).__ski.getState());
   // Menu selections rebuild the render scene; race.course switches at start.
   expect(setup.startHouse).toBe(true);
+  expect(setup.blueBorderDye).toBe(true);
   expect(setup.timingWands).toBe(2);
   expect(setup.pairedGatePoles).toBe(68);
   expect(setup.gateFlagCount).toBe(68);
@@ -53,8 +54,21 @@ test("World-Cup-style Super-G start house, four-pole flags and terrain crest", a
   await page.waitForTimeout(200);
   await page.screenshot({ path: "test-results/superg-airborne.png" });
 
-  // Verify that the complete long Super-G is finishable, then inspect the
-  // celebratory arm motion before the results overlay appears.
+  // Check the last turn and show the blue-dyed sides before the photo-finish.
+  const finalApproach = await page.evaluate(() => {
+    const api = (window as any).__ski;
+    const neutral = { steer: 0, tuck: false, brake: false, jump: false };
+    for (let i = 0; i < 28000; i++) {
+      if (api.getState().z > api.getCourse().length - 14) break;
+      api.step(1, neutral);
+    }
+    return api.getState();
+  });
+  expect(finalApproach.z).toBeGreaterThan(1900);
+  await page.waitForTimeout(60);
+  await page.screenshot({ path: "test-results/superg-last-turn.png" });
+
+  // Verify that the entire Super-G reaches the finish photoelectric beam.
   const finish = await page.evaluate(() => {
     const api = (window as any).__ski;
     const neutral = { steer: 0, tuck: false, brake: false, jump: false };
@@ -66,11 +80,13 @@ test("World-Cup-style Super-G start house, four-pole flags and terrain crest", a
   });
   expect(finish.phase).toBe("finished");
   expect(finish.gate).toBe(34);
+  expect(finish.finishBeamTime).not.toBeNull();
+  expect(finish.finishBeamTriggeredBy).toBe("hand");
   await page.waitForFunction(
     () => (window as any).__ski.getState().celebrationTime > 0.45,
     {}, { timeout: 15000 },
   );
-  await page.screenshot({ path: "test-results/superg-finish-gesture.png" });
+  await page.screenshot({ path: "test-results/superg-finish-reach.png" });
   await expect(page.locator("#modal")).toBeVisible({ timeout: 15000 });
   expect(errors).toEqual([]);
 });
