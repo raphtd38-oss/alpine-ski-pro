@@ -104,3 +104,13 @@ Le projet n'est **pas terminé**. Pas de certification FIS, pas de sponsoring Au
 - Neige PBR générée localement : relief micro-normal plus fin, sillons de damage moins agressifs, carte de rugosité et matériaux conservés dans la gestion des ressources.
 - Générations des quatre MP3 ElevenLabs réessayées une fois dans une nouvelle session, mais le service est encore saturé (« Free generations are busy right now ») ; aucun nouveau son disponible, aucun débit. Bruitages de synthèse toujours fonctionnels.
 - Tests unitaires surface/texture ajoutés, et CI navigateur à vérifier avant publication.
+
+## Mise à jour V1.2 — 16 novembre 2026
+
+- Nouvelle trajectoire de référence calculée par interpolation cubique Hermite, rendue par un unique mesh translucide, activée **uniquement** en entraînement.
+- HUD de prochaine porte, avec distance en mètres.
+- Nouveau replay : sélecteur de vitesse 0,5× / 1× / 2×, chronologie et navigation ; rotation interpolée sur le plus court arc.
+- Skieur : accessoires originaux liés aux articulations du GLB et gestes brefs de plantation du bâton en transition.
+- Particules de neige : billboards face à la caméra, retombée sur le terrain, suppression des maillages vides, cadences/budgets préservés.
+- Nouveaux tests unitaires trajectoire/replay, tests Playwright des contrôles de replay et du mode entraînement.
+- Aucun code ou asset de CarveMania incorporé, aucun nouveau MP3 ElevenLabs. Tests et publication à vérifier avant annonce de disponibilité.
