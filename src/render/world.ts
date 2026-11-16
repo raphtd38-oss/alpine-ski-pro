@@ -30,6 +30,7 @@ export class World {
   redFlag: pc.StandardMaterial;
   blueFlag: pc.StandardMaterial;
   gateVisualTime = 0;
+  blueBorderDye = false;
   constructor(
     public app: pc.Application,
     public course: Course,
@@ -554,6 +555,7 @@ export class World {
    * crossing bars at compressions/crests. Painted on the real sampled terrain.
    * A single batched mesh, rather than hundreds of draw calls. */
   superGBlueDye() {
+    this.blueBorderDye = true;
     const p: number[] = [], indices: number[] = [];
     const meshQuad = (
       ax: number, az: number, bx: number, bz: number, width: number,
