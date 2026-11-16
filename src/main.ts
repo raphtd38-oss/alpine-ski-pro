@@ -445,6 +445,7 @@ async function boot() {
           course: race.course.id,
           fps: renderer.fps,
           guideActive: Boolean(renderer.world.trainingGuide?.enabled),
+          startArchVisible: Boolean(renderer.world.startArch?.enabled),
           gateFlagCount: renderer.world.gateEntities.reduce(
             (count, gate) => count + gate.children.reduce(
               (flags, pivot) => flags + pivot.children.filter(
