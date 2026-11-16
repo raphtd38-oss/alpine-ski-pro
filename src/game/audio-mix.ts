@@ -9,6 +9,15 @@ export interface SkiSoundMix {
   wind: number;
   filterHz: number;
   windFilterHz: number;
+  /** Broadband chatter of edges on frozen snow. */
+  rattle: number;
+  /** Soft snow hiss from deeper shoulder snow. */
+  powder: number;
+}
+export interface SkiSoundExtra {
+  chatter?: number;
+  skid?: number;
+  depth?: number;
 }
 const clamp = (n: number, min: number, max: number) =>
   Math.min(max, Math.max(min, n));
@@ -18,8 +27,12 @@ export function computeSkiSoundMix(
   slip: number,
   active: boolean,
   snowGrip = 1,
+  extra: SkiSoundExtra = {},
 ): SkiSoundMix {
-  if (!active) return { glide: 0, carving: 0, ice: 0, wind: 0, filterHz: 280, windFilterHz: 550 };
+  if (!active) return {
+    glide: 0, carving: 0, ice: 0, wind: 0, filterHz: 280,
+    windFilterHz: 550, rattle: 0, powder: 0,
+  };
   const v = clamp(Number.isFinite(speed) ? speed : 0, 0, 70);
   const e = clamp(Number.isFinite(edge) ? Math.abs(edge) : 0, 0, 1.5);
   const s = clamp(Number.isFinite(slip) ? slip : 0, 0, 30);
@@ -35,9 +48,18 @@ export function computeSkiSoundMix(
     skid * speedFactor * clamp((1.3 - grip) / 0.5, 0.1, 1) +
       brittleEdge, 0, 1,
   );
+  const safe = (n: number | undefined) =>
+    clamp(Number.isFinite(n) ? (n as number) : 0, 0, 1);
+  const rattle = safe(extra.chatter) * speedFactor *
+    (0.6 + safe(extra.skid) * 0.4);
+  const powder = safe(extra.depth) * clamp(v / 18, 0, 1) *
+    (0.5 + 0.5 * clamp(e / 0.6, 0, 1));
   return {
+    rattle: clamp(rattle * 0.36, 0, 0.36),
+    powder: clamp(powder * 0.40, 0, 0.40),
     glide: clamp(v / 40, 0, 0.55),
-    carving: clamp(carving * (1 - ice * 0.3), 0, 0.6),
+    carving: clamp(carving * (1 - ice * 0.3) *
+      (1 - safe(extra.depth) * 0.6), 0, 0.6),
     ice: clamp(ice * 0.55, 0, 0.55),
     wind: clamp((v - 5) / 36, 0, 0.52),
     filterHz: 250 + v * 35 + s * 75,

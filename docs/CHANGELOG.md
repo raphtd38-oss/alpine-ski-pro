@@ -1,3 +1,14 @@
+## 1.6.0 — 16 novembre 2026 — intégration sélective des fichiers fournis
+
+- Nouvel état `skid` avec perte puis récupération progressive d'adhérence, effet réduit pour rester jouable ; prise de carre progressive conservée.
+- Mesure de `pressure` depuis la courbure du terrain, compression visuelle du skieur, légère vibration de caméra et FOV croissant avec la vitesse.
+- Zones de neige fraîche/poudreuse déterministes sur les bords de piste et sous la neige, avec adhérence et freinage spécifiques ; affichage du type de neige dans le HUD.
+- Distinction des chocs de protections de tibia et de bras sur les piquets, résonance élastique amortie de leur pointe supérieure et réactions corporelles déjà existantes conservées.
+- Deux nouvelles couches de son procédural (vibration des carres et souffle de poudreuse), sans remplacer les MP3 ElevenLabs intégrés.
+- Deux nouveaux canaux optionnels dans les replays, compatibles avec les sauvegardes V1.5.
+- Tests de non-régression et validations GitHub Actions avant publication.
+- Éléments issus de deux propositions utilisateurs (`alpine-ski-pro-v1.5.patch` et `alpine-ski-pro-v1.5-fichiers.zip`) intégrés de manière sélective, sans écraser l'avatar V1.5.
+
 ## 1.5.0 — 16 novembre 2026
 
 - Carving : transfert de poids dépendant de la vitesse, adhérence modulée par la charge et vibrations déterministes sur neige dure.

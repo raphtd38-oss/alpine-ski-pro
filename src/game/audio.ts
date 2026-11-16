@@ -1,4 +1,4 @@
-import { computeSkiSoundMix, type SkiSoundMix } from "./audio-mix";
+import { computeSkiSoundMix, type SkiSoundMix, type SkiSoundExtra } from "./audio-mix";
 import { poleImpactMix } from "./pole-sound";
 
 /**
@@ -22,7 +22,10 @@ export class SkiAudio {
   enabled = true;
   buffers: Partial<Record<SoundName, AudioBuffer>> = {};
   looped: Partial<Record<LoopName, BufferLoop>> = {};
-  voices: Partial<Record<"glide" | "carving" | "ice" | "wind", NoiseVoice>> = {};
+  voices: Partial<Record<
+    "glide" | "carving" | "ice" | "wind" | "rattle" | "powder",
+    NoiseVoice
+  >> = {};
   loaded = false;
   menuActive = true;
   crowdProximity = 0;
@@ -42,6 +45,8 @@ export class SkiAudio {
       this.voices.carving = this.makeVoice(noise, "bandpass", 1500);
       this.voices.ice = this.makeVoice(noise, "highpass", 2500);
       this.voices.wind = this.makeVoice(noise, "lowpass", 600);
+      this.voices.rattle = this.makeRattleVoice(noise);
+      this.voices.powder = this.makeVoice(noise, "lowpass", 900);
       this.gain = this.voices.glide.gain;
       this.filter = this.voices.glide.filter;
       void this.loadAssets();
@@ -85,6 +90,29 @@ export class SkiAudio {
     gain.gain.value = 0;
     source.connect(filter).connect(gain).connect(this.master!);
     source.start();
+    return { source, filter, gain };
+  }
+
+  /** A small 38-Hz gated filtered-noise layer for hard-snow vibration. */
+  private makeRattleVoice(buffer: AudioBuffer): NoiseVoice {
+    const ctx = this.ctx!;
+    const source = ctx.createBufferSource(), filter = ctx.createBiquadFilter(),
+      chopped = ctx.createGain(), gain = ctx.createGain(),
+      lfo = ctx.createOscillator(), depth = ctx.createGain();
+    source.buffer = buffer;
+    source.loop = true;
+    filter.type = "bandpass";
+    filter.Q.value = 1.4;
+    filter.frequency.value = 2600;
+    chopped.gain.value = 0.55;
+    lfo.type = "square";
+    lfo.frequency.value = 38;
+    depth.gain.value = 0.45;
+    lfo.connect(depth).connect(chopped.gain);
+    gain.gain.value = 0;
+    source.connect(filter).connect(chopped).connect(gain).connect(this.master!);
+    source.start();
+    lfo.start();
     return { source, filter, gain };
   }
 
@@ -143,6 +171,11 @@ export class SkiAudio {
       this.fade(this.voices[name]?.gain, level * (hasFile ? 0.18 : 0.7), 0.09);
     };
     this.fade(this.voices.glide?.gain, mix.glide * 0.9, 0.09);
+    this.fade(this.voices.rattle?.gain, mix.rattle, 0.06);
+    this.fade(this.voices.powder?.gain, mix.powder, 0.16);
+    this.voices.rattle?.filter.frequency.setTargetAtTime(
+      2200 + mix.filterHz * 0.5, this.ctx.currentTime, 0.1,
+    );
     sample("carving", mix.carving);
     sample("ice", mix.ice);
     sample("wind", mix.wind);
@@ -155,8 +188,9 @@ export class SkiAudio {
     );
   }
 
-  update(speed: number, edge: number, slip: number, active: boolean, snowGrip = 1) {
-    this.lastMix = computeSkiSoundMix(speed, edge, slip, active, snowGrip);
+  update(speed: number, edge: number, slip: number, active: boolean,
+    snowGrip = 1, extra: SkiSoundExtra = {}) {
+    this.lastMix = computeSkiSoundMix(speed, edge, slip, active, snowGrip, extra);
     this.applyMix(this.lastMix);
   }
 
@@ -172,14 +206,15 @@ export class SkiAudio {
     this.fade(this.looped[name]?.gain, this.crowdProximity * 0.25, 0.5);
   }
 
-  impact(speed: number, side: number, banner = false) {
+  impact(speed: number, side: number, banner = false,
+    kind: "shin" | "arm" = "shin") {
     if (!this.ctx || !this.master) return;
     const ctx = this.ctx;
     const now = ctx.currentTime;
     // Prevent duplicated snaps from closely spaced collision frames.
     if (now - this.lastImpactSeconds < 0.055) return;
     this.lastImpactSeconds = now;
-    const mix = poleImpactMix(speed, banner);
+    const mix = poleImpactMix(speed, banner, kind);
     const pan = ctx.createStereoPanner();
     pan.pan.value = Math.max(-0.8, Math.min(0.8, side * 0.65));
     pan.connect(this.master);

@@ -152,3 +152,22 @@ Référence : vidéos fournies par le joueur le 16 novembre (55 s Giant Slalom e
 - Tests ajoutés pour pression extérieure, neige dure, collision et rétrocompatibilité des replays ; contrôle du nombre de sections de piquets dans Chromium.
 - **Validation / publication :** se référer à la PR et aux checks GitHub Actions. Ce texte ne revendique pas la réussite des tests avant lecture de leurs résultats.
 - Limitations : modèle 3D toujours procédural et semi-réaliste, non AAA. Aucune mesure de FPS sur GPU joueur ; l'animation des piquets ajoute un mesh léger par piquet.
+
+## V1.6 — intégration sélective des fichiers ZIP et patch utilisateur
+
+Source : `alpine-ski-pro-v1.5-fichiers.zip` et `alpine-ski-pro-v1.5.patch` fournis en conversation le 16 novembre 2026. Le patch cible la V1.4 et contient aussi des modifications V1.5 déjà développées sur main ; ces copies ne sont pas reprises littéralement pour éviter les régressions.
+
+### Changements codés
+
+- Hystérésis douce (`src/game/carving.ts`) : perte puis reprise de l'adhérence avec transitions amorties, sans remplacer l'appui extérieur V1.5 ; effet sur `slip` et sur l'énergie perdue.
+- `pressure` calculé à partir des ondulations du terrain et répercuté dans la posture du skieur, son crouch et le champ visuel.
+- Épaisseur `depth` de neige molle dans `sampleSnowSurface`, sensible près des filets et en météo neige ; effets sur freinage/adhérence et indication au HUD.
+- Caméra : vitesse/FOV et micro-vibration du chatter ; position sans vibration mémorisée pour éviter la dérive caméra au cours des frames.
+- Piquets : collision plus forte au centre, glissement latéral très limité, classification simple protection tibia / bras et vibrato de l'extrémité supérieure en plus de la charnière existante.
+- Audio : `rattle` et `powder` générés par Web Audio ; variations de choc selon la zone de contact. MP3 ElevenLabs carving 7 s toujours **non intégré**.
+- Pose V1.5 à 18 articulations, replays et tracés conservés ; nouvelles données skid/pressure optionnelles dans les replays.
+- **Validation** : lire le résultat du workflow CI et de GitHub Pages, non présumés ici.
+
+### Limites
+
+Le moteur reste un compromis de jeu navigateur (pas solveur FIS), le modèle de skieur original est toujours stylisé, et l'amélioration vidéo/photo n'est pas une refonte graphique AAA. Les fichiers de l'autre proposition contenaient plusieurs moteurs entiers concurrents : seules leurs meilleures idées compatibles ont été retenues.

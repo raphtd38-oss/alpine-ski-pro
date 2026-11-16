@@ -13,6 +13,7 @@ import type {
 } from "../game/types";
 import { color } from "./geometry";
 import { AdaptiveQuality } from "../game/performance";
+import { cameraShake, speedFov } from "../game/camera-rig";
 export const CAMERAS = ["Poursuite", "Rapprochée", "Subjective", "Télévision"];
 export class Renderer {
   app: pc.Application;
@@ -27,6 +28,8 @@ export class Renderer {
   cameraMode = 0;
   cameraReady = false;
   smoothedLook: pc.Vec3 | null = null;
+  /** Camera world position before local chatter offset, to avoid shake drift. */
+  cleanCameraPos: pc.Vec3 | null = null;
   quality: Quality = "high";
   weather: Weather = "clear";
   menu = true;
@@ -122,6 +125,7 @@ export class Renderer {
     configureWeather(this.app, this.camera, weather);
     this.cameraReady = false;
     this.smoothedLook = null;
+    this.cleanCameraPos = null;
   }
   update(
     s: SkierState,
@@ -146,6 +150,10 @@ export class Renderer {
     }
     dt = Math.min(0.1, dt);
     this.athlete.update(f, this.course, dt);
+    // Keep the banner visible on the start line, hide it once accelerating
+    // so it cannot obstruct the chase view; restore it for the next start.
+    if (this.world.startArch)
+      this.world.startArch.enabled = this.menu || f.z < 7;
     this.ghost.root.enabled = ghostFrame !== null;
     if (ghostFrame) this.ghost.update(ghostFrame, this.course, dt);
     this.effects.update(s, dt, active, this.camera.getPosition());
@@ -197,15 +205,20 @@ export class Renderer {
     } else {
       const chaseBlend = 1 - Math.exp(-dt * (this.menu ? 2 : 7));
       const focusBlend = 1 - Math.exp(-dt * (this.menu ? 2 : 9));
-      this.camera.setPosition(
-        this.camera.getPosition().clone().lerp(this.camera.getPosition(), eye, chaseBlend),
-      );
+      const from = this.cleanCameraPos ?? this.camera.getPosition();
+      this.camera.setPosition(from.clone().lerp(from, eye, chaseBlend));
       if (!this.smoothedLook) this.smoothedLook = look.clone();
       else this.smoothedLook.lerp(this.smoothedLook, look, focusBlend);
     }
+    // Preserve an unshaken position for smoothing next frame.
+    this.cleanCameraPos = this.camera.getPosition().clone();
     this.camera.lookAt(this.smoothedLook!);
+    if (!this.menu && active) {
+      const jitter = cameraShake(s.chatter, s.pressure, speed, f.t);
+      this.camera.translateLocal(jitter.x, jitter.y, jitter.z);
+    }
     const targetFov = this.menu ? 62 : this.cameraMode === 2
-      ? 76 : 58 + Math.min(8, speed * 0.18);
+      ? 76 : speedFov(58, speed);
     this.camera.camera!.fov += (targetFov - this.camera.camera!.fov) *
       (1 - Math.exp(-dt * 5));
     this.athlete.root.enabled = this.menu || this.cameraMode !== 2;

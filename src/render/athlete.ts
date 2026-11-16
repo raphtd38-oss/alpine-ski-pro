@@ -243,10 +243,15 @@ export class Athlete {
     ) * blend;
     const shake = this.visualChatter * Math.sin(f.t * 62) * 0.008;
     const torsoTarget = -edge * (9 + load * 5) +
-      this.visualImpact * (edge >= 0 ? -9 : 9);
+      this.visualImpact * (edge >= 0 ? -9 : 9) -
+      Math.sign(edge) * (f.skid ?? 0) * 5;
     this.visualUpperBody += (torsoTarget - this.visualUpperBody) * blend;
+    const pressureAbsorption = Math.min(0.065,
+      Math.abs((f.pressure ?? 1) - 1) * 0.055);
+    const skidStance = Math.min(0.04, (f.skid ?? 0) * 0.04);
     const crouchTarget = 0.055 + f.tuck * 0.18 +
-      Math.abs(edge) * 0.085 + load * 0.045;
+      Math.abs(edge) * 0.085 + load * 0.045 +
+      pressureAbsorption + skidStance;
     this.visualCrouch += (crouchTarget - this.visualCrouch) * blend;
     const crouch = this.visualCrouch;
     const j = this.joints;
@@ -307,7 +312,8 @@ export class Athlete {
         -f.tuck * 15 + Math.sin(f.t * 3 + i) * Math.abs(edge) * 4 -
           activePlant * 23 - this.visualImpact * 13,
         0,
-        (i === 0 ? -1 : 1) * (8 + Math.abs(edge) * 12),
+        (i === 0 ? -1 : 1) * (8 + Math.abs(edge) * 12 +
+          (f.skid ?? 0) * 13),
       );
       j[side + "Elbow"]?.setLocalEulerAngles(
         -f.tuck * 36 - activePlant * 15, 0, 0);
@@ -321,7 +327,7 @@ export class Athlete {
       surf.mesh.setPositions(vertices);
       surf.mesh.update();
       this.skis[i].setLocalEulerAngles(
-        0, outside * 1.5,
+        outside * (f.skid ?? 0) * 3.5, outside * 1.5,
         -edge * (45 + outsidePressure * 6) + shake * 90,
       );
       this.skis[i].setLocalPosition(

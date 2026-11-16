@@ -9,6 +9,7 @@ import "@fontsource/barlow-condensed/latin-700.css";
 import "./ui/style.css";
 import { COURSES, EQUIPMENT } from "./game/course";
 import { sampleSnowSurface } from "./game/surface";
+import { snowLabel } from "./game/snow-model";
 import {
   FIXED_DT,
   FixedClock,
@@ -74,6 +75,8 @@ async function boot() {
     slip: state.slip,
     chatter: state.chatter,
     poleImpact: state.poleImpact,
+    skid: state.skid,
+    pressure: state.pressure,
     height: state.height,
     tuck: input.sample().tuck ? 1 : 0,
     fallen: state.fallen,
@@ -232,19 +235,23 @@ async function boot() {
     }
     if (race.phase !== "racing") return;
     previous = { ...state };
+    const snow = sampleSnowSurface(state.x, state.z, race.course, settings.weather);
     stepPhysics(
       state,
       control,
       EQUIPMENT[settings.equipment],
       race.course,
       dt,
-      sampleSnowSurface(state.x, state.z, race.course, settings.weather).grip,
+      snow.grip,
+      snow.ice,
+      snow.depth,
     );
     poles.update(previous, state, dt);
     if (poles.lastImpacts)
       audio.impact(
         Math.hypot(state.vx, state.vz), state.edge,
         race.course.id !== "SL",
+        poles.lastImpactKind === "arm" ? "arm" : "shin",
       );
     const oldGate = race.nextGate;
     race.update(previous, state, dt, control.tuck);
@@ -266,9 +273,7 @@ async function boot() {
     ui.text("time", formatTime(replaying ? replayTime : race.time));
     ui.text("speed", String(Math.round(Math.hypot(state.vx, state.vz) * 3.6)));
     const surface = sampleSnowSurface(state.x, state.z, race.course, settings.weather);
-    ui.text("surface-label",
-      surface.ice > 0.38 ? "NEIGE TRÈS DURE" :
-        surface.packed > 0.65 ? "NEIGE COMPACTÉE" : "NEIGE DAMÉE");
+    ui.text("surface-label", snowLabel(surface));
     ui.text("fps-meter", `${Math.round(renderer.fps)} FPS · RENDU ${Math.round(renderer.renderScale * 100)}%`);
     const upcoming = race.course.gates[race.nextGate];
     ui.text("next-gate", upcoming
@@ -350,6 +355,8 @@ async function boot() {
             slip: f.slip ?? 0,
             chatter: f.chatter ?? 0,
             poleImpact: f.poleImpact ?? 0,
+            skid: f.skid ?? 0,
+            pressure: f.pressure ?? 1,
             height: f.height,
             fallen: f.fallen,
             vz: Math.max(0, Math.min(70, (f.z - prevZ) / elapsed)),
@@ -401,6 +408,10 @@ async function boot() {
       state.slip,
       playing && !paused && (replaying || race.phase === "racing"),
       sampleSnowSurface(state.x, state.z, race.course, settings.weather).grip,
+      {
+        chatter: state.chatter, skid: state.skid,
+        depth: sampleSnowSurface(state.x, state.z, race.course, settings.weather).depth,
+      },
     );
     audio.menu(!playing);
     audio.crowd(
@@ -434,6 +445,7 @@ async function boot() {
           course: race.course.id,
           fps: renderer.fps,
           guideActive: Boolean(renderer.world.trainingGuide?.enabled),
+          startArchVisible: Boolean(renderer.world.startArch?.enabled),
           gateFlagCount: renderer.world.gateEntities.reduce(
             (count, gate) => count + gate.children.reduce(
               (flags, pivot) => flags + pivot.children.filter(
