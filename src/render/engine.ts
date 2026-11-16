@@ -12,6 +12,7 @@ import type {
   Weather,
 } from "../game/types";
 import { color } from "./geometry";
+import { AdaptiveQuality } from "../game/performance";
 export const CAMERAS = ["Poursuite", "Rapprochée", "Subjective", "Télévision"];
 export class Renderer {
   app: pc.Application;
@@ -30,6 +31,11 @@ export class Renderer {
   menu = true;
   orbit = 0;
   fps = 60;
+  adaptiveQuality: AdaptiveQuality | null = null;
+  adaptiveEnabled = true;
+  maxRenderRatio = 1;
+  renderScale = 1;
+  baseShadowResolution = 2048;
   constructor(
     public canvas: HTMLCanvasElement,
     device: pc.GraphicsDevice,
@@ -78,7 +84,7 @@ export class Renderer {
       this.app.assets.load(this.asset);
     });
   }
-  build(c: Course, e: Equipment, quality: Quality, weather: Weather) {
+  build(c: Course, e: Equipment, quality: Quality, weather: Weather, adaptive = true) {
     this.world?.destroy();
     this.athlete?.destroy();
     this.ghost?.destroy();
@@ -86,16 +92,26 @@ export class Renderer {
     this.quality = quality;
     this.weather = weather;
     this.course = c;
-    this.app.graphicsDevice.maxPixelRatio = {
+    const baseRatio = {
       low: 0.65,
       medium: 1,
-      high: Math.min(1.5, devicePixelRatio),
-      ultra: Math.min(2, devicePixelRatio),
+      high: Math.min(1.5, window.devicePixelRatio),
+      ultra: Math.min(2, window.devicePixelRatio),
     }[quality];
+    const minRatio = Math.min(
+      baseRatio,
+      { low: 0.55, medium: 0.7, high: 0.8, ultra: 0.9 }[quality],
+    );
+    this.adaptiveEnabled = adaptive;
+    this.maxRenderRatio = baseRatio;
+    this.renderScale = 1;
+    this.adaptiveQuality = new AdaptiveQuality(baseRatio, minRatio);
+    this.app.graphicsDevice.maxPixelRatio = baseRatio;
     this.app.resizeCanvas();
     this.sun.light!.castShadows = quality !== "low";
-    this.sun.light!.shadowResolution =
+    this.baseShadowResolution =
       quality === "ultra" ? 4096 : quality === "high" ? 2048 : 1024;
+    this.sun.light!.shadowResolution = this.baseShadowResolution;
     this.sun.light!.intensity = weather === "clear" ? 1.7 : 0.8;
     this.world = new World(this.app, c, quality);
     this.athlete = new Athlete(this.app, this.asset, e);
@@ -113,6 +129,19 @@ export class Renderer {
     ghostFrame: Frame | null,
   ) {
     this.fps += (1 / Math.max(0.001, dt) - this.fps) * Math.min(1, dt * 2);
+    const update = this.adaptiveQuality?.sample(
+      dt,
+      this.adaptiveEnabled && !document.hidden && (active || this.menu),
+    );
+    if (update) {
+      this.app.graphicsDevice.maxPixelRatio = update.ratio;
+      this.renderScale = update.ratio / this.maxRenderRatio;
+      this.sun.light!.shadowResolution = Math.max(
+        512,
+        Math.round(this.baseShadowResolution * update.shadowScale),
+      );
+      this.app.resizeCanvas();
+    }
     dt = Math.min(0.1, dt);
     this.athlete.update(f, this.course, dt);
     this.ghost.root.enabled = ghostFrame !== null;
