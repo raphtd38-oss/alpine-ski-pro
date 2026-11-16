@@ -1,7 +1,19 @@
 import * as pc from "playcanvas";
 import type { Course, SkierState, Quality } from "../game/types";
 import { terrainHeight } from "../game/course";
-import { material, meshEntity } from "./geometry";
+import { skiTrackQuad, snowSprayVelocity, type TrackSample } from "../game/snow";
+import { material, meshEntity, rng } from "./geometry";
+
+interface Crystal {
+  x: number;
+  y: number;
+  z: number;
+  vx: number;
+  vy: number;
+  vz: number;
+  life: number;
+}
+
 export class SnowEffects {
   root = new pc.Entity("Snow effects");
   trail: pc.Entity;
@@ -9,159 +21,201 @@ export class SnowEffects {
   positions: number[];
   indices: number[];
   cursor = 0;
-  lastX = 0;
-  lastZ = 0;
-  hasLast = false;
-  particles: {
-    x: number;
-    y: number;
-    z: number;
-    vx: number;
-    vy: number;
-    vz: number;
-    life: number;
-  }[] = [];
+  lastSample: TrackSample | null = null;
+  particles: Crystal[] = [];
+  random = rng(20261116);
+  emissionTime = 0;
+  sprayDrawTime = 0;
   mat: pc.StandardMaterial;
   sprayMat: pc.StandardMaterial;
+  particleLimit: number;
+
   constructor(
     public app: pc.Application,
     public c: Course,
     public quality: Quality,
   ) {
     app.root.addChild(this.root);
-    this.mat = material("Ski grooves", "#a4becd");
-    this.mat.opacity = 0.38;
+    this.mat = material("Carved ski grooves", "#9bb4c1");
+    this.mat.opacity = 0.43;
     this.mat.blendType = pc.BLEND_NORMAL;
     this.mat.depthWrite = false;
+    this.mat.cull = pc.CULLFACE_NONE;
     this.mat.update();
+
     const count = { low: 260, medium: 500, high: 900, ultra: 1400 }[quality];
+    this.particleLimit = { low: 0, medium: 65, high: 115, ultra: 180 }[quality];
     this.positions = Array(count * 12).fill(0);
+    // Park the as-yet unwritten trail triangles below the mountain.
+    for (let i = 1; i < this.positions.length; i += 3) this.positions[i] = -1000;
     this.indices = [];
+    const upNormals: number[] = [];
     for (let i = 0; i < count; i++) {
       const n = i * 4;
       this.indices.push(n, n + 1, n + 2, n, n + 2, n + 3);
+      for (let v = 0; v < 4; v++) upNormals.push(0, 1, 0);
     }
     this.trail = meshEntity(
       app.graphicsDevice,
       this.root,
-      "Persistent ski tracks",
+      "Persistent slope-following ski tracks",
       this.positions,
       this.indices,
       this.mat,
     );
     this.trail.render!.castShadows = false;
-    this.sprayMat = material("Powder crystals", "#f0f7fa");
-    this.sprayMat.emissive.set(0.1, 0.12, 0.14);
+    const trailMesh = this.trail.render!.meshInstances[0].mesh!;
+    trailMesh.setNormals(upNormals);
+    trailMesh.update();
+
+    this.sprayMat = material("Carving powder crystals", "#f0f7fa");
+    this.sprayMat.emissive.set(0.08, 0.1, 0.12);
+    this.sprayMat.cull = pc.CULLFACE_NONE;
+    this.sprayMat.opacity = 0.86;
+    this.sprayMat.blendType = pc.BLEND_NORMAL;
+    this.sprayMat.depthWrite = false;
     this.sprayMat.update();
     this.spray = meshEntity(
       app.graphicsDevice,
       this.root,
-      "Carving snow spray",
-      [0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "Speed-relative carving spray",
+      [0, -1000, 0, 0, -1000, 0, 0, -1000, 0],
       [0, 1, 2],
       this.sprayMat,
     );
     this.spray.render!.castShadows = false;
+    this.spray.enabled = false;
   }
+
   update(s: SkierState, dt: number, active: boolean) {
-    if (
-      active &&
-      s.height < 0.05 &&
-      Math.hypot(s.vx, s.vz) > 1 &&
-      (!this.hasLast || Math.hypot(s.x - this.lastX, s.z - this.lastZ) > 0.4)
+    dt = Math.min(0.1, Math.max(0, dt));
+    const speed = Math.hypot(s.vx, s.vz);
+    const grounded = s.height < 0.05;
+    if (!active || !grounded) {
+      // Do not connect tracks across a jump or a restart.
+      this.lastSample = null;
+    } else if (
+      speed > 1 &&
+      (!this.lastSample ||
+        Math.hypot(s.x - this.lastSample.x, s.z - this.lastSample.z) > 0.34)
     ) {
-      if (this.hasLast) {
-        for (const side of [-0.17, 0.17]) {
-          const x = s.x + Math.cos(s.heading) * side,
-            z = s.z - Math.sin(s.heading) * side,
-            px = this.lastX + Math.cos(s.heading) * side,
-            pz = this.lastZ - Math.sin(s.heading) * side;
-          const width = 0.022 + s.slip * 0.006;
-          const v = [
-            px - width,
-            terrainHeight(px, pz, this.c) + 0.025,
-            pz,
-            px + width,
-            terrainHeight(px, pz, this.c) + 0.025,
-            pz,
-            x + width,
-            terrainHeight(x, z, this.c) + 0.025,
-            z,
-            x - width,
-            terrainHeight(x, z, this.c) + 0.025,
-            z,
-          ];
-          this.positions.splice(this.cursor * 12, 12, ...v);
+      const current: TrackSample = { x: s.x, z: s.z, heading: s.heading };
+      if (this.lastSample) {
+        const halfWidth = Math.min(0.075, 0.025 + s.slip * 0.004);
+        const ground = (x: number, z: number) => terrainHeight(x, z, this.c);
+        for (const skiOffset of [-0.17, 0.17]) {
+          const quad = skiTrackQuad(
+            this.lastSample,
+            current,
+            skiOffset,
+            halfWidth,
+            ground,
+          );
+          const offset = this.cursor * 12;
+          for (let k = 0; k < 12; k++) this.positions[offset + k] = quad[k];
           this.cursor = (this.cursor + 1) % (this.positions.length / 12);
         }
         const mesh = this.trail.render!.meshInstances[0].mesh!;
         mesh.setPositions(this.positions);
         mesh.update();
       }
-      this.lastX = s.x;
-      this.lastZ = s.z;
-      this.hasLast = true;
+      this.lastSample = current;
     }
-    if (
+
+    const emitting =
       active &&
-      s.height < 0.1 &&
-      Math.hypot(s.vx, s.vz) > 4 &&
-      (Math.abs(s.edge) > 0.15 || s.slip > 1) &&
-      this.quality !== "low"
-    ) {
-      const n = Math.min(6, Math.ceil(Math.abs(s.edge) * 3 + s.slip * 0.3));
-      for (let i = 0; i < n && this.particles.length < 140; i++)
-        this.particles.push({
-          x: s.x,
-          y: terrainHeight(s.x, s.z, this.c) + 0.12,
-          z: s.z,
-          vx: -s.edge * (2 + Math.random() * 4),
-          vy: 1 + Math.random() * 2,
-          vz: -1 - Math.random() * 3,
-          life: 0.35 + Math.random() * 0.35,
-        });
+      grounded &&
+      this.particleLimit > 0 &&
+      speed > 4 &&
+      (Math.abs(s.edge) > 0.15 || s.slip > 1);
+    if (emitting) {
+      // Emit by elapsed time, not by frames, so 30/60/144 Hz remain comparable.
+      this.emissionTime = Math.min(this.emissionTime + dt, 0.1);
+      const tick = 1 / 35;
+      while (this.emissionTime >= tick) {
+        this.emissionTime -= tick;
+        const n = Math.min(4, Math.ceil(Math.abs(s.edge) * 2.4 + s.slip * 0.22));
+        const outside = s.edge >= 0 ? -1 : 1;
+        for (let i = 0; i < n && this.particles.length < this.particleLimit; i++) {
+          const v = snowSprayVelocity(s, this.random());
+          const lateral = outside * (0.12 + this.random() * 0.13);
+          const x = s.x + Math.cos(s.heading) * lateral;
+          const z = s.z - Math.sin(s.heading) * lateral;
+          this.particles.push({
+            x,
+            y: terrainHeight(x, z, this.c) + 0.09,
+            z,
+            vx: v.x,
+            vy: v.y,
+            vz: v.z,
+            life: 0.3 + this.random() * 0.35,
+          });
+        }
+      }
+    } else {
+      this.emissionTime = 0;
     }
-    const p: number[] = [],
-      idx: number[] = [];
+
+    // Simulate every frame, but upload dynamic mesh buffers at at most 30 Hz.
     for (let i = this.particles.length - 1; i >= 0; i--) {
-      const a = this.particles[i];
-      a.life -= dt;
-      if (a.life <= 0) {
+      const crystal = this.particles[i];
+      crystal.life -= dt;
+      if (crystal.life <= 0) {
         this.particles.splice(i, 1);
         continue;
       }
-      a.x += a.vx * dt;
-      a.y += a.vy * dt;
-      a.z += a.vz * dt;
-      a.vy -= 6 * dt;
-      const k = p.length / 3,
-        r = 0.025 + a.life * 0.05;
-      p.push(a.x - r, a.y, a.z, a.x + r, a.y, a.z, a.x, a.y + r * 2, a.z);
-      idx.push(k, k + 1, k + 2);
+      crystal.x += crystal.vx * dt;
+      crystal.y += crystal.vy * dt;
+      crystal.z += crystal.vz * dt;
+      crystal.vy -= 7 * dt;
     }
-    if (!p.length) {
-      p.push(0, -1000, 0, 0, -1000, 0, 0, -1000, 0);
-      idx.push(0, 1, 2);
+
+    if (!this.particles.length) {
+      this.spray.enabled = false;
+      this.sprayDrawTime = 0;
+      return;
+    }
+    this.sprayDrawTime += dt;
+    if (this.sprayDrawTime < 1 / 30) return;
+    this.sprayDrawTime = 0;
+
+    const p: number[] = [];
+    const idx: number[] = [];
+    const normals: number[] = [];
+    for (const a of this.particles) {
+      const k = p.length / 3;
+      const radius = 0.018 + a.life * 0.066;
+      p.push(
+        a.x - radius, a.y, a.z,
+        a.x + radius, a.y, a.z,
+        a.x, a.y + radius * 2.1, a.z + radius * 0.3,
+      );
+      idx.push(k, k + 1, k + 2);
+      normals.push(0, 1, 0, 0, 1, 0, 0, 1, 0);
     }
     const mesh = this.spray.render!.meshInstances[0].mesh!;
     mesh.setPositions(p);
-    mesh.setNormals(
-      Array(p.length)
-        .fill(0)
-        .map((_, i) => (i % 3 === 1 ? 1 : 0)),
-    );
+    mesh.setNormals(normals);
     mesh.setIndices(idx);
     mesh.update();
+    this.spray.enabled = true;
   }
+
   reset() {
     this.positions.fill(0);
+    for (let i = 1; i < this.positions.length; i += 3) this.positions[i] = -1000;
     this.cursor = 0;
-    this.hasLast = false;
+    this.lastSample = null;
     this.particles = [];
+    this.emissionTime = 0;
+    this.sprayDrawTime = 0;
+    this.random = rng(20261116);
+    this.spray.enabled = false;
     const mesh = this.trail.render!.meshInstances[0].mesh!;
     mesh.setPositions(this.positions);
     mesh.update();
   }
+
   destroy() {
     this.root.destroy();
     this.mat.destroy();
