@@ -1299,3 +1299,67 @@ footer button span {
     bottom: 16%;
   }
 }
+
+/* V1.2: Replay analysis is a compact overlay rather than a second screen. */
+#replay-controls {
+  position: absolute;
+  z-index: 8;
+  left: 50%;
+  bottom: 21%;
+  width: min(690px, 92vw);
+  transform: translateX(-50%);
+  padding: 12px 17px 16px;
+  color: #eff9fb;
+  background: rgba(7, 28, 40, 0.88);
+  border: 1px solid rgba(183, 231, 235, 0.26);
+  border-radius: 12px;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, .3);
+  backdrop-filter: blur(14px);
+}
+.replay-title {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+  color: #8bdadd;
+  margin-bottom: 11px;
+}
+.replay-toolbar {
+  display: flex;
+  gap: 13px;
+  align-items: center;
+  font-size: 11px;
+}
+.replay-toolbar #replay-timecode {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+#replay-seek {
+  min-width: 65px;
+  flex: 1;
+  accent-color: #6be1e4;
+  cursor: pointer;
+}
+.replay-speeds {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.replay-speeds button {
+  border-radius: 5px;
+  padding: 7px 9px;
+  border: 1px solid rgba(255,255,255,.23);
+  font-size: 12px;
+  font-weight: 600;
+}
+.replay-speeds button.active {
+  background: #6ae0db;
+  color: #082635;
+  border-color: #6ae0db;
+}
+@media (max-width: 700px) {
+  #replay-controls { bottom: 23%; padding: 10px 12px; }
+  .replay-toolbar { flex-wrap: wrap; gap: 9px; }
+  #replay-seek { min-width: 50%; }
+  .replay-toolbar > span:last-child { display: none; }
+}
