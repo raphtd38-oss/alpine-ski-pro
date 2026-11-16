@@ -1,4 +1,5 @@
 import type { Course } from "./types";
+import { courseCenterX } from "./course";
 
 /** Advisory skiing line for training only, not an autopilot.
  * Piecewise cubic Hermite interpolation follows the center of each gate while
@@ -8,7 +9,7 @@ export function trainingLineX(course: Course, z: number): number {
   const points = [
     { x: 0, z: 3 },
     ...course.gates.map((g) => ({ x: g.x, z: g.z })),
-    { x: 0, z: course.length },
+    { x: courseCenterX(course.length, course), z: course.length },
   ];
   const target = Math.max(3, Math.min(course.length, Number.isFinite(z) ? z : 3));
   let i = 0;
@@ -24,5 +25,7 @@ export function trainingLineX(course: Course, z: number): number {
     (u ** 3 - 2 * u ** 2 + u) * length * m0 +
     (-2 * u ** 3 + 3 * u ** 2) * b.x +
     (u ** 3 - u ** 2) * length * m1;
-  return Math.max(-course.width / 2 + 1.5, Math.min(course.width / 2 - 1.5, x));
+  const centre = courseCenterX(target, course);
+  return Math.max(centre - course.width / 2 + 1.5,
+    Math.min(centre + course.width / 2 - 1.5, x));
 }
