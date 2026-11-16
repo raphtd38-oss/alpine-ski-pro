@@ -342,15 +342,25 @@ export class World {
         const pivot = new pc.Entity("Pole hinge");
         pivot.setLocalPosition(x, h, g.z);
         parent.addChild(pivot);
+        // Two aligned sections preserve the V1.4 gate meshes while making
+        // fiberglass flex visible along the shaft, not only at the hinge.
         const pole = shape(
           pivot,
           "cylinder",
           "Flexible slalom pole",
-          [0, 1, 0],
-          [0.035, 2, 0.035],
+          [0, 0.64, 0],
+          [0.035, 1.28, 0.035],
           m,
         );
         pole.tags.add("pole");
+        const tip = new pc.Entity("Pole elastic upper section");
+        tip.setLocalPosition(0, 1.28, 0);
+        pivot.addChild(tip);
+        const tipShaft = shape(
+          tip, "cylinder", "Fiberglass flexing pole tip",
+          [0, 0.36, 0], [0.033, 0.72, 0.033], m,
+        );
+        tipShaft.render!.castShadows = this.quality !== "low";
         // SL retains its real-world flexible bare poles. GS/SG/DH get short
         // textured fabric panels tethered to their spring hinges; the cloth
         // moves with a hit rather than remaining frozen in world space.
@@ -848,6 +858,16 @@ export class World {
             (p.angleX * 180) / Math.PI,
             0,
             (p.angleZ * 180) / Math.PI,
+          );
+          // A faster, lighter top section recoils after the lower hinge.
+          // No per-frame mesh allocations and only one extra primitive per pole.
+          const elasticTip = hinge.children.find(
+            (e) => e.name === "Pole elastic upper section",
+          );
+          if (elasticTip) elasticTip.setLocalEulerAngles(
+            ((p.angleX * 0.24 + p.omegaX * 0.022) * 180) / Math.PI,
+            0,
+            ((p.angleZ * 0.24 + p.omegaZ * 0.022) * 180) / Math.PI,
           );
           const cloth = hinge.children.find((e) => e.name === "Gate textile flag");
           if (cloth)
