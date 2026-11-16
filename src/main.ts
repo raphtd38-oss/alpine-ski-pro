@@ -478,6 +478,14 @@ async function boot() {
           startArchVisible: Boolean(renderer.world.startArch?.enabled),
           startHouse: Boolean(renderer.world.startBooth),
           timingWands: renderer.world.startWands.length,
+          timingWandAngle: renderer.world.startWands[0]?.getLocalEulerAngles().y ?? 0,
+          pairedGatePoles: renderer.world.gateEntities.reduce(
+            (count, gate) => count + gate.children.reduce(
+              (n, hinge) => n + hinge.children.filter(
+                (child) => child.name === "Second pole of flag pair",
+              ).length, 0,
+            ), 0,
+          ),
           celebrationTime,
           gateFlagCount: renderer.world.gateEntities.reduce(
             (count, gate) => count + gate.children.reduce(
