@@ -208,6 +208,10 @@ export class SnowEffects {
       }
       idx.push(k, k + 1, k + 2, k, k + 2, k + 3);
     }
+    if (p.length === 0) {
+      this.spray.enabled = false;
+      return;
+    }
     const mesh = this.spray.render!.meshInstances[0].mesh!;
     mesh.setPositions(p);
     mesh.setNormals(normals);
