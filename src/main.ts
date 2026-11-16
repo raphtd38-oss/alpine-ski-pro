@@ -251,6 +251,7 @@ async function boot() {
       audio.impact(
         Math.hypot(state.vx, state.vz), state.edge,
         race.course.id !== "SL",
+        poles.lastImpactKind === "arm" ? "arm" : "shin",
       );
     const oldGate = race.nextGate;
     race.update(previous, state, dt, control.tuck);
@@ -407,6 +408,10 @@ async function boot() {
       state.slip,
       playing && !paused && (replaying || race.phase === "racing"),
       sampleSnowSurface(state.x, state.z, race.course, settings.weather).grip,
+      {
+        chatter: state.chatter, skid: state.skid,
+        depth: sampleSnowSurface(state.x, state.z, race.course, settings.weather).depth,
+      },
     );
     audio.menu(!playing);
     audio.crowd(
