@@ -123,3 +123,10 @@ Le projet n'est **pas terminé**. Pas de certification FIS, pas de sponsoring Au
 - Animations existantes conservées et affinées : bassin, jambes indépendantes, torse stabilisé, chute interpolée.
 - CI enrichie : régénération déterministe GLB, validation skinning/poids, tests navigateur de présence du squelette et des maillages ; vérifier statut vert avant toute fusion.
 - Modèle original, pas de textures ou de personnages issus de CarveMania.
+
+## V1.3.1 — corrections de l'équipement du skieur
+
+- Panier de bâton en dimensions réelles : 0,13 m de diamètre au lieu du multiplicateur de 3 m.
+- Pointe, poignée antidérapante et protège-main de slalom modélisés à partir de primitives PlayCanvas ; ils suivent l'animation des bâtons existants.
+- Ajout d'un contrôle unitaire des dimensions des composants du matériel. Aucune modification aux forces physiques, au chronomètre ou à l'enregistrement des courses.
+- Publication uniquement après succès de tous les tests GitHub Actions.
