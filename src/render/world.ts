@@ -553,6 +553,38 @@ export class World {
       6.4, 0.65, "#183247");
     shape(root, "box", "Start house illuminated race header",
       [0, h + 3.48, 4.44], [6.4, 0.65, 0.1], header.m);
+    // Enclosed start box: wind shields and side sponsor-style boards from
+    // Saalbach 2025 reference, with completely original Alpine Ski Pro art.
+    const sunny = this.mat("Start house yellow safety cladding", "#f4c332",
+      0.02, 0.38);
+    const black = this.mat("Start bay padded jambs", "#202936", 0, 0.21);
+    for (const side of [-1, 1]) {
+      const x = side * 3.79;
+      for (const z of [-2.55, 1.25]) {
+        shape(root, "box", "Weatherproof start hut side wall",
+          [x, terrainHeight(x, z, this.course) + 1.83, z],
+          [0.22, 3.47, 3.45], sunny);
+        const graphic = this.sign("ALPINE RACE", 3.0, 0.8, "#c99c20");
+        shape(root, "box", "Original start cabin sponsor panel",
+          [x - side * 0.13, terrainHeight(x, z, this.course) + 2.3, z],
+          [0.05, 0.86, 2.90], graphic.m);
+      }
+      shape(root, "box", "Padded entry race door jamb",
+        [side * 1.53, gateH + 1.7, 4.4],
+        [0.19, 3.34, 0.38], black);
+      shape(root, "box", "Bright race start facade",
+        [side * 2.7, gateH + 1.85, 4.4],
+        [2.25, 3.25, 0.26], sunny);
+      const timer = this.sign("TIME  /  READY", 2.2, 0.55, "#1d3046");
+      shape(root, "box", "Original electronic start timer display",
+        [side * 2.73, gateH + 1.8, 4.23],
+        [2.05, 0.54, 0.05], timer.m);
+      shape(root, "box", "Start cabling and protective padding",
+        [side * 1.6, gateH + 0.82, 4.36],
+        [0.18, 1.52, 0.32], black);
+    }
+    shape(root, "box", "Start cabin overhead dark opening frame",
+      [0, gateH + 3.55, 4.35], [3.25, 0.45, 0.35], black);
     const slab = this.mat("Starting runway blue ink", "#3e93b9", 0, 0.35);
     for (const x of [-1.78, 1.78])
       shape(root, "box", "Timing alignment strip",
