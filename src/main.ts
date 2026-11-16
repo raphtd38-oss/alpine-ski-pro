@@ -9,6 +9,7 @@ import "@fontsource/barlow-condensed/latin-700.css";
 import "./ui/style.css";
 import { COURSES, EQUIPMENT } from "./game/course";
 import { startPushAcceleration } from "./game/superg";
+import { finishReachAmount } from "./game/finish-timing";
 import { sampleSnowSurface } from "./game/surface";
 import { snowLabel } from "./game/snow-model";
 import {
@@ -82,8 +83,13 @@ async function boot() {
     landingShock: state.landingShock,
     startPush: race.course.id === "SG" && race.phase === "racing"
       ? Math.max(0, 1 - race.time / 1.5) : 0,
-    finishGesture: race.course.id === "SG" && race.phase === "finished"
-      ? Math.min(1, celebrationTime * 1.4) : 0,
+    finishReach: race.course.id === "SG"
+      ? race.phase === "racing"
+        ? finishReachAmount("SG", state.z, race.course.length,
+          Math.hypot(state.vx, state.vz), state.fallen)
+        : race.phase === "finished"
+          ? Math.max(0, 1 - celebrationTime * 0.85) : 0
+      : 0,
     skid: state.skid,
     pressure: state.pressure,
     height: state.height,
@@ -127,7 +133,9 @@ async function boot() {
       "split",
       training
         ? "Entraînement · sans classement"
-        : "Passez entre les deux piquets de chaque porte",
+        : race.course.id === "SG"
+          ? "Super-G · 4 piquets et 2 fanions par porte"
+          : "Passez entre les deux piquets de chaque porte",
     );
     void audio
       .start()
@@ -404,14 +412,14 @@ async function boot() {
       best = !race.training && progress.record(race.result!, race.frames);
       audio.tone(1100, 0.5);
       if (race.course.id === "SG") {
-        // Let the athlete lift a hand at the finish before the result dialog.
+        // Hold the photofinish reach and low hand briefly after crossing.
         celebrationPending = true;
         celebrationTime = 0;
       } else ui.results(race.result!, best, race.training);
     }
     if (celebrationPending && !paused && !replaying) {
       celebrationTime += dt;
-      frame.finishGesture = Math.min(1, celebrationTime * 1.4);
+      frame.finishReach = Math.max(0, 1 - celebrationTime * 0.85);
       if (celebrationTime >= 2.25) {
         celebrationPending = false;
         ui.results(race.result!, best, race.training);
@@ -487,6 +495,10 @@ async function boot() {
             ), 0,
           ),
           celebrationTime,
+          finishBeamTime: race.finishBeamTime,
+          finishBeamTriggeredBy: race.finishBeamTriggeredBy,
+          finishReach: frame.finishReach ?? 0,
+          blueBorderDye: Boolean(renderer.world.blueBorderDye),
           gateFlagCount: renderer.world.gateEntities.reduce(
             (count, gate) => count + gate.children.reduce(
               (flags, pivot) => flags + pivot.children.filter(
