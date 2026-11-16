@@ -8,6 +8,7 @@ import {
   type Equipment,
 } from "./types";
 import { gradient, terrainHeight } from "./course";
+import { shouldLaunchAtCrest } from "./superg";
 import {
   nextSkid,
   pressureGripFactor,
@@ -29,11 +30,14 @@ export const initialState = (): SkierState => ({
   slip: 0,
   chatter: 0,
   poleImpact: 0,
+  poleImpactSide: 0,
   skid: 0,
   pressure: 1,
   balance: 1,
   height: 0,
   verticalSpeed: 0,
+  lastTakeoffZ: -1000,
+  landingShock: 0,
   fallen: 0,
   jumpHeld: false,
   distance: 0,
@@ -75,6 +79,7 @@ export function stepPhysics(
       ? hardSurface * edgePressure * clamp((speed - 8) / 26, 0, 1)
       : 0, 13, dt);
   s.poleImpact = Math.max(0, s.poleImpact - dt * 4.5);
+  s.landingShock = Math.max(0, s.landingShock - dt * 3.4);
   s.flex = smooth(
     s.flex,
     clamp(
@@ -173,21 +178,54 @@ export function stepPhysics(
       1,
     );
     if (s.balance <= 0) s.fallen = 2.5;
-    if (input.jump && !s.jumpHeld && s.height === 0 && speed > 3)
-      s.verticalSpeed = 2.5;
+  }
+  // Flight uses WORLD vertical velocity. A convex crest can outrun the
+  // normal force at SG speed: the terrain falls away under the skis.
+  const manualTakeoff = input.jump && !s.jumpHeld &&
+    s.height === 0 && speed > 3 && s.fallen <= 0;
+  const automaticTakeoff = s.z - s.lastTakeoffZ > 30 &&
+    s.fallen <= 0 &&
+    shouldLaunchAtCrest(c.id, speed, curvature, s.height === 0);
+  const takeoff = manualTakeoff || automaticTakeoff;
+  if (takeoff) {
+    const surfaceVy = gx * s.vx + gz * s.vz;
+    // Manual jump retains its previous 2.5 m/s pop. Natural rollers add only
+    // a little clearance; most airtime comes from the real shape of the slope.
+    // The skier actively extends at the crest: enough clearance to leave
+    // the snow at race speed, but only a fraction of a manual jump impulse.
+    const terrainExtension = clamp(
+      0.65 + Math.max(0, -curvature * speed * speed / 9.81) * 0.46,
+      0.65, 1.17,
+    );
+    s.verticalSpeed = surfaceVy +
+      (manualTakeoff ? 2.5 : terrainExtension);
+    s.lastTakeoffZ = s.z;
   }
   s.jumpHeld = input.jump;
+  if (s.height > 0) {
+    // No invisible snow-particle acceleration while airborne.
+    ax = -s.vx * 0.01;
+    az = -s.vz * 0.01;
+  }
   s.vx += ax * dt;
   s.vz = Math.max(0, s.vz + az * dt);
   const oldZ = s.z;
   s.x += s.vx * dt;
   s.z += s.vz * dt;
   s.distance += Math.hypot(s.vx, s.vz) * dt;
-  if (s.height > 0 || s.verticalSpeed > 0) {
+  if (s.height > 0 || takeoff) {
+    const groundAfter = terrainHeight(s.x, s.z, c);
+    const newWorldY = h + s.height +
+      s.verticalSpeed * dt - 4.905 * dt * dt;
     s.verticalSpeed -= 9.81 * dt;
-    s.height += s.verticalSpeed * dt;
-    if (s.height < 0) {
+    s.height = newWorldY - groundAfter;
+    if (s.height <= 0) {
       s.height = 0;
+      const newSlope = gradient(s.x, s.z, c);
+      const surfaceVy = newSlope[0] * s.vx + newSlope[1] * s.vz;
+      s.landingShock = clamp(
+        Math.abs(s.verticalSpeed - surfaceVy) / 11, 0, 1,
+      );
       s.verticalSpeed = 0;
     }
   }

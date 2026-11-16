@@ -1,4 +1,5 @@
 import type { Course, Discipline, Equipment } from "./types";
+import { superGRelief } from "./superg";
 export const EQUIPMENT: Record<Discipline, Equipment> = {
   SL: {
     id: "SL",
@@ -70,15 +71,15 @@ export const COURSES: Record<Discipline, Course> = Object.fromEntries(
       ],
       [
         "SG",
-        "Glacier Express",
-        "Laissez parler la vitesse.",
-        1550,
-        0.28,
-        58,
-        16,
-        87,
-        13,
-        17,
+        "Glacier Express — Super-G",
+        "Crêtes, compressions et sauts. Une vraie course de vitesse.",
+        1980,
+        0.276,
+        62,
+        34,
+        55,
+        14,
+        8,
       ],
       [
         "DH",
@@ -116,9 +117,11 @@ export const COURSES: Record<Discipline, Course> = Object.fromEntries(
         width,
         gates: Array.from({ length: n }, (_, i) => ({
           id: i,
-          x: Math.sin((i * Math.PI) / 2 + 0.5) * swing,
-          z: 40 + i * space,
-          width: gateWidth,
+          x: id === "SG"
+            ? Math.sin(i * 1.43 + 0.35) * 11.5 + Math.sin(i * 0.47) * 2.4
+            : Math.sin((i * Math.PI) / 2 + 0.5) * swing,
+          z: id === "SG" ? 56 + i * space : 40 + i * space,
+          width: id === "SG" && i % 9 === 7 ? 10 : gateWidth,
         })),
       },
     ],
@@ -128,7 +131,8 @@ export const COURSES: Record<Discipline, Course> = Object.fromEntries(
 export function terrainHeight(x: number, z: number, c: Course): number {
   const roll = Math.sin(z * 0.024) * 0.65 + Math.sin(z * 0.057) * 0.17;
   const bank = Math.pow(Math.max(0, Math.abs(x) - c.width / 2), 1.3) * 0.19;
-  const jump = c.id === "DH" || c.id === "SG" ? Math.sin(z * 0.041) * 1.05 : 0;
+  const jump = c.id === "SG" ? superGRelief(z) :
+    c.id === "DH" ? Math.sin(z * 0.041) * 1.05 : 0;
   // Ease the racing pitch into a run-out; the same surface drives rendering and gravity.
   const start = c.length - 45,
     span = 90,

@@ -1,3 +1,14 @@
+## 1.7.0 — 16 novembre 2026 — Super-G entièrement repensé
+
+- Course originale `Glacier Express` étendue à 1 980 m avec 34 portes alternées, virages espacés, reliefs de compression et cinq bosses importantes.
+- Relief terrain identique dans l'image et dans les calculs de physique ; décollage naturel automatique au franchissement rapide d'une crête, trajectoire balistique et amortissement de la réception. Simulation stable à 120 Hz, sans prétention à l'homologation.
+- Portes de Super-G à quatre piquets visuels et deux petits panneaux textiles de taille inspirée des prescriptions FIS ; les deux pivots internes gardent les collisions/ressorts antérieurs.
+- Original chalet de départ Super-G, portillons chrono articulés, barrettes de couleur et marquages bleus à l'approche des sauts.
+- Animation du skieur : impulsion sur les bâtons au départ, flexion en vol, épaules qui accompagnent le piquet, main levée après la ligne d'arrivée. Résultat légèrement différé en SG pour rendre la célébration visible.
+- Traces SL/GS/DH, records et anciens replays préservés ; nouvelles données d'animation enregistrées comme champs optionnels.
+- Tests unitaires dédiés au terrain, aux portes, aux décollages et test Chromium du départ, de la piste et du matériel.
+- Sources de référence consultées : FIS ICR 2024 / broadcaster manual et les vidéos fournies par le joueur ; aucune texture, logo ou moteur propriétaire copié.
+
 ## 1.6.0 — 16 novembre 2026 — intégration sélective des fichiers fournis
 
 - Nouvel état `skid` avec perte puis récupération progressive d'adhérence, effet réduit pour rester jouable ; prise de carre progressive conservée.

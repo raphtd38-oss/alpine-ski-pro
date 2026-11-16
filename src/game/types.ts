@@ -46,6 +46,7 @@ export interface SkierState {
   chatter: number;
   /** Recent breakaway-gate collision, eased down at the physics tick. */
   poleImpact: number;
+  poleImpactSide: number;
   /** Persistent loss of edge grip (0 gripping, 1 skidding). */
   skid: number;
   /** Normal force relative to level ground (crests/compressions). */
@@ -53,6 +54,10 @@ export interface SkierState {
   balance: number;
   height: number;
   verticalSpeed: number;
+  /** Takeoff separation for realistic roller-triggered flight. */
+  lastTakeoffZ: number;
+  /** Damped landing compression after touchdown. */
+  landingShock: number;
   fallen: number;
   jumpHeld: boolean;
   distance: number;
@@ -64,6 +69,10 @@ export interface Frame {
   slip?: number;
   chatter?: number;
   poleImpact?: number;
+  poleImpactSide?: number;
+  landingShock?: number;
+  startPush?: number;
+  finishGesture?: number;
   skid?: number;
   pressure?: number;
   t: number;

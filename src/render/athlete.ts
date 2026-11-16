@@ -229,6 +229,11 @@ export class Athlete {
     if (side !== 0) this.lastTurnSide = side;
     this.plantEnergy *= Math.exp(-Math.max(0, dt) * 7);
     const load = Math.max(0, Math.min(1.4, f.flex ?? 0));
+    const startPush = Math.max(0, Math.min(1, f.startPush ?? 0));
+    const finishGesture = Math.max(0, Math.min(1, f.finishGesture ?? 0));
+    const landing = Math.max(0, Math.min(1, f.landingShock ?? 0));
+    const airborne = Math.max(0, Math.min(1, f.height * 1.4));
+    const impactSide = Math.sign(f.poleImpactSide ?? 0);
     // Replays generated before V1.5 provide no contact channels: keep their
     // posture and apply only physically grounded data when present.
     const targetPressure = Math.max(0.06, Math.min(0.94,
@@ -243,7 +248,7 @@ export class Athlete {
     ) * blend;
     const shake = this.visualChatter * Math.sin(f.t * 62) * 0.008;
     const torsoTarget = -edge * (9 + load * 5) +
-      this.visualImpact * (edge >= 0 ? -9 : 9) -
+      this.visualImpact * (impactSide || (edge >= 0 ? -1 : 1)) * 12 -
       Math.sign(edge) * (f.skid ?? 0) * 5;
     this.visualUpperBody += (torsoTarget - this.visualUpperBody) * blend;
     const pressureAbsorption = Math.min(0.065,
@@ -251,7 +256,8 @@ export class Athlete {
     const skidStance = Math.min(0.04, (f.skid ?? 0) * 0.04);
     const crouchTarget = 0.055 + f.tuck * 0.18 +
       Math.abs(edge) * 0.085 + load * 0.045 +
-      pressureAbsorption + skidStance;
+      pressureAbsorption + skidStance +
+      startPush * 0.11 + landing * 0.075 + airborne * 0.095;
     this.visualCrouch += (crouchTarget - this.visualCrouch) * blend;
     const crouch = this.visualCrouch;
     const j = this.joints;
@@ -259,8 +265,12 @@ export class Athlete {
     // The outside leg is visibly longer and keeps the ski pressurized.
     const lean = edge * (0.19 + load * 0.065);
     j.Pelvis?.setLocalPosition(lean + shake, 0.92 - crouch, -0.055 * f.tuck);
+    // Professional race start: chest ahead of bindings, hips loaded,
+    // alternating pole-drive phase. Airborne posture retracts legs.
+    const pushCycle = Math.sin((1 - startPush) * 2 * Math.PI * 1.65);
     j.Spine?.setLocalEulerAngles(
-      10 + f.tuck * 27, edge * -4 + this.visualImpact * 6,
+      10 + f.tuck * 27 + startPush * 23 - airborne * 7,
+      edge * -4 + this.visualImpact * 6,
       -edge * (18 + outsidePressure * 8),
     );
     // Stabilize the professional racer's upper body toward the fall line while
@@ -270,7 +280,8 @@ export class Athlete {
       this.visualUpperBody, edge * (12 - load * 2) + shake * 90,
     );
     j.Head?.setLocalEulerAngles(
-      -12 - f.tuck * 23 + this.visualImpact * 3,
+      -12 - f.tuck * 23 + this.visualImpact * 3 -
+        startPush * 12 + finishGesture * 9,
       edge * 7 - this.visualImpact * 3, edge * 3 - shake * 80,
     );
     j.Pelvis?.setLocalEulerAngles(0, edge * 2, -edge * (19 + outsidePressure * 7));
@@ -296,11 +307,15 @@ export class Athlete {
       const hipRot = (-(thigh - Math.atan2(0.13, 0.4)) * 180) / Math.PI;
       const kneeRot =
         (-(calf - Math.atan2(-0.11, 0.38)) * 180) / Math.PI - hipRot;
+      const flightHip = airborne * -12;
+      const flightKnee = airborne * 23;
       j[side + "Hip"]?.setLocalEulerAngles(
-        hipRot, -outside * 6, edge * (12 + outsidePressure * 5),
+        hipRot + flightHip + landing * 7,
+        -outside * 6, edge * (12 + outsidePressure * 5),
       );
       j[side + "Knee"]?.setLocalEulerAngles(
-        kneeRot, 0, outside * (3 + outsidePressure * 3),
+        kneeRot + flightKnee + landing * 9,
+        0, outside * (3 + outsidePressure * 3),
       );
       j[side + "Ankle"]?.setLocalEulerAngles(
         -hipRot - kneeRot, 0,
@@ -308,15 +323,27 @@ export class Athlete {
       );
       const activePlant = ((i === 0 ? 1 : -1) === this.plantingSide)
         ? this.plantEnergy : 0;
+      const nearGate = impactSide === (i === 0 ? -1 : 1);
+      // The gate-side shoulder drives around the flex pole; the opposite
+      // elbow stays in front. At finish the right arm rises in celebration.
+      const shoulderWrap = this.visualImpact * (nearGate ? 38 : -9);
+      const pushStroke = startPush * (-36 + pushCycle * (i === 0 ? 20 : -20));
       j[side + "Shoulder"]?.setLocalEulerAngles(
         -f.tuck * 15 + Math.sin(f.t * 3 + i) * Math.abs(edge) * 4 -
-          activePlant * 23 - this.visualImpact * 13,
+          activePlant * 23 + shoulderWrap +
+          pushStroke - (i === 1 ? 112 : 18) * finishGesture,
         0,
         (i === 0 ? -1 : 1) * (8 + Math.abs(edge) * 12 +
           (f.skid ?? 0) * 13),
       );
       j[side + "Elbow"]?.setLocalEulerAngles(
-        -f.tuck * 36 - activePlant * 15, 0, 0);
+        -f.tuck * 36 - activePlant * 15 +
+          startPush * 31 - (i === 1 ? 18 : 0) * finishGesture,
+        0, 0);
+      j[side + "Wrist"]?.setLocalEulerAngles(
+        -startPush * 9 + (i === 1 ? 18 : 0) * finishGesture,
+        0, 0,
+      );
       const surf = this.skiSurfaces[i];
       const vertices = [...surf.base];
       for (let k = 0; k < vertices.length; k += 3) {
@@ -327,8 +354,9 @@ export class Athlete {
       surf.mesh.setPositions(vertices);
       surf.mesh.update();
       this.skis[i].setLocalEulerAngles(
-        outside * (f.skid ?? 0) * 3.5, outside * 1.5,
-        -edge * (45 + outsidePressure * 6) + shake * 90,
+        outside * (f.skid ?? 0) * 3.5 + airborne * 4,
+        outside * 1.5,
+        -edge * (45 + outsidePressure * 6) * (1 - airborne * 0.52) + shake * 90,
       );
       this.skis[i].setLocalPosition(
         (i === 0 ? -1 : 1) * (0.16 + Math.abs(edge) * 0.035),

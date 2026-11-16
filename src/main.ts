@@ -8,6 +8,7 @@ import "@fontsource/barlow-condensed/latin-600.css";
 import "@fontsource/barlow-condensed/latin-700.css";
 import "./ui/style.css";
 import { COURSES, EQUIPMENT } from "./game/course";
+import { startPushAcceleration } from "./game/superg";
 import { sampleSnowSurface } from "./game/surface";
 import { snowLabel } from "./game/snow-model";
 import {
@@ -57,6 +58,8 @@ async function boot() {
     replayTime = 0,
     replaySpeed = 1,
     resultShown = false,
+    celebrationTime = 0,
+    celebrationPending = false,
     best = false,
     hudTimer = 0,
     lastCountdown = 4;
@@ -75,6 +78,12 @@ async function boot() {
     slip: state.slip,
     chatter: state.chatter,
     poleImpact: state.poleImpact,
+    poleImpactSide: state.poleImpactSide,
+    landingShock: state.landingShock,
+    startPush: race.course.id === "SG" && race.phase === "racing"
+      ? Math.max(0, 1 - race.time / 1.5) : 0,
+    finishGesture: race.course.id === "SG" && race.phase === "finished"
+      ? Math.min(1, celebrationTime * 1.4) : 0,
     skid: state.skid,
     pressure: state.pressure,
     height: state.height,
@@ -103,6 +112,8 @@ async function boot() {
     replaying = false;
     paused = false;
     resultShown = false;
+    celebrationTime = 0;
+    celebrationPending = false;
     lastCountdown = 4;
     clock.reset();
     renderer.menu = false;
@@ -139,6 +150,8 @@ async function boot() {
     playing = false;
     paused = false;
     replaying = false;
+    celebrationTime = 0;
+    celebrationPending = false;
     renderer.menu = true;
     state = initialState();
     previous = { ...state };
@@ -246,6 +259,9 @@ async function boot() {
       snow.ice,
       snow.depth,
     );
+    // Two short pole pushes in the speed-event start cabin. No boost is
+    // given outside the first 1.5 s or on any other discipline.
+    state.vz += startPushAcceleration(race.course.id, race.time) * dt;
     poles.update(previous, state, dt);
     if (poles.lastImpacts)
       audio.impact(
@@ -355,6 +371,8 @@ async function boot() {
             slip: f.slip ?? 0,
             chatter: f.chatter ?? 0,
             poleImpact: f.poleImpact ?? 0,
+            poleImpactSide: f.poleImpactSide ?? 0,
+            landingShock: f.landingShock ?? 0,
             skid: f.skid ?? 0,
             pressure: f.pressure ?? 1,
             height: f.height,
@@ -385,7 +403,19 @@ async function boot() {
       lastResult = race.result;
       best = !race.training && progress.record(race.result!, race.frames);
       audio.tone(1100, 0.5);
-      ui.results(race.result!, best, race.training);
+      if (race.course.id === "SG") {
+        // Let the athlete lift a hand at the finish before the result dialog.
+        celebrationPending = true;
+        celebrationTime = 0;
+      } else ui.results(race.result!, best, race.training);
+    }
+    if (celebrationPending && !paused && !replaying) {
+      celebrationTime += dt;
+      frame.finishGesture = Math.min(1, celebrationTime * 1.4);
+      if (celebrationTime >= 2.25) {
+        celebrationPending = false;
+        ui.results(race.result!, best, race.training);
+      }
     }
     const ghost =
       playing && !replaying && settings.ghost && race.phase === "racing"
@@ -446,6 +476,17 @@ async function boot() {
           fps: renderer.fps,
           guideActive: Boolean(renderer.world.trainingGuide?.enabled),
           startArchVisible: Boolean(renderer.world.startArch?.enabled),
+          startHouse: Boolean(renderer.world.startBooth),
+          timingWands: renderer.world.startWands.length,
+          timingWandAngle: renderer.world.startWands[0]?.getLocalEulerAngles().y ?? 0,
+          pairedGatePoles: renderer.world.gateEntities.reduce(
+            (count, gate) => count + gate.children.reduce(
+              (n, hinge) => n + hinge.children.filter(
+                (child) => child.name === "Second pole of flag pair",
+              ).length, 0,
+            ), 0,
+          ),
+          celebrationTime,
           gateFlagCount: renderer.world.gateEntities.reduce(
             (count, gate) => count + gate.children.reduce(
               (flags, pivot) => flags + pivot.children.filter(

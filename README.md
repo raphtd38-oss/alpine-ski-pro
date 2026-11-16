@@ -1,5 +1,12 @@
 # Alpine Ski Pro
 
+## V1.7 — Super-G de Coupe alpine : bosses, vrai départ et gestuelle du skieur
+
+Le **Super-G « Glacier Express »** possède désormais un tracé original de 1 980 m et 34 portes, avec une dénivellation simulée d'environ 545 m, des compressions et cinq zones de crêtes. À vitesse suffisante, le skieur peut décoller naturellement, suivre une trajectoire balistique et amortir sa réception ; la touche de saut reste disponible. Les portes de vitesse comportent deux paires de piquets (quatre piquets) et deux petits fanions texturés. Le départ Super-G se déroule sous un abri original avec portillons de chronométrage, impulsion et animation des bâtons ; l'arrivée comporte un bref geste de célébration avant l'affichage des résultats.
+
+**Inspiration :** compétitions FIS de vitesse et vidéos de gameplay fournies par le joueur ; **ni reproduction d'un vrai parcours homologué, ni licence FIS, ni copie des ressources de CarveMania**. Physique et personnage restent des approximations de jeu navigateur. Les modes SL, GS, DH et le système de records/replays sont conservés.
+
+
 **V1.6 — améliorations sélectionnées dans les fichiers fournis par le joueur :** hystérésis d'adhérence modérée, poudreuse au bord de piste, absorption du relief, animation de dérapage, caméra dynamique, résonance des piquets et son additionnel Web Audio. Les disciplines SL / GS / SG / DH, les contrôles, les records et les replays restent conservés.
 
 

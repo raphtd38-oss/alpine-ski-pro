@@ -95,6 +95,7 @@ export class PoleSimulation {
           impulse * (kind === "shin" ? 0.008 : 0.004), 0, 1);
         const strength = clamp(impulse / 3.6, 0, 1);
         s.poleImpact = Math.max(s.poleImpact, strength);
+        s.poleImpactSide = p.side;
         p.tipAmp = Math.max(p.tipAmp, strength * 0.15);
         if (strength >= this.lastImpactStrength) {
           this.lastImpactKind = kind;
