@@ -2,6 +2,7 @@ import * as pc from "playcanvas";
 import type { Course, Equipment, Frame } from "../game/types";
 import { terrainHeight, gradient } from "../game/course";
 import { shape, material, meshEntity } from "./geometry";
+import { PRO_POLE, PRO_GEAR } from "./equipment-specs";
 export class Athlete {
   root = new pc.Entity("Skier");
   rig: pc.Entity;
@@ -58,7 +59,10 @@ export class Athlete {
       0.65,
     );
     const base = material("Ski graphite", "#102736", 0.45, 0.6);
-    this.ownedMaterials.push(this.material, base);
+    const poleGrip = material("Professional pole grips", "#202b34", 0.04, 0.5);
+    const poleFerrule = material("Steel carbide pole tip", "#cad4d8", 0.65, 0.75);
+    const handGuard = material("Slalom hand protection", "#f0f5f5", 0.18, 0.53);
+    this.ownedMaterials.push(this.material, base, poleGrip, poleFerrule, handGuard);
     for (const side of [-1, 1]) {
       const e = new pc.Entity("Independent ski");
       this.root.addChild(e);
@@ -107,11 +111,36 @@ export class Athlete {
         "cylinder",
         "Carbon ski pole",
         [side * 0.38, 0.5, 0.05],
-        [0.018, 1.02, 0.018],
+        [PRO_POLE.shaftDiameter, PRO_POLE.shaftLength, PRO_POLE.shaftDiameter],
         base,
       );
       this.poles.push(pole);
-      shape(pole, "sphere", "Pole basket", [0, -0.46, 0], [3, 0.05, 3], base);
+      // Competition SL poles: a narrow basket near the tip, an ergonomic
+      // handgrip and a small protective guard. No metre-wide geometry.
+      shape(
+        pole, "cylinder", "Real-scale pole basket",
+        [0, -PRO_POLE.shaftLength / 2 + 0.06, 0],
+        [PRO_POLE.basketDiameter, PRO_POLE.basketThickness, PRO_POLE.basketDiameter],
+        base,
+      );
+      shape(
+        pole, "cylinder", "Carbide ski pole tip",
+        [0, -PRO_POLE.shaftLength / 2 - PRO_POLE.ferruleLength * 0.25, 0],
+        [0.009, PRO_POLE.ferruleLength, 0.009],
+        poleFerrule,
+      );
+      shape(
+        pole, "cylinder", "Rubber pole grip",
+        [0, PRO_POLE.shaftLength / 2 - PRO_POLE.gripLength / 2, 0],
+        [PRO_POLE.gripDiameter, PRO_POLE.gripLength, PRO_POLE.gripDiameter],
+        poleGrip,
+      );
+      shape(
+        pole, "box", "Slalom race hand protector",
+        [side * 0.055, PRO_POLE.shaftLength / 2 - 0.07, 0.015],
+        [PRO_GEAR.gloveGuardWidth, PRO_GEAR.gloveGuardHeight, 0.025],
+        handGuard,
+      );
     }
     // Lightweight original detail meshes make the silhouette and equipment
     // readable up close. They follow existing GLB bones, not a separate rig.
