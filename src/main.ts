@@ -425,6 +425,7 @@ async function boot() {
           guideActive: Boolean(renderer.world.trainingGuide?.enabled),
           replaying,
           replaySpeed,
+          replayTime,
           renderer: renderer.app.graphicsDevice.deviceType,
         }),
         start,
