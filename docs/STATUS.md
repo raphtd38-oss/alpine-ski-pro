@@ -96,3 +96,11 @@ Le projet n'est **pas terminé**. Pas de certification FIS, pas de sponsoring Au
 - URL de test : https://raphtd38-oss.github.io/alpine-ski-pro/ . GitHub Actions rapporte un déploiement réussi ; retours de rendu/performance attendus de l'utilisateur sur GPU réel.
 - Alternative navigateur : https://stackblitz.com/github/raphtd38-oss/alpine-ski-pro?startScript=dev (import public du dépôt ; compatibilité propre au navigateur non vérifiée).
 - Quatre nouveaux MP3 ElevenLabs toujours indisponibles, le jeu utilise ses anciennes pistes ElevenLabs et ses bruitages ski de synthèse dynamique.
+
+## Mise à jour piste et contact neige — 16 novembre 2026
+
+- Nouveau champ de neige compactée/verglacée très progressif, déterministe et partagé entre simulation, rendu et son. Les zones sont visibles par une coloration légèrement bleutée et un indicateur sur le HUD.
+- L'adhérence varie subtilement selon la position ; l'effet de neige fraîche reste distinct. Le pas de physique reste à 120 Hz, indépendant de l'affichage.
+- Neige PBR générée localement : relief micro-normal plus fin, sillons de damage moins agressifs, carte de rugosité et matériaux conservés dans la gestion des ressources.
+- Générations des quatre MP3 ElevenLabs réessayées une fois dans une nouvelle session, mais le service est encore saturé (« Free generations are busy right now ») ; aucun nouveau son disponible, aucun débit. Bruitages de synthèse toujours fonctionnels.
+- Tests unitaires surface/texture ajoutés, et CI navigateur à vérifier avant publication.
