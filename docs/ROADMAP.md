@@ -97,3 +97,10 @@ Le but est un simulateur de ski de grande qualité, amélioré sur le même dép
 - Ajuster l'appui extérieur et le dosage de dérapage d'après des essais réels à la manette, pas seulement des tests de trajectoire.
 - Refondre ensuite la géométrie humaine et l'IK 3D ; les nouvelles animations V1.5 ne rendent pas le GLB photoréaliste.
 - Intégrer `carving.mp3` seulement si le fichier audio original ElevenLabs est récupéré durablement, puis tester droits, boucle et poids au chargement.
+
+## Après V1.8
+
+- Vérifier une course complète sans portes manquées avec un contrôleur de trajectoire sur le nouveau Super-G sinueux.
+- Tester visuellement en qualités Élevé et Ultra sur GPU joueur et affiner courbes, textures de neige et forme du start gate selon le retour de la vidéo.
+- Améliorer davantage la silhouette anatomique, le rig à 18 joints (poignets, épaules, hanches), et animer une course FIS à partir de clips droits/licenciés ou de mocap originale.
+- Exporter un futur avatar en glTF/GLB + KTX2, LOD de décors et animation retargetée ; aucun besoin intrinsèque de changer de moteur.
