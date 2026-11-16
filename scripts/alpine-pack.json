@@ -1,0 +1,70 @@
+{
+  "pack": "Alpine Snow Village",
+  "source": "https://3dassets.dev/packs/alpine-snow-village",
+  "manifest": "https://3dassets.dev/api/v1/packs/alpine-snow-village",
+  "license": "CC0-1.0",
+  "models": [
+    {
+      "key": "chalet",
+      "id": 19780,
+      "bytes": 475236
+    },
+    {
+      "key": "guesthouse",
+      "id": 19785,
+      "bytes": 525020
+    },
+    {
+      "key": "fir",
+      "id": 19789,
+      "bytes": 147864
+    },
+    {
+      "key": "pine",
+      "id": 19786,
+      "bytes": 47536
+    },
+    {
+      "key": "sapling",
+      "id": 19788,
+      "bytes": 19872
+    },
+    {
+      "key": "boulder",
+      "id": 19791,
+      "bytes": 15768
+    },
+    {
+      "key": "outcrop",
+      "id": 19793,
+      "bytes": 26308
+    },
+    {
+      "key": "glacial-rock",
+      "id": 19792,
+      "bytes": 12752
+    },
+    {
+      "key": "wayfinding",
+      "id": 19808,
+      "bytes": 18304
+    }
+  ],
+  "textures": [
+    {
+      "key": "snow-diffuse",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/snow_02/snow_02_diff_1k.jpg"
+    },
+    {
+      "key": "snow-normal",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/snow_02/snow_02_nor_gl_1k.jpg"
+    },
+    {
+      "key": "snow-roughness",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/snow_02/snow_02_rough_1k.jpg"
+    }
+  ],
+  "textureSource": "https://polyhaven.com/a/snow_02",
+  "textureLicense": "CC0-1.0",
+  "textureAuthor": "Rob Tuytel"
+}
