@@ -78,3 +78,13 @@ Le projet n'est **pas terminé**. Pas de certification FIS, pas de sponsoring Au
 - Chargement conditionnel de quatre futurs assets ElevenLabs : `carving.mp3`, `ice.mp3`, `wind.mp3`, `crowd-long.mp3`. Sans ces fichiers, le jeu fonctionne avec synthèse originale et l'ancienne ambiance public.
 - Génération ElevenLabs essayée (flow documenté dans ASSETS) mais **refusée avant lancement : service occupé, zéro crédit consommé, aucun nouveau fichier livré**.
 - Nouveaux tests de mixeur; CI à vérifier avant fusion. Aucun fichier additionnel ElevenLabs n'est revendiqué comme intégré dans cette branche.
+
+## Préparation de la V1 jouable — branche release/v1-solid-base
+
+- Réunit les évolutions de neige, performance et mixage audio issues des branches précédentes.
+- Physique affinée : vitesse légèrement dissipée en dérapage et retour sonore/visuel plus sensible quand la prise de carre atteint la limite d'adhérence. Réglage conservateur pour préserver le slalom automatisé.
+- Animations : inclinaison et position basse du skieur amorties sur le temps de rendu ; bras et skis suivent un appui cohérent.
+- Caméra : focalisation et variation du champ de vision amorties pour réduire la sensation de tremblements.
+- Numéro de version affiché : V1.0.0. Tests GitHub Actions à exécuter avant fusion sur main.
+- Publication : source GitHub Pages à activer côté dépôt, sans pouvoir faire ce réglage avec les permissions du connecteur. Import StackBlitz possible comme solution de navigation provisoire, sous réserve de compatibilité du navigateur.
+- Les quatre nouveaux fichiers ElevenLabs n'ont pas été livrés à cause de la saturation du service. Ne pas les annoncer comme intégrés.
