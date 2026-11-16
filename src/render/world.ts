@@ -593,12 +593,18 @@ export class World {
   }
 
   /** Smoothly open hinged chronometric wands after the launch. */
-  updateStartWands(startPush = 0, positionZ = 3, raceStarted = false) {
+  updateStartWands(_startPush = 0, positionZ = 3,
+    raceStarted = false, dt = 1 / 60) {
     if (!this.startWands.length) return;
-    const opening = positionZ > 5 ? 1 :
-      raceStarted ? Math.max(0, Math.min(1, (1 - startPush) * 6)) : 0;
+    // Contact-driven: the mechanism bends when the racer passes z=4.05,
+    // not instantly when GO appears during the double-pole push.
+    const opening = raceStarted
+      ? Math.max(0, Math.min(1, (positionZ - 3.1) / 1.7)) : 0;
+    const blend = 1 - Math.exp(-Math.min(0.1, Math.max(0, dt)) * 14);
     this.startWands.forEach((wand, i) => {
-      wand.setLocalEulerAngles(0, (i === 0 ? 1 : -1) * opening * 76, 0);
+      const target = (i === 0 ? 1 : -1) * opening * 76;
+      const current = wand.getLocalEulerAngles().y;
+      wand.setLocalEulerAngles(0, current + (target - current) * blend, 0);
     });
   }
 
