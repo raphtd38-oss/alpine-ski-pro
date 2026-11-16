@@ -5,7 +5,7 @@ import { trainingLineX } from "../game/guide";
 import { sampleSnowSurface } from "../game/surface";
 import { snowTexel } from "./snow-texture";
 import { gatePoleCanvas, gateBannerCanvas } from "./gate-textures";
-import { gateFlagFlutter, textureFlagWidth } from "../game/gates-visual";
+import { gateFlagFlutter } from "../game/gates-visual";
 import { tipVibration, type PoleState } from "../game/poles";
 import { SUPER_G_ROLLERS } from "../game/superg";
 import type { Course, Quality, Weather } from "../game/types";
@@ -459,7 +459,7 @@ export class World {
   updateStartWands(startPush = 0, positionZ = 3, raceStarted = false) {
     if (!this.startWands.length) return;
     const opening = positionZ > 5 ? 1 :
-      raceStarted ? Math.max(0, Math.min(1, (1 - startPush) * 3)) : 0;
+      raceStarted ? Math.max(0, Math.min(1, (1 - startPush) * 6)) : 0;
     this.startWands.forEach((wand, i) => {
       wand.setLocalEulerAngles(0, (i === 0 ? 1 : -1) * opening * 76, 0);
     });
