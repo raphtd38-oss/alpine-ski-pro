@@ -10,6 +10,7 @@ export interface Settings {
   course: Discipline;
   equipment: Discipline;
   quality: Quality;
+  autoPerformance: boolean;
   weather: Weather;
   sound: boolean;
   ghost: boolean;
@@ -37,7 +38,7 @@ export class UI {
   <main id="menu"><section class="hero"><div class="eyebrow"><i></i> SAISON 01 · LES ALPES</div><h1>LA MONTAGNE.<br>VOTRE <em>LIGNE.</em></h1><p>Le silence au départ. La morsure des carres.<br>Trouvez votre rythme, laissez votre trace.</p><div class="hero-actions"><button class="primary" id="play">PRENDRE LE DÉPART <span>${launchIcon}</span></button><button class="secondary" id="train">S’entraîner</button></div><div class="hint"><span class="key">A</span><span class="key">D</span> pour carver <span class="separator">/</span> <span class="key">W</span> pour la vitesse</div></section>
   <aside class="course-preview"><div class="preview-top"><span>VOTRE PROCHAINE DESCENTE</span><span class="live-dot">●</span></div><div class="course-title"><div><small id="discipline-label">SLALOM / SL</small><h2 id="course-name">Les Aiguilles</h2></div><svg class="route-art" viewBox="0 0 70 105"><path d="M45 5C-5 22 75 30 27 47S70 70 22 90" stroke="#f96c48" fill="none" stroke-width="2" stroke-dasharray="4 3"/><circle cx="45" cy="5" r="4" fill="white"/><circle cx="22" cy="90" r="4" fill="#f96c48"/></svg></div><div class="course-stats"><div><strong id="course-gates">22</strong><small>PORTES</small></div><div><strong id="course-length">570 <small>m</small></strong><small>DISTANCE</small></div><div><strong id="course-drop">140 <small>m</small></strong><small>DÉNIVELÉ</small></div></div><button class="course-link" data-nav="courses">Choisir une autre piste <span>→</span></button></aside>
   <footer><span><i class="status-dot"></i> VERSION JOUABLE 0.1.1 <b>·</b> 100 % NAVIGATEUR</span><button data-nav="leaderboard">VOS RECORDS <span>${launchIcon}</span></button><span id="renderer-info">PLAYCANVAS ENGINE</span></footer></main>
-  <section id="hud" hidden><div class="race-top"><div class="race-brand">ALPINE <b>SKI PRO</b><small id="hud-course">LES AIGUILLES · SL</small></div><div class="timing"><small>TEMPS DE COURSE</small><strong id="time">00:00.00</strong><span id="split">À vous de tracer la ligne</span></div><button id="pause" class="icon-button" aria-label="Pause"><span class="pause-bars"></span></button></div><div id="countdown" aria-live="polite"></div><div id="race-message"></div><div class="race-bottom"><div class="speed"><strong id="speed">0</strong><span>KM/H</span><div class="speed-bar"><i id="speed-bar"></i></div></div><div class="race-instruments"><div class="gate-info"><span>PORTES <strong id="gates">0 / 22</strong></span><span id="race-status">EN PISTE</span></div><div class="course-progress"><i id="progress"></i></div><div class="edge-info"><span id="equipment-label">PRECISION 165</span><span id="edge-label">CARRES 0°</span></div><div class="race-keys">A / D &nbsp; DIRECTION <b>·</b> W &nbsp; VITESSE <b>·</b> S &nbsp; FREIN <b>·</b> ESPACE &nbsp; IMPULSION <b>·</b> C &nbsp; CAMÉRA <b>·</b> R &nbsp; RECOMMENCER</div></div><div class="altitude"><small>RESTANT</small><strong id="remaining">570</strong><span>MÈTRES</span></div></div><div id="touch-controls"><button data-touch="left" aria-label="Tourner à gauche"><svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="m6 12 12-8v16Z"/></svg></button><button data-touch="brake">FREIN</button><button data-touch="right" aria-label="Tourner à droite"><svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="m18 12-12-8v16Z"/></svg></button></div></section>
+  <section id="hud" hidden><div class="race-top"><div class="race-brand">ALPINE <b>SKI PRO</b><small id="hud-course">LES AIGUILLES · SL</small></div><div class="timing"><small>TEMPS DE COURSE</small><strong id="time">00:00.00</strong><span id="split">À vous de tracer la ligne</span></div><button id="pause" class="icon-button" aria-label="Pause"><span class="pause-bars"></span></button></div><div id="countdown" aria-live="polite"></div><div id="race-message"></div><div class="race-bottom"><div class="speed"><strong id="speed">0</strong><span>KM/H</span><div class="speed-bar"><i id="speed-bar"></i></div></div><div class="race-instruments"><div class="gate-info"><span>PORTES <strong id="gates">0 / 22</strong></span><span id="race-status">EN PISTE</span></div><div class="course-progress"><i id="progress"></i></div><div class="edge-info"><span id="equipment-label">PRECISION 165</span><span id="edge-label">CARRES 0°</span></div><div class="race-keys"><span id="fps-meter" aria-label="Images par seconde">FPS —</span><span> A / D &nbsp; DIRECTION <b>·</b> W &nbsp; VITESSE <b>·</b> S &nbsp; FREIN <b>·</b> ESPACE &nbsp; IMPULSION <b>·</b> C &nbsp; CAMÉRA <b>·</b> R &nbsp; RECOMMENCER</span></div></div><div class="altitude"><small>RESTANT</small><strong id="remaining">570</strong><span>MÈTRES</span></div></div><div id="touch-controls"><button data-touch="left" aria-label="Tourner à gauche"><svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="m6 12 12-8v16Z"/></svg></button><button data-touch="brake">FREIN</button><button data-touch="right" aria-label="Tourner à droite"><svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="m18 12-12-8v16Z"/></svg></button></div></section>
   <div id="modal" class="modal-backdrop" hidden></div><div id="toast" role="status"></div>`;
     this.menu = el.querySelector("#menu")!;
     this.hud = el.querySelector("#hud")!;
@@ -138,14 +139,15 @@ export class UI {
           ["sound", "Ambiance sonore"],
           ["ghost", "Fantôme du meilleur chrono"],
           ["edges", "Télémétrie des carres"],
+          ["autoPerformance", "Fluidité automatique (FPS maximum sans sacrifier les décors)"],
         ]
           .map(
             ([id, name]) =>
-              `<label>${name}<input type="checkbox" id="${id}" ${this.settings[id as "sound"] ? "checked" : ""}></label>`,
+              `<label>${name}<input type="checkbox" id="${id}" ${this.settings[id as "sound" | "ghost" | "edges" | "autoPerformance"] ? "checked" : ""}></label>`,
           )
           .join(
             "",
-          )}</div><p class="footnote">Musique, impacts et public créés avec <a href="https://elevenlabs.io" target="_blank" rel="noopener noreferrer">ElevenLabs</a>. La qualité règle la résolution, les ombres et la végétation. La brume réduit la visibilité et l’adhérence. Une course en cours recommence si le rendu est reconstruit.</p><button id="apply" class="primary">APPLIQUER <span>${checkIcon}</span></button>`,
+          )}</div><p class="footnote">Musique, impacts et public créés avec <a href="https://elevenlabs.io" target="_blank" rel="noopener noreferrer">ElevenLabs</a>. La fluidité automatique ajuste légèrement la résolution et les ombres uniquement si nécessaire, sans limiter les FPS ; les décors et les animations restent visibles. Le choix Élevé ou Ultra détermine le niveau graphique maximal. La brume réduit la visibilité et l’adhérence. Une course en cours recommence si le rendu est reconstruit.</p><button id="apply" class="primary">APPLIQUER <span>${checkIcon}</span></button>`,
       );
       this.modal.querySelector("#apply")!.addEventListener("click", () => {
         this.settings.quality = (
@@ -154,7 +156,7 @@ export class UI {
         this.settings.weather = (
           this.modal.querySelector("#weather") as HTMLSelectElement
         ).value as Weather;
-        for (const k of ["sound", "ghost", "edges"] as const)
+        for (const k of ["sound", "ghost", "edges", "autoPerformance"] as const)
           this.settings[k] = (
             this.modal.querySelector("#" + k) as HTMLInputElement
           ).checked;
