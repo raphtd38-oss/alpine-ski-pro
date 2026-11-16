@@ -193,11 +193,19 @@ export class Renderer {
       look = target;
     } else {
       const inStartHouse = this.course.id === "SG" && f.z < 12;
+      // On SG the old camera flattened rollers and made the racer too tiny.
+      // Keep gates in view while approaching the skier and lowering the lens.
+      const speedChase = this.course.id === "SG" && this.cameraMode === 0;
       const distance = inStartHouse ? 5.3 :
-        this.cameraMode === 1 ? 4.8 : 8.6 + speed * 0.065;
+        this.cameraMode === 1 ? 4.8 :
+        speedChase ? 6.15 + speed * 0.05 : 8.6 + speed * 0.065;
       eye = target.clone().sub(forward.clone().mulScalar(distance));
-      eye.y = y + (inStartHouse ? 2.55 : this.cameraMode === 1 ? 3 : 5);
-      look = target.clone().add(new pc.Vec3(s.vx * 0.12, -0.45, 6.5));
+      eye.y = y + (inStartHouse ? 2.55 :
+        speedChase ? 3.45 : this.cameraMode === 1 ? 3 : 5);
+      look = target.clone().add(new pc.Vec3(
+        s.vx * 0.12, speedChase ? -0.2 : -0.45,
+        speedChase ? 4.3 : 6.5,
+      ));
     }
     eye.y = Math.max(eye.y, terrainHeight(eye.x, eye.z, this.course) + 0.7);
     // Smooth both camera position and focal target. A moving target without
