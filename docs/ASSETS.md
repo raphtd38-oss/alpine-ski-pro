@@ -63,3 +63,12 @@ Le code charge ces fichiers seulement s'ils existent ; sinon, les trois premiers
 - Le fichier binaire `public/assets/skier.glb` est versionné et générable à l'identique par `npm run assets` à partir de `scripts/build_skier_pro.mjs`.
 - `npm run assets:verify` vérifie automatiquement la validité du conteneur GLB, les noms des os, les indices, les poids des sommets, la géométrie et le budget navigateur.
 - Les nouvelles formes sont des créations procédurales originales, sans assets tiers ou fichiers de CarveMania. La qualité est plus riche mais reste stylisée, non photogrammétrique.
+
+## V1.4 — textures originales et provenance de l'inspiration vidéo
+
+Le joueur a fourni une vidéo de 55 s d'une course *Giant Slalom Switchback B* avec deux piquets de porte rouges/bleus et panneaux colorés, des bois de sapins, neige damée, montagnes et filets. Notre version V1.4 n'importe **ni les pixels, ni le code, ni la bande-son** de ce jeu.
+
+- `src/render/gate-textures.ts` : texture Canvas générée lors du chargement du niveau pour les piquets fibre de verre et fanions originaux marqués ALPINE SKI PRO.
+- `src/game/gates-visual.ts` : flutter simple simulé à partir du temps et de la vitesse du ressort, purement visuel.
+- `src/game/pole-sound.ts` et `src/game/audio.ts` : bruitages originaux de piquet et tissu créés à partir de Web Audio, combinés au MP3 ElevenLabs existant du piquet.
+- ElevenLabs (nouvel essai du 16 novembre 2026) : **un** son original de carving 7 secondes a été généré (`twV2FljboNunWB9zOUVI`, `eleven_text_to_sound_v2`, 70 crédits). Il est accessible dans https://elevenlabs.io/app/flows/3a7o6vXZTCRaMICykpbt mais **non intégré dans le dépôt** faute d'accès aux octets du MP3. Ne jamais stocker l'URL signée temporaire comme dépendance durable.
