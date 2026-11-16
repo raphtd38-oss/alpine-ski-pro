@@ -87,5 +87,28 @@ test("completes a valid slalom, persists the result and plays a replay", async (
   await expect(page.locator("#modal")).toBeHidden();
   await page.waitForTimeout(500);
   await expect(page.locator("#race-status")).toHaveText("REPLAY");
+  await expect(page.locator("#replay-controls")).toBeVisible();
+  await page.locator('[data-replay-speed="0.5"]').click();
+  expect(await page.evaluate(() => (window as any).__ski.getState().replaySpeed)).toBe(0.5);
+  await page.locator('[data-replay-speed="2"]').click();
+  expect(await page.evaluate(() => (window as any).__ski.getState().replaySpeed)).toBe(2);
+  await page.locator("#replay-seek").evaluate((el: HTMLInputElement) => {
+    el.value = "400";
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  expect(await page.evaluate(() => (window as any).__ski.getState().replayTime)).toBeGreaterThan(1);
   expect(errors).toEqual([]);
+});
+
+test("training mode reveals advisory guide but regular racing does not", async ({ page }) => {
+  await page.goto("/?quality=low");
+  await expect(page.locator("#loading")).toHaveCount(0, { timeout: 45000 });
+  expect(await page.evaluate(() => (window as any).__ski.getState().guideActive)).toBe(false);
+  await page.locator("#train").click();
+  expect(await page.evaluate(() => (window as any).__ski.getState().guideActive)).toBe(true);
+  await page.keyboard.press("Escape");
+  await page.locator("#home").click();
+  expect(await page.evaluate(() => (window as any).__ski.getState().guideActive)).toBe(false);
+  await page.locator("#play").click();
+  expect(await page.evaluate(() => (window as any).__ski.getState().guideActive)).toBe(false);
 });
