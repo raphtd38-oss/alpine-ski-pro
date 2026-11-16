@@ -7,11 +7,12 @@
     "dev": "vite --host 0.0.0.0",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 0.0.0.0",
-    "test": "vitest run --exclude tests/browser/**",
+    "test": "node scripts/check_skier.mjs && vitest run --exclude tests/browser/**",
     "test:e2e": "playwright test",
     "assets": "node scripts/build_skier_pro.mjs",
     "format": "prettier --write src tests scripts/*.mjs *.ts *.json *.html docs/*.md README.md AGENTS.md",
-    "assets:verify": "node scripts/check_skier.mjs"
+    "assets:verify": "node scripts/check_skier.mjs",
+    "prebuild": "npm run assets && npm run assets:verify"
   },
   "dependencies": {
     "@fontsource/barlow": "^5.3.0",
