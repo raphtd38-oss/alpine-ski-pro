@@ -456,10 +456,10 @@ export class World {
   }
 
   /** Smoothly open hinged chronometric wands after the launch. */
-  updateStartWands(startPush = 0, positionZ = 3) {
+  updateStartWands(startPush = 0, positionZ = 3, raceStarted = false) {
     if (!this.startWands.length) return;
     const opening = positionZ > 5 ? 1 :
-      Math.max(0, Math.min(1, (1 - startPush) * 3));
+      raceStarted ? Math.max(0, Math.min(1, (1 - startPush) * 3)) : 0;
     this.startWands.forEach((wand, i) => {
       wand.setLocalEulerAngles(0, (i === 0 ? 1 : -1) * opening * 76, 0);
     });
