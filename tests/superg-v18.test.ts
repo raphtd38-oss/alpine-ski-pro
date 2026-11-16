@@ -81,7 +81,7 @@ describe("V1.8 Super-G winding route, markers and FIS-inspired finish", () => {
       state.z += dz;
       race.update(prev, state, dt, true);
       if (race.finishBeamTriggeredBy && !beamZ) beamZ = state.z;
-      if (race.phase === "finished") {
+      if (race.result !== null) {
         reachedFinish = true;
         break;
       }
