@@ -191,8 +191,14 @@ export function stepPhysics(
     const surfaceVy = gx * s.vx + gz * s.vz;
     // Manual jump retains its previous 2.5 m/s pop. Natural rollers add only
     // a little clearance; most airtime comes from the real shape of the slope.
+    // The skier actively extends at the crest: enough clearance to leave
+    // the snow at race speed, but only a fraction of a manual jump impulse.
+    const terrainExtension = clamp(
+      0.65 + Math.max(0, -curvature * speed * speed / 9.81) * 0.46,
+      0.65, 1.17,
+    );
     s.verticalSpeed = surfaceVy +
-      (manualTakeoff ? 2.5 : clamp((0.16 - s.pressure) * 0.55, 0.18, 0.85));
+      (manualTakeoff ? 2.5 : terrainExtension);
     s.lastTakeoffZ = s.z;
   }
   s.jumpHeld = input.jump;
