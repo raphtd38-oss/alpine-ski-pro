@@ -81,3 +81,13 @@ Le joueur a fourni une vidéo de 55 s d'une course *Giant Slalom Switchback B* a
 - **Intégration** : le workflow GitHub Actions exécute npm run assets:alpine avant compilation et livre les GLB/JPG dans son artefact déployé. Le script vérifie la taille et le conteneur glTF, avertit si un téléchargement échoue ; le jeu conserve ses modèles procéduraux en repli. Les fichiers téléchargés ne sont pas versionnés dans Git lui-même.
 - **LOD spatial** : les GLB détaillés bordent la piste ; arbres lointains et montagnes restent dans des maillages groupés, avec budgets par qualité. Ombres des modèles importés limitées aux bâtiments pour ne pas alourdir les courses.
 - **Limites** : les modèles ajoutés sont statiques avec matériaux colorés (pas de nouvelles animations ou de scans). Le skieur GLB original et son IK sont préservés. Les textures Snow 02 sont en **JPG 1K, non KTX2** ; le LOD dynamique et l'optimisation Basis/KTX2 restent à faire. Aucun asset de CarveMania n'est utilisé.
+
+## Outils de découverte et de production — 16 novembre 2026
+
+Les scripts de la nouvelle boîte à outils **n'ajoutent pas automatiquement de binaires sous licence tierce au jeu** : ce sont des aides destinées aux agents de code, décrites dans [RESOURCE_CATALOG.md](RESOURCE_CATALOG.md) et [ASSET_WORKFLOW.md](ASSET_WORKFLOW.md).
+
+- Recherche API en lecture seule Poly Haven et ambientCG, sans compte ; conserver crédit Poly Haven et User-Agent pour la live API.
+- Audit GLB/provenance/budget depuis scripts/asset_audit.mjs, blocage en CI des nouveaux fichiers visuels non déclarés et vérification du pack existant.
+- Blender exportateur local et glTF Transform optionnel pour inspection/optimisation WebP, sans remplacement aveugle du coureur actif.
+- Le KTX2, les nouveaux rigs et les animations de ski externes ne sont **pas activés** par ce lot ; aucune modification des licences ElevenLabs existantes.
+- La documentation précise la divergence entre la licence générale récente de Quaternius (QAL) et certaines pages de packs toujours marquées CC0 ; contrôle asset par asset obligatoire.
