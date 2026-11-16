@@ -12,6 +12,7 @@ import { material, meshEntity, shape, beam, rng, color } from "./geometry";
 export class World {
   root = new pc.Entity("Alpine world");
   gateEntities: pc.Entity[] = [];
+  startArch: pc.Entity | null = null;
   trainingGuide: pc.Entity | null = null;
   resources: pc.Texture[] = [];
   materials: pc.StandardMaterial[] = [];
@@ -403,11 +404,16 @@ export class World {
     return { m, width, height, canvas: c, texture: t };
   }
   arch(z: number, label: string, finish: boolean) {
+    // Group the arch to hide the start banner after departure: it otherwise
+    // crosses the entire chase-camera viewport for several seconds.
+    const archRoot = new pc.Entity(finish ? "Finish arch" : "Start arch");
+    this.root.addChild(archRoot);
+    if (!finish) this.startArch = archRoot;
     const w = finish ? 14 : 7,
       h = terrainHeight(0, z, this.course);
     for (const x of [-w / 2, w / 2])
       shape(
-        this.root,
+        archRoot,
         "box",
         "Arch tower",
         [x, h + 2.1, z],
@@ -421,7 +427,7 @@ export class World {
       finish ? "#d82728" : "#152b3a",
     );
     shape(
-      this.root,
+      archRoot,
       "box",
       label,
       [0, h + 3.85, z],
@@ -432,7 +438,7 @@ export class World {
       for (let i = 0; i < 20; i++) {
         const x = -w / 2 + (i * w) / 20;
         shape(
-          this.root,
+          archRoot,
           "box",
           "Finish checker",
           [x, h + 0.05, z],
