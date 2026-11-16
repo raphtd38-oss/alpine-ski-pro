@@ -53,7 +53,10 @@ export class World {
     this.forest();
     if (this.course.id === "SG") this.superGScenery();
     this.gates();
-    if (this.course.id === "SG") this.superGMarkers();
+    if (this.course.id === "SG") {
+      this.superGMarkers();
+      this.superGBlueDye();
+    }
     this.fences();
     this.buildings();
     this.finishArena();
@@ -546,6 +549,65 @@ export class World {
 
   /** Blue terrain marks on the approach to the five speed crests.
    * One batched geometry, no expensive per-frame decal updates. */
+
+  /** World Cup-inspired blue-dye lane: BOTH curving side markers and short
+   * crossing bars at compressions/crests. Painted on the real sampled terrain.
+   * A single batched mesh, rather than hundreds of draw calls. */
+  superGBlueDye() {
+    const p: number[] = [], indices: number[] = [];
+    const meshQuad = (
+      ax: number, az: number, bx: number, bz: number, width: number,
+    ) => {
+      const dx = bx - ax, dz = bz - az;
+      const distance = Math.max(0.001, Math.hypot(dx, dz));
+      const nx = dz / distance * width / 2;
+      const nz = -dx / distance * width / 2;
+      const corners: [number, number][] = [
+        [ax + nx, az + nz], [ax - nx, az - nz],
+        [bx + nx, bz + nz], [bx - nx, bz - nz],
+      ];
+      const n = p.length / 3;
+      for (const [x, z] of corners)
+        p.push(x, terrainHeight(x, z, this.course) + 0.055, z);
+      indices.push(n, n + 2, n + 1, n + 1, n + 2, n + 3);
+    };
+    const stripeWidth = this.quality === "low" ? 0.30 : 0.23;
+    for (let z = 0; z < this.course.length; z += 3.6) {
+      const next = Math.min(this.course.length, z + 3.6);
+      for (const side of [-1, 1]) {
+        const offset = side * (this.course.width / 2 - 1.9);
+        meshQuad(courseCenterX(z, this.course) + offset, z,
+          courseCenterX(next, this.course) + offset, next, stripeWidth);
+      }
+    }
+    for (const bump of SUPER_G_ROLLERS) {
+      for (const z of [bump.z - 15, bump.z - 2, bump.z + 9])
+        for (let i = 0; i < 30; i++) {
+          const centre = courseCenterX(z, this.course);
+          const x0 = centre - 18 + i * 1.2;
+          meshQuad(x0, z, x0 + 1.2, z, 0.22);
+        }
+    }
+    // Short outer-edge alignment markings beside each gate give the player
+    // a visual cue before setting the edges into the next long turn.
+    for (const gate of this.course.gates) {
+      for (const side of [-1, 1]) {
+        const x = gate.x + side * (gate.width / 2 + 1.5);
+        meshQuad(x, gate.z - 2.5, x, gate.z + 2.5, 0.22);
+      }
+    }
+    const material = this.mat("World-cup blue snow dye", "#337eb2", 0, 0.32);
+    material.opacity = 0.88;
+    material.blendType = pc.BLEND_NORMAL;
+    material.depthWrite = false;
+    material.cull = pc.CULLFACE_NONE;
+    material.update();
+    const mesh = meshEntity(this.app.graphicsDevice, this.root,
+      "Blue dye on both winding piste borders and jump crests",
+      p, indices, material);
+    mesh.render!.castShadows = false;
+  }
+
   superGMarkers() {
     const p: number[] = [], indices: number[] = [];
     for (const bump of SUPER_G_ROLLERS) {
