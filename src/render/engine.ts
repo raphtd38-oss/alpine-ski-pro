@@ -148,7 +148,7 @@ export class Renderer {
     this.athlete.update(f, this.course, dt);
     this.ghost.root.enabled = ghostFrame !== null;
     if (ghostFrame) this.ghost.update(ghostFrame, this.course, dt);
-    this.effects.update(s, dt, active);
+    this.effects.update(s, dt, active, this.camera.getPosition());
     const y = terrainHeight(f.x, f.z, this.course) + f.height;
     const speed = Math.hypot(s.vx, s.vz);
     const forward = new pc.Vec3(

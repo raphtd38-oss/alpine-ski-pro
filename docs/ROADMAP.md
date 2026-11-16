@@ -67,3 +67,11 @@ Le but est un simulateur de ski de grande qualité, amélioré sur le même dép
 - Comparer visuellement neige PBR et rendu précédente sur machine avec GPU ; ajuster l'intensité de la coloration si elle devient trop visible.
 - Optimiser le chargement des textures sur les navigateurs mobiles si cela rallonge le premier lancement.
 - Réessayer les sons ElevenLabs dans une autre session seulement lorsque le service redevient disponible, puis importer les MP3 localement.
+
+## Pistes après V1.2
+
+- Mesurer et ajuster sur GPU joueur les billboards de neige et la végétation en réglages Élevé/Ultra.
+- Revoir les sensations de flexion et de plantation du bâton à l'aide de retours vidéo de slalom réel et de tests en jeu.
+- Faire évoluer le modèle GLB vers un skinning multi-poids, un anatomie plus détaillée et une vraie IK 3D.
+- Ajouter des portes de slalom doubles, tracés combinés et modes course plus exigeants après stabilisation de la V1.
+- Générer les nouveaux sons ElevenLabs lorsqu'ils deviennent disponibles, avec licences vérifiées, sans conserver d'appels payants au runtime.

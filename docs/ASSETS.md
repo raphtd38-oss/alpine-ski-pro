@@ -48,3 +48,10 @@ Le code charge ces fichiers seulement s'ils existent ; sinon, les trois premiers
 - `src/game/surface.ts` définit un relief de dureté/adhérence doucement variable sur la piste, utilisé également pour la teinte visuelle des zones compactées.
 - Aucun contenu externe ni licence supplémentaire nécessaire pour cette mise à jour.
 - Nouvelle tentative ElevenLabs le 16 novembre 2026 : création refusée avant démarrage (service occupé), zéro fichier MP3 livré et aucun crédit débité.
+
+## Nouveaux détails originaux V1.2
+
+- `src/game/guide.ts` et `src/render/world.ts` : trajectoire indicative d'entraînement interpolée et dessinée par notre code, sans ressources externes.
+- `src/render/athlete.ts` : insertions originales de petit équipement 3D (masque, casque, boucles de chaussures), riggées sur le squelette existant.
+- `src/render/effects.ts` : particules de neige rendues par billboards et retombée sur le sol, sans textures téléchargées.
+- Aucune nouvelle génération ElevenLabs livrée pour ce lot. Les fichiers audio existants et leur provenance restent inchangés.

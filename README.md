@@ -104,3 +104,15 @@ Les améliorations sont des travaux originaux. Rien de propriétaire n'a été c
 ## Mise à jour V1.1 : sensation de neige
 
 Le damage de la piste utilise maintenant un matériau PBR procédural (albedo, micro-normales, rugosité) avec des bandes moins artificielles. Certaines zones compactées sont légèrement bleutées et offrent une adhérence un peu différente, cohérente avec la simulation à 120 Hz et le mixage des sons de carving. Un indicateur de neige en course aide à repérer ces zones. La variabilité est déterministe et volontairement modeste afin de conserver la jouabilité du SL. Les nouvelles générations ElevenLabs restent indisponibles, les sons Web Audio actuels restent présents.
+
+## V1.2 — Carving, entraînement et replay
+
+- **Entraînement guidé** : une trajectoire lumineuse originale traverse les portes ; elle n'apparaît qu'en mode entraînement et n'est pas un pilote automatique. Elle disparaît pendant les courses chronométrées et les replays.
+- **Replay analysable** : barre de lecture, saut à un moment de la descente et vitesses 0,5×, 1×, 2× ; on peut toujours changer de caméra avec `C`. Les angles du skieur suivent le plus court arc, y compris aux passages angulaires +/-π.
+- **Athlète plus détaillé** : inserts sur le masque et le casque, boucles des chaussures de ski, mouvements ponctuels des bâtons au changement de carre. Le personnage reste stylisé, mais ses accessoires et la gestuelle sont plus lisibles.
+- **Projections de neige** : particules orientées vers la caméra, retombant sur la pente et affichées en quads translucides (au lieu de triangles rigides) ; niveau de qualité et cadence de mise à jour plafonnés pour éviter une baisse inutile des FPS.
+- **Interface en course** : distance de la prochaine porte, contrôles de replay et compteurs existants conservés.
+- **Compatibilité** : physique 120 Hz, quatre disciplines, scores, progrès, musique et sons actuels ElevenLabs préservés. Aucun nouveau son ElevenLabs revendiqué, les quatre fichiers complémentaires restent indisponibles.
+- **Provenance** : code de trajectoire, détails visuels et particules créés spécialement pour ce jeu ; aucune réutilisation des fichiers propriétaires de CarveMania.
+
+Le mode entraînement ne valide pas les résultats dans les records. Les performances graphiques et le réalisme doivent toujours être évalués sur une machine avec GPU réel.

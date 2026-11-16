@@ -11,6 +11,9 @@ export class Athlete {
   poles: pc.Entity[] = [];
   visualEdge = 0;
   visualCrouch = 0.045;
+  lastTurnSide = 0;
+  plantingSide = 0;
+  plantEnergy = 0;
   material: pc.StandardMaterial;
   ownedMaterials: pc.StandardMaterial[] = [];
   constructor(
@@ -108,6 +111,33 @@ export class Athlete {
       this.poles.push(pole);
       shape(pole, "sphere", "Pole basket", [0, -0.46, 0], [3, 0.05, 3], base);
     }
+    // Lightweight original detail meshes make the silhouette and equipment
+    // readable up close. They follow existing GLB bones, not a separate rig.
+    const visor = material("Goggle anti-reflective visor", "#263b4d", 0.65, 0.88);
+    const trim = material("Helmet air vents and carbon buckles", "#122432", 0.4, 0.55);
+    const highlight = material("Equipment safety highlight", "#aee5e1", 0.25, 0.6);
+    this.ownedMaterials.push(visor, trim, highlight);
+    const head = this.rig.findByName("Head") as pc.Entity | null;
+    if (head) {
+      shape(head, "box", "Goggle lens highlight",
+        [0, 0.031, 0.146], [0.19, 0.038, 0.015], visor);
+      for (const side of [-1, 1]) {
+        shape(head, "box", "Helmet side vents",
+          [side * 0.088, 0.157, -0.025], [0.029, 0.009, 0.083], trim);
+        shape(head, "box", "Goggle secure strap",
+          [side * 0.131, -0.005, -0.018], [0.018, 0.03, 0.15], trim);
+      }
+    }
+    for (const side of ["L", "R"]) {
+      const ankle = this.rig.findByName(side + "Ankle") as pc.Entity | null;
+      if (!ankle) continue;
+      for (const y of [-0.012, 0.052]) {
+        shape(ankle, "box", "Racing boot micro buckle",
+          [0, y, 0.168], [0.116, 0.018, 0.026], trim);
+        shape(ankle, "box", "Boot clasp",
+          [0.037, y, 0.182], [0.028, 0.014, 0.014], highlight);
+      }
+    }
     if (ghost) {
       this.rig.findComponents("render").forEach((c) => {
         const r = c as pc.RenderComponent;
@@ -151,6 +181,14 @@ export class Athlete {
     const edgeTarget = Math.max(-1.1, Math.min(1.1, f.edge));
     this.visualEdge += (edgeTarget - this.visualEdge) * blend;
     const edge = this.visualEdge;
+    // Initiate a brief pole plant at each completed edge transition.
+    const side = edge > 0.17 ? 1 : edge < -0.17 ? -1 : 0;
+    if (side !== 0 && this.lastTurnSide !== 0 && side !== this.lastTurnSide) {
+      this.plantingSide = side;
+      this.plantEnergy = 1;
+    }
+    if (side !== 0) this.lastTurnSide = side;
+    this.plantEnergy *= Math.exp(-Math.max(0, dt) * 7);
     const load = Math.max(0, Math.min(1.4, f.flex ?? 0));
     const crouchTarget = 0.055 + f.tuck * 0.18 +
       Math.abs(edge) * 0.085 + load * 0.045;
@@ -186,12 +224,16 @@ export class Athlete {
       j[side + "Hip"]?.setLocalEulerAngles(hipRot, 0, edge * 12);
       j[side + "Knee"]?.setLocalEulerAngles(kneeRot, 0, 0);
       j[side + "Ankle"]?.setLocalEulerAngles(-hipRot - kneeRot, 0, -edge * 10);
+      const activePlant = ((i === 0 ? 1 : -1) === this.plantingSide)
+        ? this.plantEnergy : 0;
       j[side + "Shoulder"]?.setLocalEulerAngles(
-        -f.tuck * 15 + Math.sin(f.t * 3 + i) * Math.abs(edge) * 4,
+        -f.tuck * 15 + Math.sin(f.t * 3 + i) * Math.abs(edge) * 4 -
+          activePlant * 23,
         0,
         (i === 0 ? -1 : 1) * (8 + Math.abs(edge) * 12),
       );
-      j[side + "Elbow"]?.setLocalEulerAngles(-f.tuck * 36, 0, 0);
+      j[side + "Elbow"]?.setLocalEulerAngles(
+        -f.tuck * 36 - activePlant * 15, 0, 0);
       const surf = this.skiSurfaces[i];
       const vertices = [...surf.base];
       for (let k = 0; k < vertices.length; k += 3) {
@@ -215,10 +257,12 @@ export class Athlete {
           .invert()
           .transformPoint(wrist.getPosition());
         this.poles[i].setLocalPosition(point.x, point.y - 0.45, point.z - 0.24);
+        const activePlant = ((i === 0 ? 1 : -1) === this.plantingSide)
+          ? this.plantEnergy : 0;
         this.poles[i].setLocalEulerAngles(
-          27 - f.tuck * 12,
+          27 - f.tuck * 12 - activePlant * 28,
           0,
-          (i === 0 ? -1 : 1) * 9,
+          (i === 0 ? -1 : 1) * (9 + activePlant * 7),
         );
       }
     }

@@ -87,7 +87,7 @@ export class SnowEffects {
     this.spray.enabled = false;
   }
 
-  update(s: SkierState, dt: number, active: boolean) {
+  update(s: SkierState, dt: number, active: boolean, cameraPosition: pc.Vec3) {
     dt = Math.min(0.1, Math.max(0, dt));
     const speed = Math.hypot(s.vx, s.vz);
     const grounded = s.height < 0.05;
@@ -168,6 +168,9 @@ export class SnowEffects {
       crystal.y += crystal.vy * dt;
       crystal.z += crystal.vz * dt;
       crystal.vy -= 7 * dt;
+      // Powder lands on the actual slope instead of sinking through it.
+      if (crystal.y <= terrainHeight(crystal.x, crystal.z, this.c) + 0.025)
+        crystal.life = 0;
     }
 
     if (!this.particles.length) {
@@ -183,15 +186,31 @@ export class SnowEffects {
     const idx: number[] = [];
     const normals: number[] = [];
     for (const a of this.particles) {
+      if (a.life <= 0) continue;
       const k = p.length / 3;
-      const radius = 0.018 + a.life * 0.066;
-      p.push(
-        a.x - radius, a.y, a.z,
-        a.x + radius, a.y, a.z,
-        a.x, a.y + radius * 2.1, a.z + radius * 0.3,
-      );
-      idx.push(k, k + 1, k + 2);
-      normals.push(0, 1, 0, 0, 1, 0, 0, 1, 0);
+      const radius = Math.min(0.065, 0.016 + a.life * 0.066);
+      // Two triangles form a view-facing translucent snowflake. The previous
+      // fixed world-space triangles disappeared edge-on when the camera moved.
+      const dx = cameraPosition.x - a.x;
+      const dy = cameraPosition.y - a.y;
+      const dz = cameraPosition.z - a.z;
+      const d = Math.max(1e-6, Math.hypot(dx, dy, dz));
+      const nx = dx / d, ny = dy / d, nz = dz / d;
+      const h = Math.max(1e-5, Math.hypot(nx, nz));
+      const rx = nz / h, rz = -nx / h;
+      const ux = -ny * nx / h, uy = h, uz = -ny * nz / h;
+      const size = radius * 1.7;
+      for (const [sx, sy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) {
+        p.push(a.x + rx * size * sx + ux * size * sy,
+          a.y + uy * size * sy,
+          a.z + rz * size * sx + uz * size * sy);
+        normals.push(nx, ny, nz);
+      }
+      idx.push(k, k + 1, k + 2, k, k + 2, k + 3);
+    }
+    if (p.length === 0) {
+      this.spray.enabled = false;
+      return;
     }
     const mesh = this.spray.render!.meshInstances[0].mesh!;
     mesh.setPositions(p);
