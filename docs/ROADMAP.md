@@ -90,3 +90,10 @@ Le but est un simulateur de ski de grande qualité, amélioré sur le même dép
 - Améliorer la chaîne de skinning et la posture du skieur en vrai carving (les géométries et IK demeurent semi-réalistes).
 - Tester une variante d'animation plus ample pour les pivots après collision sans influer sur la validation des portes.
 - Récupérer manuellement le nouveau MP3 ElevenLabs depuis le compte propriétaire, vérifier les droits d'usage, puis intégrer de façon locale et pérenne en `public/audio/carving.mp3`.
+
+## Suite après V1.5
+
+- Vérifier l'impact des sections supérieures supplémentaires sur le rendu GS et les FPS à qualité Ultra.
+- Ajuster l'appui extérieur et le dosage de dérapage d'après des essais réels à la manette, pas seulement des tests de trajectoire.
+- Refondre ensuite la géométrie humaine et l'IK 3D ; les nouvelles animations V1.5 ne rendent pas le GLB photoréaliste.
+- Intégrer `carving.mp3` seulement si le fichier audio original ElevenLabs est récupéré durablement, puis tester droits, boucle et poids au chargement.
