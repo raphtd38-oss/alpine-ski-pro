@@ -1,13 +1,13 @@
 import * as pc from "playcanvas";
 import { formatTime } from "../game/race";
-import { terrainHeight, gradient } from "../game/course";
+import { terrainHeight, gradient, courseCenterX } from "../game/course";
 import { trainingLineX } from "../game/guide";
 import { sampleSnowSurface } from "../game/surface";
 import { snowTexel } from "./snow-texture";
 import { gatePoleCanvas, gateBannerCanvas } from "./gate-textures";
 import { gateFlagFlutter } from "../game/gates-visual";
 import { tipVibration, type PoleState } from "../game/poles";
-import { SUPER_G_ROLLERS } from "../game/superg";
+import { SUPER_G_ROLLERS, superGSector } from "../game/superg";
 import type { Course, Quality, Weather } from "../game/types";
 import { material, meshEntity, shape, beam, rng, color } from "./geometry";
 export class World {
@@ -51,6 +51,7 @@ export class World {
     this.buildTrainingGuide();
     this.mountains();
     this.forest();
+    if (this.course.id === "SG") this.superGScenery();
     this.gates();
     if (this.course.id === "SG") this.superGMarkers();
     this.fences();
@@ -225,8 +226,9 @@ export class World {
       for (let j = 0; j <= m; j++)
         for (let i = 0; i <= n; i++) {
           const z = -500 + (j * (this.course.length + 1300)) / m,
-            x = side * (120 + i * 19);
-          const base = terrainHeight(side * 120, z, this.course);
+            x = courseCenterX(z, this.course) + side * (120 + i * 19);
+          const base = terrainHeight(courseCenterX(z, this.course) +
+            side * 120, z, this.course);
           const envelope = Math.sin(Math.min(1, i / n) * Math.PI) * 265;
           const ridges =
             Math.abs(Math.sin(z * 0.0048 + x * 0.009)) +
@@ -290,10 +292,18 @@ export class World {
       this.quality
     ];
     for (let t = 0; t < count; t++) {
-      const x = (t % 2 ? 1 : -1) * (this.course.width / 2 + 6 + random() * 75),
-        z = -50 + random() * (this.course.length + 140),
-        y = terrainHeight(x, z, this.course),
-        h = 4 + random() * 8;
+      const z = -50 + random() * (this.course.length + 140);
+      const section = this.course.id === "SG" ? superGSector(z) : "spruce";
+      // Evergreen woodland, exposed glacier, then steeper mixed forest.
+      // The tree mesh stays fully batched and changes NO draw calls.
+      const density = section === "glacier" ? 0.18 :
+        section === "canyon" ? 0.58 : section === "finish" ? 0.38 : 1;
+      if (random() > density) continue;
+      const x = courseCenterX(z, this.course) +
+        (t % 2 ? 1 : -1) * (this.course.width / 2 + 6 + random() * 75);
+      const y = terrainHeight(x, z, this.course);
+      const h = (section === "glacier" ? 3 : 4) +
+        random() * (section === "canyon" ? 12 : 8);
       for (let level = 0; level < 6; level++) {
         const by = y + h * 0.12 + level * h * 0.135,
           r = h * 0.26 * (1 - level / 7),
@@ -335,6 +345,75 @@ export class World {
     );
     e.render!.castShadows = this.quality !== "low";
   }
+
+  /** Area-specific, fully batched rock geometry. Unlike repetitive cones,
+   * every sector has separate density, silhouettes, exposed granite and
+   * frost colour, with the glacier intentionally almost treeless. */
+  superGScenery() {
+    const random = rng(17122026);
+    const vertices: number[] = [], indices: number[] = [],
+      colors: number[] = [];
+    const count = {
+      low: 88, medium: 155, high: 260, ultra: 370,
+    }[this.quality];
+    const addRock = (x: number, z: number, radius: number, altitude: number,
+      tint: number) => {
+      const n = vertices.length / 3;
+      const y = terrainHeight(x, z, this.course);
+      const sides = 7;
+      vertices.push(x, y + altitude, z);
+      colors.push(tint * 0.78, tint * 0.86, tint * 0.91, 1);
+      for (let k = 0; k < sides; k++) {
+        const a = k * Math.PI * 2 / sides;
+        const rough = 0.7 + random() * 0.6;
+        vertices.push(x + Math.cos(a) * radius * rough,
+          y + (random() - 0.35) * radius * 0.4,
+          z + Math.sin(a) * radius * rough);
+        const shade = tint * (0.5 + random() * 0.37);
+        colors.push(shade * 0.79, shade * 0.86, shade * 0.91, 1);
+      }
+      for(let k=0;k<sides;k++)
+        indices.push(n, n + 1 + k, n + 1 + ((k + 1) % sides));
+    };
+    for (let i = 0; i < count; i++) {
+      const z = 90 + random() * (this.course.length - 140);
+      const sector = superGSector(z);
+      const side = i % 2 ? 1 : -1;
+      const shoulder = this.course.width / 2;
+      const distance = shoulder + 8 + random() *
+        (sector === "glacier" ? 66 : 48);
+      const x = courseCenterX(z, this.course) + side * distance;
+      const radius = (sector === "glacier" ? 3.8 :
+        sector === "canyon" ? 3 : 1.8) * (0.6 + random() * 1.1);
+      const height = radius * (sector === "glacier" ? 2.3 : 1.3);
+      addRock(x, z, radius, height,
+        sector === "glacier" ? 0.79 : sector === "canyon" ? 0.63 : 0.76);
+    }
+    const granite = this.mat("Batched rock faces and glacier moraine", "#ffffff");
+    granite.diffuseVertexColor = true;
+    granite.update();
+    const mesh = meshEntity(this.app.graphicsDevice, this.root,
+      "Terrain sector granite and moraine", vertices, indices, granite, colors);
+    mesh.render!.castShadows = this.quality !== "low";
+    const signs: { z: number; text: string; tone: string }[] = [
+      { z: 400, text: "FORET DES AIGUILLES", tone: "#245b49" },
+      { z: 850, text: "GLACIER / 110 KM H", tone: "#477a99" },
+      { z: 1260, text: "COMBE DU ROC", tone: "#465968" },
+      { z: 1725, text: "SPRINT FINAL", tone: "#b52937" },
+    ];
+    for (const signInfo of signs) {
+      const z = signInfo.z;
+      const x = courseCenterX(z, this.course) +
+        this.course.width / 2 + 3.6;
+      const base = terrainHeight(x, z, this.course);
+      const panel = this.sign(signInfo.text, 5.3, 0.7, signInfo.tone);
+      shape(this.root, "box", "Super-G sector sign",
+        [x, base + 2.3, z], [5.3, 0.76, 0.16], panel.m);
+      shape(this.root, "cylinder", "Sector sign support",
+        [x, base + 1.0, z], [0.075, 2.0, 0.075], this.dark);
+    }
+  }
+
   gates() {
     for (const g of this.course.gates) {
       const parent = new pc.Entity(`Gate ${g.id + 1}`);
@@ -472,8 +551,8 @@ export class World {
     for (const bump of SUPER_G_ROLLERS) {
       const z = bump.z - 14;
       for (let i = 0; i < 32; i++) {
-        const x0 = (i / 32 - 0.5) * 27;
-        const x1 = ((i + 1) / 32 - 0.5) * 27;
+        const x0 = courseCenterX(z, this.course) + (i / 32 - 0.5) * 27;
+        const x1 = courseCenterX(z, this.course) + ((i + 1) / 32 - 0.5) * 27;
         const y0 = terrainHeight(x0, z, this.course) + 0.044;
         const y1 = terrainHeight(x1, z, this.course) + 0.044;
         const n = p.length / 3;
@@ -482,7 +561,7 @@ export class World {
           x0, terrainHeight(x0, z + 0.21, this.course) + 0.044, z + 0.21);
         indices.push(n, n + 1, n + 2, n, n + 2, n + 3);
       }
-      const x = -this.course.width / 2 - 3;
+      const x = courseCenterX(z, this.course) - this.course.width / 2 - 3;
       const y = terrainHeight(x, z, this.course) + 1.2;
       const sign = this.sign(bump.name.toUpperCase(), 4.4, 0.7, "#205a83");
       shape(this.root, "box", "Super-G crest sector marker",
@@ -588,40 +667,30 @@ export class World {
       idx.push(n, n + 1, n + 2, n, n + 2, n + 3);
     };
     for (const side of [-1, 1]) {
-      const x = (side * this.course.width) / 2;
       for (let z = 0; z < this.course.length + 30; z += 6) {
-        const a = terrainHeight(x, z, this.course),
-          b = terrainHeight(x, z + 6, this.course);
+        const x = courseCenterX(z, this.course) +
+          side * this.course.width / 2;
+        const nextX = courseCenterX(z + 6, this.course) +
+          side * this.course.width / 2;
+        const a = terrainHeight(x, z, this.course);
+        const b = terrainHeight(nextX, z + 6, this.course);
         for (let y = 0.25; y <= 1.25; y += 0.25)
-          quad([x, a + y, z], [x, b + y, z + 6], 0.025);
-        for (let dz = 0; dz < 6; dz += 0.5) {
-          const y = terrainHeight(x, z + dz, this.course),
-            n = p.length / 3;
-          p.push(
-            x,
-            y + 0.2,
-            z + dz,
-            x,
-            y + 1.3,
-            z + dz,
-            x,
-            y + 1.3,
-            z + dz + 0.02,
-            x,
-            y + 0.2,
-            z + dz + 0.02,
-          );
+          quad([x, a + y, z], [nextX, b + y, z + 6], 0.025);
+        // Flexible safety net strands trace the serpentine piste, not x=const.
+        for (let dz = 0; dz < 6; dz += 0.75) {
+          const xx = courseCenterX(z + dz, this.course) +
+            side * this.course.width / 2;
+          const y = terrainHeight(xx, z + dz, this.course);
+          const n = p.length / 3;
+          p.push(xx, y + 0.2, z + dz,
+            xx, y + 1.3, z + dz,
+            xx, y + 1.3, z + dz + 0.02,
+            xx, y + 0.2, z + dz + 0.02);
           idx.push(n, n + 1, n + 2, n, n + 2, n + 3);
         }
-        if (z % 18 === 0)
-          shape(
-            this.root,
-            "cylinder",
-            "Net support",
-            [x, a + 0.7, z],
-            [0.06, 1.6, 0.06],
-            this.red,
-          );
+        if (z % 24 === 0)
+          shape(this.root, "cylinder", "Net support",
+            [x, a + 0.7, z], [0.06, 1.6, 0.06], this.red);
       }
     }
     const e = meshEntity(
