@@ -1,4 +1,5 @@
 import { clamp, type Course, type Weather } from "./types";
+import { courseCenterX } from "./course";
 
 /**
  * Original deterministic piste surface. All tracks sample the same field:
@@ -31,7 +32,7 @@ export function sampleSnowSurface(
     1,
   );
   // Fresh snow collects at piste shoulders, with a shallow layer in snowfall.
-  const verge = clamp((Math.abs(x) - (course.width / 2 - 6)) / 5, 0, 1);
+  const verge = clamp((Math.abs(x - courseCenterX(z, course)) - (course.width / 2 - 6)) / 5, 0, 1);
   const depth = clamp(verge * 0.75 + (weather === "snow" ? 0.18 : 0), 0, 1);
   const base = weather === "snow" ? 0.82 : 1;
   return {
