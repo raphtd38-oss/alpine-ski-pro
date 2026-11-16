@@ -5,6 +5,7 @@ export function readSettings(): Settings {
     course: "SL",
     equipment: "SL",
     quality: "high",
+    autoPerformance: true,
     weather: "clear",
     sound: true,
     ghost: true,
@@ -21,7 +22,7 @@ export function readSettings(): Settings {
       result.quality = v.quality;
     if (["clear", "overcast", "snow"].includes(v.weather))
       result.weather = v.weather;
-    for (const name of ["sound", "ghost", "edges"] as const)
+    for (const name of ["sound", "ghost", "edges", "autoPerformance"] as const)
       if (typeof v[name] === "boolean") result[name] = v[name];
     if (typeof v.suit === "string" && /^#[0-9a-f]{6}$/i.test(v.suit))
       result.suit = v.suit;
