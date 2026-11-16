@@ -5,6 +5,7 @@ import type {
   RacePhase,
   Result,
   SkierState,
+  angleDiff,
 } from "./types";
 export class Race {
   phase: RacePhase = "ready";
@@ -101,7 +102,7 @@ export function replayAt(frames: Frame[], time: number): Frame | null {
     t: time,
     x: a.x + (b.x - a.x) * u,
     z: a.z + (b.z - a.z) * u,
-    heading: a.heading + (b.heading - a.heading) * u,
+    heading: a.heading + angleDiff(b.heading, a.heading) * u,
     edge: a.edge + (b.edge - a.edge) * u,
     flex: (a.flex ?? 0) + ((b.flex ?? 0) - (a.flex ?? 0)) * u,
     height: a.height + (b.height - a.height) * u,
