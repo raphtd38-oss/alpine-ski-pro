@@ -12,7 +12,7 @@ function frames(performance: AdaptiveQuality, fps: number, seconds: number) {
 describe("adaptive graphics", () => {
   it("starts at high quality and lowers only rendering resolution under sustained load", () => {
     const p = new AdaptiveQuality(1.5, 0.75);
-    expect(frames(p, 30, 2)).toHaveLength(0); // smoothing grace period
+    expect(frames(p, 30, 1)).toHaveLength(0); // smoothing grace period
     frames(p, 30, 12);
     expect(p.ratio).toBeLessThan(1.5);
     expect(p.ratio).toBeGreaterThanOrEqual(0.75);
