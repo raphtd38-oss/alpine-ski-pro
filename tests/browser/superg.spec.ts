@@ -16,6 +16,7 @@ test("World-Cup-style Super-G start house, four-pole flags and terrain crest", a
   await page.screenshot({ path: "test-results/superg-start-house.png" });
 
   await page.locator("#play").click();
+  await page.screenshot({ path: "test-results/superg-in-start-house.png" });
   const state = await page.evaluate(() => {
     const api = (window as any).__ski;
     const neutral = { steer: 0, tuck: false, brake: false, jump: false };
