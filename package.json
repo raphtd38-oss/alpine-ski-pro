@@ -7,7 +7,7 @@
     "dev": "vite --host 0.0.0.0",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 0.0.0.0",
-    "test": "vitest run --exclude tests/browser/**",
+    "test": "vitest run --exclude 'tests/browser/**'",
     "test:e2e": "playwright test",
     "assets": "python3 scripts/build_skier.py",
     "format": "prettier --write src tests scripts/*.mjs *.ts *.json *.html docs/*.md README.md AGENTS.md"
