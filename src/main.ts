@@ -426,6 +426,20 @@ async function boot() {
           course: race.course.id,
           fps: renderer.fps,
           guideActive: Boolean(renderer.world.trainingGuide?.enabled),
+          gateFlagCount: renderer.world.gateEntities.reduce(
+            (count, gate) => count + gate.children.reduce(
+              (flags, pivot) => flags + pivot.children.filter(
+                (child) => child.name === "Gate textile flag",
+              ).length, 0,
+            ), 0,
+          ),
+          texturedGatePoles: renderer.world.gateEntities.reduce(
+            (count, gate) => count + gate.children.reduce(
+              (poles, pivot) => poles + pivot.children.filter(
+                (child) => child.name === "Flexible slalom pole",
+              ).length, 0,
+            ), 0,
+          ),
           athleteBones: Object.keys(renderer.athlete.joints).length,
           athleteSurfaces: renderer.athlete.rig.findComponents("render").reduce(
             (n, c) => n + (c as import("playcanvas").RenderComponent).meshInstances.length, 0,
