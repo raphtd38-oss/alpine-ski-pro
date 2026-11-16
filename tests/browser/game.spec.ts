@@ -33,6 +33,12 @@ test("renders a real 3D scene, responds to keys, pauses, restarts and changes eq
   const after = await page.evaluate(() => (window as any).__ski.getState());
   expect(after.heading).toBeLessThan(before.heading);
   expect(after.edge).toBeLessThan(0);
+  await page.waitForFunction(
+    () => (window as any).__ski.getState().z > 8,
+    {}, { timeout: 45000 },
+  );
+  expect((await page.evaluate(() => (window as any).__ski.getState())).startArchVisible)
+    .toBe(false);
   await page.screenshot({ path: "test-results/racing.png" });
   await page.keyboard.press("Escape");
   await expect(page.locator("#modal")).toBeVisible();
