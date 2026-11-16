@@ -40,3 +40,10 @@ Le but est un simulateur de ski de grande qualité, amélioré sur le même dép
 - Vérification Firefox/Safari, manettes physiques, mobile et accessibilité des dialogues.
 - Versionner les sauvegardes et prévoir leur migration avant de changer les schémas.
 - API mondiale et validation/rejeu serveur uniquement lorsqu'un backend est effectivement déployé.
+
+## Prochain lot visuel — après l'amélioration des effets neige
+
+- Tester réellement les traces orientées dans les épingles, le spray aux différentes vitesses et le repli WebGL en navigateur.
+- Ajouter des billboards orientés caméra ou de vraies particules instanciées si le GPU le permet ; vérifier coût de draw calls et GPU.
+- Introduire un athlète plus anatomique, son skinning multi-poids et une IK tridimensionnelle. Les effets neige seuls n'améliorent pas la qualité du corps humain.
+- Mesurer les performances sur machine utilisateur avant toute affirmation de 60 FPS.
