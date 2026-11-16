@@ -14,6 +14,8 @@ export class Athlete {
   lastTurnSide = 0;
   plantingSide = 0;
   plantEnergy = 0;
+  visualFall = 0;
+  visualUpperBody = 0;
   material: pc.StandardMaterial;
   ownedMaterials: pc.StandardMaterial[] = [];
   constructor(
@@ -155,7 +157,12 @@ export class Athlete {
   paint(hex: string) {
     for (const c of this.rig.findComponents("render")) {
       for (const mi of (c as pc.RenderComponent).meshInstances) {
-        if (mi.material?.name.startsWith("Race suit")) {
+        // Preserve the graphite compression side panels and the white bib.
+        // Only recolour the base fabric; pro racewear needs multiple materials.
+        if (
+          mi.material?.name.startsWith("Race suit / alpine crimson") ||
+          mi.material?.name.startsWith("Race suit / ember")
+        ) {
           const mat = mi.material.clone() as pc.StandardMaterial;
           this.ownedMaterials.push(mat);
           mat.diffuse.fromString(hex);
@@ -190,6 +197,8 @@ export class Athlete {
     if (side !== 0) this.lastTurnSide = side;
     this.plantEnergy *= Math.exp(-Math.max(0, dt) * 7);
     const load = Math.max(0, Math.min(1.4, f.flex ?? 0));
+    const torsoTarget = -edge * (9 + load * 5);
+    this.visualUpperBody += (torsoTarget - this.visualUpperBody) * blend;
     const crouchTarget = 0.055 + f.tuck * 0.18 +
       Math.abs(edge) * 0.085 + load * 0.045;
     this.visualCrouch += (crouchTarget - this.visualCrouch) * blend;
@@ -198,13 +207,19 @@ export class Athlete {
     const lean = edge * (0.14 + load * 0.04);
     j.Pelvis?.setLocalPosition(lean, 0.92 - crouch, -0.055 * f.tuck);
     j.Spine?.setLocalEulerAngles(10 + f.tuck * 27, edge * -3, -edge * 19);
-    j.Chest?.setLocalEulerAngles(5 + f.tuck * 12, -edge * 11, edge * 12);
+    // Stabilize the professional racer's upper body toward the fall line while
+    // hips and loaded outside leg continue carving below.
+    j.Chest?.setLocalEulerAngles(
+      5 + f.tuck * 12, this.visualUpperBody, edge * (12 - load * 2),
+    );
     j.Head?.setLocalEulerAngles(-12 - f.tuck * 23, edge * 7, edge * 3);
     j.Pelvis?.setLocalEulerAngles(0, 0, -edge * 19);
     // Analytic sagittal two-link IK. Flexion follows COM height and outside-leg loading.
     for (const [i, side] of ["L", "R"].entries()) {
       const outside = (i === 0 ? 1 : -1) * edge;
-      const hipY = 0.9 - crouch + outside * 0.035;
+      // The outside leg extends under pressure, the unloaded inside leg
+      // retracts slightly. Both ankles remain animated by the existing IK.
+      const hipY = 0.9 - crouch + outside * 0.048;
       const dy = Math.min(0.81, hipY - 0.12),
         dz = 0.02 + f.tuck * 0.055,
         L1 = 0.421,
@@ -246,7 +261,7 @@ export class Athlete {
       this.skis[i].setLocalEulerAngles(0, outside * 1.2, -edge * 45);
       this.skis[i].setLocalPosition(
         (i === 0 ? -1 : 1) * (0.16 + Math.abs(edge) * 0.035),
-        Math.abs(outside) * 0.012,
+        Math.max(0, -outside) * 0.022 + Math.abs(outside) * 0.008,
         0.02,
       );
       const wrist = j[side + "Wrist"];
@@ -266,13 +281,12 @@ export class Athlete {
         );
       }
     }
-    if (f.fallen > 0) {
-      this.rig.setLocalEulerAngles(0, 0, 76);
-      this.rig.setLocalPosition(0, 0.15, 0);
-    } else {
-      this.rig.setLocalEulerAngles(0, 0, 0);
-      this.rig.setLocalPosition(0, 0, 0);
-    }
+    // Blend falls and recovery rather than snapping the entire body.
+    const desiredFall = f.fallen > 0 ? 1 : 0;
+    this.visualFall += (desiredFall - this.visualFall) *
+      (1 - Math.exp(-Math.max(0, dt) * 10));
+    this.rig.setLocalEulerAngles(0, 0, this.visualFall * 76);
+    this.rig.setLocalPosition(0, this.visualFall * 0.15, 0);
   }
   destroy() {
     this.root.destroy();
