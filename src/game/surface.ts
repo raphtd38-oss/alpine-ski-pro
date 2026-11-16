@@ -9,15 +9,17 @@ export interface SnowSurface {
   ice: number;
   packed: number;
   grip: number;
+  /** Accumulated soft-snow depth, 0 on the centre of a clear piste. */
+  depth: number;
 }
 export function sampleSnowSurface(
   x: number,
   z: number,
-  _course: Course,
+  course: Course,
   weather: Weather = "clear",
 ): SnowSurface {
   if (!Number.isFinite(x) || !Number.isFinite(z))
-    return { ice: 0, packed: 0.5, grip: weather === "snow" ? 0.82 : 1 };
+    return { ice: 0, packed: 0.5, grip: weather === "snow" ? 0.82 : 1, depth: 0 };
   const large = Math.sin(z * 0.037 + x * 0.028 + Math.sin(z * 0.008) * 0.6);
   const cross = Math.cos(z * 0.017 - x * 0.065 + 1.2);
   const patches = clamp((large * 0.6 + cross * 0.4 + 0.32) / 1.18, 0, 1);
@@ -28,8 +30,12 @@ export function sampleSnowSurface(
     0,
     1,
   );
+  // Fresh snow collects at piste shoulders, with a shallow layer in snowfall.
+  const verge = clamp((Math.abs(x) - (course.width / 2 - 6)) / 5, 0, 1);
+  const depth = clamp(verge * 0.75 + (weather === "snow" ? 0.18 : 0), 0, 1);
   const base = weather === "snow" ? 0.82 : 1;
   return {
+    depth,
     ice,
     packed,
     grip: base * (1 - ice * 0.095 + (packed - 0.5) * 0.025),
