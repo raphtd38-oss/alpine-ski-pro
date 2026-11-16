@@ -181,3 +181,9 @@ Références : vidéos joueur de 55 s (Giant Slalom Switchback B) et 36 s (versi
 Le sol simulé et le rendu restent basés sur une seule fonction de hauteur continue, à 120 Hz pour la physique. Les dispositifs de porte sont des approximations visuelles de compétition et ne sont **pas homologués FIS**. Le modèle original 18 articulations reste semi-réaliste ; la pose des épaules est une animation procédurale, pas une simulation anatomique rigide.
 
 **Publication :** vérifier les checks CI Playwright et l'exécution GitHub Pages de main après fusion ; ne pas déclarer les étapes réussies sans résultats.
+
+## 16 novembre 2026 — premier lot d'assets 3D CC0
+
+Le moteur est raccordé à 9 modèles GLB Alpine Snow Village et 3 cartes PBR Snow 02 (Poly Haven), avec origine et droits dans ASSETS.md. Les chalets primitifs sont remplacés lorsque les modèles sont disponibles, des arbres et rochers détaillés enrichissent les abords de piste, et la forêt procédurale groupée assure un fond à moindre coût. Le niveau de qualité limite les instances et les ombres.
+
+Les téléchargements doivent réussir dans GitHub Actions pour être présents dans l'artefact publié ; sinon les décors d'origine restent utilisables. Le skieur, la physique déterministe, le chrono et les collisions ne sont pas modifiés. Le skieur photoréaliste, les animations mocap, les textures KTX2 et le LOD dynamique ne sont pas encore livrés. FPS réels non mesurés.
