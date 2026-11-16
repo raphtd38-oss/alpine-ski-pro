@@ -8,6 +8,7 @@ import "@fontsource/barlow-condensed/latin-600.css";
 import "@fontsource/barlow-condensed/latin-700.css";
 import "./ui/style.css";
 import { COURSES, EQUIPMENT } from "./game/course";
+import { startPushAcceleration } from "./game/superg";
 import { sampleSnowSurface } from "./game/surface";
 import { snowLabel } from "./game/snow-model";
 import {
