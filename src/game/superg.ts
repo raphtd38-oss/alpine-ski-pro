@@ -41,8 +41,8 @@ export function shouldLaunchAtCrest(
   grounded: boolean,
 ): boolean {
   return (courseId === "SG" || courseId === "DH") &&
-    grounded && speed > 16 && curvature < -0.012 &&
-    1 + (speed * speed * curvature) / 9.81 < 0.65;
+    grounded && speed > 18 && curvature < -0.017 &&
+    1 + (speed * speed * curvature) / 9.81 < 0.25;
 }
 
 /** A short, damped double-pole push, only at the race start. */
