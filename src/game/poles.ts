@@ -11,7 +11,13 @@ export interface PoleState {
   omegaZ: number;
   contact: boolean;
   impacts: number;
+  /** High-frequency fiberglass tip ringing after impacts. */
+  tipAmp: number;
+  tipPhase: number;
 }
+export type ImpactKind = "none" | "shin" | "arm";
+export const tipVibration = (p: Pick<PoleState, "tipAmp" | "tipPhase">) =>
+  p.tipAmp * Math.sin(p.tipPhase);
 /** Slalom breakaway pole: rigid rod on a damped 2-axis torsional hinge.
  * Parameters are gameplay approximations, not measured or certified FIS equipment.
  * Base contact is checked continuously along the skier's swept upper-body footprint.
@@ -20,6 +26,8 @@ export interface PoleState {
 export class PoleSimulation {
   poles: PoleState[] = [];
   lastImpacts = 0;
+  lastImpactKind: ImpactKind = "none";
+  lastImpactStrength = 0;
   readonly length = 2;
   readonly mass = 0.38;
   readonly spring = 13;
@@ -38,10 +46,14 @@ export class PoleSimulation {
           omegaZ: 0,
           contact: false,
           impacts: 0,
+          tipAmp: 0,
+          tipPhase: 0,
         });
   }
   update(previous: SkierState, s: SkierState, dt: number) {
     this.lastImpacts = 0;
+    this.lastImpactKind = "none";
+    this.lastImpactStrength = 0;
     const inertia = (this.mass * this.length * this.length) / 3;
     for (const p of this.poles) {
       const dx = s.x - previous.x,
@@ -55,8 +67,8 @@ export class PoleSimulation {
       );
       const closestX = previous.x + dx * u,
         closestZ = previous.z + dz * u;
-      const inside =
-        Math.hypot(p.x - closestX, p.z - closestZ) < 0.46 && s.height < 1.25;
+      const offset = Math.hypot(p.x - closestX, p.z - closestZ);
+      const inside = offset < 0.46 && s.height < 1.25;
       const speed = Math.hypot(s.vx, s.vz);
       if (
         inside &&
@@ -64,18 +76,30 @@ export class PoleSimulation {
         speed > 0.8 &&
         Math.hypot(p.angleX, p.angleZ) < 1.05
       ) {
-        // Momentum exchange is light: a breakaway pole bends instead of stopping the skier.
-        const impulse = clamp(speed * 0.16, 0, 3.6),
+        // Close hits are modeled as shin-guard contact; brushes are lighter
+        // arm-protection contact. Gameplay approximation, not bodypart IK.
+        const kind: ImpactKind = offset < 0.2 ? "shin" : "arm";
+        const scale = kind === "shin" ? 1 : 0.55;
+        const impulse = clamp(speed * 0.16, 0, 3.6) * scale,
           nx = s.vx / speed,
           nz = s.vz / speed;
         p.omegaX += (nz * impulse * 1.15) / inertia;
         p.omegaZ -= (nx * impulse * 1.15) / inertia;
         const skierMass = 82;
-        s.vx -= (nx * impulse) / skierMass;
-        s.vz = Math.max(0, s.vz - (nz * impulse) / skierMass);
-        s.balance = clamp(s.balance - impulse * 0.004, 0, 1);
-        // Trigger an upper-body recoil without disturbing ski-crossing rules.
-        s.poleImpact = Math.max(s.poleImpact, clamp(impulse / 3.6, 0, 1));
+        const slow = kind === "shin" ? 2.5 : 1.25;
+        const away = Math.sign(s.x - p.x) || (p.side > 0 ? -1 : 1);
+        s.vx -= (nx * impulse * slow) / skierMass;
+        s.vx += (away * impulse * 0.75) / skierMass;
+        s.vz = Math.max(0, s.vz - (nz * impulse * slow) / skierMass);
+        s.balance = clamp(s.balance -
+          impulse * (kind === "shin" ? 0.008 : 0.004), 0, 1);
+        const strength = clamp(impulse / 3.6, 0, 1);
+        s.poleImpact = Math.max(s.poleImpact, strength);
+        p.tipAmp = Math.max(p.tipAmp, strength * 0.15);
+        if (strength >= this.lastImpactStrength) {
+          this.lastImpactKind = kind;
+          this.lastImpactStrength = strength;
+        }
         p.impacts++;
         this.lastImpacts++;
       }
@@ -89,6 +113,9 @@ export class PoleSimulation {
         ((-restoring * p.angleX - damping * p.omegaX) / inertia) * dt;
       p.omegaZ +=
         ((-restoring * p.angleZ - damping * p.omegaZ) / inertia) * dt;
+      p.tipAmp *= Math.exp(-6.5 * dt);
+      if (p.tipAmp < 1e-5) p.tipAmp = 0;
+      p.tipPhase = (p.tipPhase + 2 * Math.PI * 17 * dt) % (2 * Math.PI);
       p.angleX += p.omegaX * dt;
       p.angleZ += p.omegaZ * dt;
       const tilt = Math.hypot(p.angleX, p.angleZ),
