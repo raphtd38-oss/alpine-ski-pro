@@ -441,6 +441,13 @@ async function boot() {
               ).length, 0,
             ), 0,
           ),
+          flexiblePoleTips: renderer.world.gateEntities.reduce(
+            (count, gate) => count + gate.children.filter(
+              (pivot) => pivot.children.some(
+                (child) => child.name === "Pole elastic upper section",
+              ),
+            ).length, 0,
+          ),
           texturedGatePoles: renderer.world.gateEntities.reduce(
             (count, gate) => count + gate.children.reduce(
               (poles, pivot) => poles + pivot.children.filter(
