@@ -65,6 +65,17 @@ export const SUPER_G_CENTRE_KNOTS = [
   [1810, 10], [1940, 0], [1980, 0],
 ] as const;
 
+/** Intentional long/middle turns, not a mechanical one-gate-per-55m rhythm.
+ * Min longitudinal separation ~33m; never below the 25m FIS turning-pole
+ * minimum. All positions remain within the 1.98km course. */
+export function superGGateZ(index: number): number {
+  let z = 55;
+  for (let i = 0; i < Math.max(0, Math.floor(index)); i++)
+    z += 52 + 12 * Math.sin(i * 0.81 + 0.3) +
+      7 * Math.sin(i * 0.26 - 0.4);
+  return z;
+}
+
 export function superGCenterX(z: number): number {
   if (!Number.isFinite(z)) return 0;
   if (z <= SUPER_G_CENTRE_KNOTS[0][0]) return 0;
