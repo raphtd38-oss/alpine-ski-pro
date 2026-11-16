@@ -81,8 +81,9 @@ async function boot() {
     poleImpact: state.poleImpact,
     poleImpactSide: state.poleImpactSide,
     landingShock: state.landingShock,
-    startPush: race.course.id === "SG" && race.phase === "racing"
-      ? Math.max(0, 1 - race.time / 1.5) : 0,
+    startPush: race.course.id === "SG" && race.phase === "countdown"
+      ? 0.72 : race.course.id === "SG" && race.phase === "racing"
+        ? Math.max(0, 1 - race.time / 1.5) : 0,
     finishReach: race.course.id === "SG"
       ? race.phase === "racing"
         ? finishReachAmount("SG", state.z, race.course.length,
