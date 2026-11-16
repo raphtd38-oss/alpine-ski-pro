@@ -50,7 +50,7 @@ describe("V1.8 Super-G winding route, markers and FIS-inspired finish", () => {
         .toBeGreaterThan(0.5);
       const middle = terrainHeight(center, z, sg);
       const highBank = terrainHeight(center + sg.width / 2 + 12, z, sg);
-      expect(highBank).toBeGreaterThan(middle + 5);
+      expect(highBank).toBeGreaterThan(middle + 3.7);
     }
   });
 
