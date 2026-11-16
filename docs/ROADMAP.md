@@ -82,3 +82,11 @@ Le but est un simulateur de ski de grande qualité, amélioré sur le même dép
 - Améliorer à terme l'IK tridimensionnelle et des animations spécifiques pour petits sauts, collisions et départ de course.
 - Mesurer les draw calls de l'avatar à 46 surfaces (plus un fantôme) sur machines modestes avant d'augmenter encore les polygones.
 - Éviter toute promesse de photoréalisme sans scan/modèle source autorisé et mesure FPS sur le matériel joueur.
+
+## Après V1.4 et le retour vidéo joueur
+
+- Mesurer les FPS en course GS avec les 36 fanions, vérifier la lisibilité des piquets à 30/60/144 Hz.
+- Évaluer la caméra de poursuite, les traces et le flux des portes sur la vidéo du joueur sans copier son contenu.
+- Améliorer la chaîne de skinning et la posture du skieur en vrai carving (les géométries et IK demeurent semi-réalistes).
+- Tester une variante d'animation plus ample pour les pivots après collision sans influer sur la validation des portes.
+- Récupérer manuellement le nouveau MP3 ElevenLabs depuis le compte propriétaire, vérifier les droits d'usage, puis intégrer de façon locale et pérenne en `public/audio/carving.mp3`.
