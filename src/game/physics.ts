@@ -99,14 +99,24 @@ export function stepPhysics(
     const totalLateral = clamp(lateral + alignment, -gripLimit, gripLimit);
     ax += nx * totalLateral * contact;
     az += nz * totalLateral * contact;
-    s.slip = smooth(
-      s.slip,
-      Math.abs(sideVelocity) + (input.brake ? speed * 0.25 : 0),
-      8,
-      dt,
-    );
+    // When edge demand exceeds grip, part of the intended carve becomes a
+    // controlled lateral skid. It costs speed and is audible/visible to players.
+    // The grip budget caps lateral force rather than rotating the velocity.
+    const gripOverflow = Math.max(0, Math.abs(lateralDemand) - gripLimit) /
+      Math.max(1, gripLimit);
+    const skidSpeed = Math.abs(sideVelocity) +
+      Math.min(12, gripOverflow * speed * 0.13) +
+      (input.brake ? speed * 0.25 : 0);
+    s.slip = smooth(s.slip, skidSpeed, 8, dt);
     const drag = (input.tuck ? 0.0024 : 0.0047) * speed;
-    const friction = (input.brake ? 0.48 : 0.012) + (1 - edgeGrip) * 0.015;
+    // A clean carve preserves speed; excessive sideways scraping loses it.
+    const edgeScrub = clamp(
+      Math.abs(sideVelocity) * 0.0018 + gripOverflow * 0.0035,
+      0,
+      0.035,
+    );
+    const friction = (input.brake ? 0.48 : 0.012) +
+      (1 - edgeGrip) * 0.015 + edgeScrub;
     ax -= s.vx * (drag + friction);
     az -= s.vz * (drag + friction);
     const stress =
