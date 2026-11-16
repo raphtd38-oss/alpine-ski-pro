@@ -62,7 +62,7 @@ describe("V1.8 Super-G winding route, markers and FIS-inspired finish", () => {
     expect(finishReachAmount("GS", 1977, 1980, 35)).toBe(0);
     expect(finishReachAmount("SG", 1977, 1980, 35, 1)).toBe(0);
     expect(lowHandLead(1)).toBeCloseTo(0.62);
-    expect(finishBeamFraction(1979.2, 1979.45, 0.62, 0.62, 1980))
+    expect(finishBeamFraction(1979.2, 1979.35, 0.62, 0.62, 1980))
       .toBeNull();
     expect(finishBeamFraction(1979.3, 1979.5, 0.62, 0.62, 1980))
       .toBeCloseTo(0.4, 4);
