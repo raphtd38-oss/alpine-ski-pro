@@ -7,7 +7,15 @@ import {
   type Course,
   type Equipment,
 } from "./types";
-import { gradient } from "./course";
+import { gradient, terrainHeight } from "./course";
+import {
+  nextSkid,
+  pressureGripFactor,
+  skidGripFactor,
+  softSnowDrag,
+  softSnowGripFactor,
+  tiltGripFactor,
+} from "./carving";
 export const FIXED_DT = 1 / 120;
 export const initialState = (): SkierState => ({
   x: 0,
@@ -21,6 +29,8 @@ export const initialState = (): SkierState => ({
   slip: 0,
   chatter: 0,
   poleImpact: 0,
+  skid: 0,
+  pressure: 1,
   balance: 1,
   height: 0,
   verticalSpeed: 0,
@@ -38,6 +48,8 @@ export function stepPhysics(
   c: Course,
   dt: number,
   snowGrip = 1,
+  ice = 0,
+  depth = 0,
 ): void {
   const speed = Math.hypot(s.vx, s.vz);
   const lengthFactor = Math.sqrt(e.length / 1.65);
@@ -57,8 +69,11 @@ export function stepPhysics(
   // render FPS and playback cannot change the path taken through a gate.
   const hardSnow = clamp((1.055 - snowGrip) / 0.27, 0, 1);
   const edgePressure = clamp(Math.abs(s.edge) / 0.9, 0, 1);
+  const hardSurface = clamp(Math.max(hardSnow, ice * (1 - depth)), 0, 1);
   s.chatter = smooth(s.chatter,
-    hardSnow * edgePressure * clamp(speed / 22, 0, 1), 13, dt);
+    s.height < 0.005
+      ? hardSurface * edgePressure * clamp((speed - 8) / 26, 0, 1)
+      : 0, 13, dt);
   s.poleImpact = Math.max(0, s.poleImpact - dt * 4.5);
   s.flex = smooth(
     s.flex,
@@ -72,6 +87,15 @@ export function stepPhysics(
   );
   const [gx, gz] = gradient(s.x, s.z, c);
   const gravityScale = 9.81 / (1 + gx * gx + gz * gz);
+  // Deterministic relief-induced loading: compressions press the skis in,
+  // while convex crests lighten the edges. Capped for forgiving gameplay.
+  const h = terrainHeight(s.x, s.z, c);
+  const curvature =
+    (terrainHeight(s.x, s.z + 1.5, c) - 2 * h +
+      terrainHeight(s.x, s.z - 1.5, c)) / 2.25;
+  s.pressure = smooth(s.pressure,
+    clamp(1 + speed * speed * curvature / 9.81, 0.6, 1.5),
+    12, dt);
   let ax = -gx * gravityScale,
     az = -gz * gravityScale;
   if (s.fallen > 0) {
@@ -80,17 +104,24 @@ export function stepPhysics(
     ax -= s.vx * 1.8;
     az -= s.vz * 1.8;
     s.balance = smooth(s.balance, 1, 1, dt);
+    s.skid = smooth(s.skid, 0, 4, dt);
   } else {
     const desiredCurvature =
       (Math.sin(s.edge) *
         (0.5 + e.stiffness * 0.5) *
         (0.82 + outsideLoad * 0.22)) /
       Math.max(4, (e.radius * Math.cos(s.edge)) / (1 + s.flex * 0.12));
-    const gripLimit =
+    const baseGrip =
       (9.81 * 1.3 * e.grip * snowGrip * lengthFactor *
         (0.94 + outsideLoad * 0.095)) /
       Math.sqrt(1 + gx * gx + gz * gz);
     const lateralDemand = speed * speed * desiredCurvature;
+    const gripLimit = baseGrip *
+      tiltGripFactor(s.edge) *
+      skidGripFactor(s.skid) *
+      pressureGripFactor(s.pressure) *
+      softSnowGripFactor(depth);
+    s.skid = nextSkid(s.skid, lateralDemand, gripLimit, dt);
     const lateral = clamp(lateralDemand, -gripLimit, gripLimit);
     const contact = s.height < 0.005 ? 1 : 0.03;
     s.heading = clamp(
@@ -119,6 +150,7 @@ export function stepPhysics(
       Math.max(1, gripLimit);
     const skidSpeed = Math.abs(sideVelocity) +
       Math.min(12, gripOverflow * speed * 0.13) +
+      s.skid * speed * 0.035 +
       (input.brake ? speed * 0.25 : 0);
     s.slip = smooth(s.slip, skidSpeed, 8, dt);
     const drag = (input.tuck ? 0.0024 : 0.0047) * speed;
@@ -129,7 +161,8 @@ export function stepPhysics(
       0.035,
     );
     const friction = (input.brake ? 0.48 : 0.012) +
-      (1 - edgeGrip) * 0.015 + edgeScrub;
+      (1 - edgeGrip) * 0.015 + edgeScrub +
+      softSnowDrag(depth, speed);
     ax -= s.vx * (drag + friction);
     az -= s.vz * (drag + friction);
     const stress =
