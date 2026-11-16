@@ -171,3 +171,13 @@ Source : `alpine-ski-pro-v1.5-fichiers.zip` et `alpine-ski-pro-v1.5.patch` fourn
 ### Limites
 
 Le moteur reste un compromis de jeu navigateur (pas solveur FIS), le modèle de skieur original est toujours stylisé, et l'amélioration vidéo/photo n'est pas une refonte graphique AAA. Les fichiers de l'autre proposition contenaient plusieurs moteurs entiers concurrents : seules leurs meilleures idées compatibles ont été retenues.
+
+## V1.7 — Super-G Coupe alpine
+
+Références : vidéos joueur de 55 s (Giant Slalom Switchback B) et 36 s (version du jeu), règles internationales FIS ICR (édition décembre 2024, §§680/690/1001) et guide FIS de diffusion des épreuves de vitesse. L'extrait CarveMania fourni montre un skieur animé, une forêt sombre, de la neige damée, des filets orange et des portes en tissu, mais ne documente pas le comportement de son moteur de physique ni son code de départ. Aucune imitation de ses assets.
+
+**Travail codé** : extension SG à 1980 m, 34 portes et reliefs `src/game/superg.ts`, lancement sur crête/dynamique balistique `physics.ts`, quatre piquets plus deux fanions par porte de vitesse, chalet et tiges chronométriques `world.ts`, impulsion sur bâtons et geste de fin dans `athlete.ts`/`main.ts`. Marquages bleus originaux en approche des crêtes.
+
+Le sol simulé et le rendu restent basés sur une seule fonction de hauteur continue, à 120 Hz pour la physique. Les dispositifs de porte sont des approximations visuelles de compétition et ne sont **pas homologués FIS**. Le modèle original 18 articulations reste semi-réaliste ; la pose des épaules est une animation procédurale, pas une simulation anatomique rigide.
+
+**Publication :** vérifier les checks CI Playwright et l'exécution GitHub Pages de main après fusion ; ne pas déclarer les étapes réussies sans résultats.
