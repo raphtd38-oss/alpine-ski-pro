@@ -1,5 +1,7 @@
 import type { Course, Discipline, Equipment } from "./types";
-import { superGRelief } from "./superg";
+import { superGRelief, superGCenterX } from "./superg";
+export const courseCenterX = (z: number, c: Course): number =>
+  c.id === "SG" ? superGCenterX(z) : 0;
 export const EQUIPMENT: Record<Discipline, Equipment> = {
   SL: {
     id: "SL",
@@ -117,8 +119,12 @@ export const COURSES: Record<Discipline, Course> = Object.fromEntries(
         width,
         gates: Array.from({ length: n }, (_, i) => ({
           id: i,
+          // The race genuinely traverses the mountainside. Each flag is
+          // offset from the curved corridor, not the former straight x=0.
           x: id === "SG"
-            ? Math.sin(i * 1.43 + 0.35) * 11.5 + Math.sin(i * 0.47) * 2.4
+            ? superGCenterX(56 + i * space) +
+              Math.sin(i * 1.37 + 0.45) * 5.4 +
+              Math.sin(i * 0.41) * 1.9
             : Math.sin((i * Math.PI) / 2 + 0.5) * swing,
           z: id === "SG" ? 56 + i * space : 40 + i * space,
           width: id === "SG" && i % 9 === 7 ? 10 : gateWidth,
@@ -130,7 +136,13 @@ export const COURSES: Record<Discipline, Course> = Object.fromEntries(
 /** Same continuous height field for rendering, ground contact, pitch and gravity. */
 export function terrainHeight(x: number, z: number, c: Course): number {
   const roll = Math.sin(z * 0.024) * 0.65 + Math.sin(z * 0.057) * 0.17;
-  const bank = Math.pow(Math.max(0, Math.abs(x) - c.width / 2), 1.3) * 0.19;
+  const localX = x - courseCenterX(z, c);
+  const bank = Math.pow(Math.max(0, Math.abs(localX) - c.width / 2), 1.3) * 0.19;
+  // Traverses have a subtle cross-slope. Different sectors expose
+  // different sides of the valley but keep the race corridor skiable.
+  const crossfall = c.id === "SG"
+    ? Math.sin(z * 0.008 + 0.3) * Math.max(-1, Math.min(1, localX / 32)) * 0.9
+    : 0;
   const jump = c.id === "SG" ? superGRelief(z) :
     c.id === "DH" ? Math.sin(z * 0.041) * 1.05 : 0;
   // Ease the racing pitch into a run-out; the same surface drives rendering and gravity.
@@ -138,7 +150,7 @@ export function terrainHeight(x: number, z: number, c: Course): number {
     span = 90,
     t = Math.max(0, Math.min(1, (z - start) / span));
   const fall = z <= start ? z : start + span * (t - (t * t) / 2);
-  return -fall * c.grade + roll + bank + jump + Math.sin(x * 0.1) * 0.12;
+  return -fall * c.grade + roll + bank + jump + crossfall + Math.sin(localX * 0.1) * 0.12;
 }
 export function gradient(x: number, z: number, c: Course): [number, number] {
   const d = 0.15;
