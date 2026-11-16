@@ -41,3 +41,10 @@ Pour intégrer ultérieurement des générations correctement autorisées et té
 - `public/audio/crowd-long.mp3` (ambiance extérieure plus longue remplaçant l'actuel public de 2 s).
 
 Le code charge ces fichiers seulement s'ils existent ; sinon, les trois premiers effets sont synthétisés localement par Web Audio et la boucle actuelle de `crowd.mp3` reste en service. **Aucun de ces quatre fichiers optionnels n'est présent actuellement.** Vérifier les conditions et droits ElevenLabs à chaque génération avant redistribution commerciale.
+
+## Nouveau matériau neige de la mise à jour V1
+
+- `src/render/snow-texture.ts` génère localement et de façon déterministe les cartes albedo, micro-normales et rugosité de la neige. La palette est originale et ne contient aucun fichier de CarveMania.
+- `src/game/surface.ts` définit un relief de dureté/adhérence doucement variable sur la piste, utilisé également pour la teinte visuelle des zones compactées.
+- Aucun contenu externe ni licence supplémentaire nécessaire pour cette mise à jour.
+- Nouvelle tentative ElevenLabs le 16 novembre 2026 : création refusée avant démarrage (service occupé), zéro fichier MP3 livré et aucun crédit débité.
