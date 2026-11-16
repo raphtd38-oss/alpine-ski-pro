@@ -114,3 +114,12 @@ Le projet n'est **pas terminé**. Pas de certification FIS, pas de sponsoring Au
 - Particules de neige : billboards face à la caméra, retombée sur le terrain, suppression des maillages vides, cadences/budgets préservés.
 - Nouveaux tests unitaires trajectoire/replay, tests Playwright des contrôles de replay et du mode entraînement.
 - Aucun code ou asset de CarveMania incorporé, aucun nouveau MP3 ElevenLabs. Tests et publication à vérifier avant annonce de disponibilité.
+
+## V1.3 — refonte du skieur (16 novembre 2026)
+
+- Nouveau skieur 3D construit et versionné, source JS reproductible dans `scripts/build_skier_pro.mjs`, GLB 18 os / 46 surfaces PBR / 13 matériaux.
+- Peau multi-influences : épaules, hanches, coudes, genoux se déforment plus progressivement que l'ancien avatar monocouche.
+- Équipement spécialisé : casque, masque miroir, dossard, protections tibias, chaussures et gants, combinaison à plusieurs matériaux préservée lors de la personnalisation.
+- Animations existantes conservées et affinées : bassin, jambes indépendantes, torse stabilisé, chute interpolée.
+- CI enrichie : régénération déterministe GLB, validation skinning/poids, tests navigateur de présence du squelette et des maillages ; vérifier statut vert avant toute fusion.
+- Modèle original, pas de textures ou de personnages issus de CarveMania.

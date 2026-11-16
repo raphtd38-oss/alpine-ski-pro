@@ -116,3 +116,13 @@ Le damage de la piste utilise maintenant un matériau PBR procédural (albedo, m
 - **Provenance** : code de trajectoire, détails visuels et particules créés spécialement pour ce jeu ; aucune réutilisation des fichiers propriétaires de CarveMania.
 
 Le mode entraînement ne valide pas les résultats dans les records. Les performances graphiques et le réalisme doivent toujours être évalués sur une machine avec GPU réel.
+
+## V1.3 — nouveau vrai modèle skieur de compétition
+
+Le personnage de la V1.2 a été remplacé par un nouveau GLB original de skieur professionnel : combinaison ajustée rouge et noire, dossard blanc, casque aérodynamique, masque réfléchissant cuivré, gants, protections rigides et chaussures de course. Il possède **18 os**, **46 surfaces PBR** et un mélange de plusieurs os aux articulations : il **reste entièrement animé** pendant le carving, les changements de carre, le planté de bâton, la recherche de vitesse et les chutes.
+
+Le haut du corps reste mieux stabilisé dans les virages, l'appui extérieur est davantage visible et les chutes sont amorties. La variation de couleur de la combinaison ne recolore pas les panneaux de compression noirs ni le dossard.
+
+Aucun Blender ni téléchargement de modèle payant n'est nécessaire : `npm run assets` génère le GLB depuis `scripts/build_skier_pro.mjs`. `npm run assets:verify` vérifie le skinning. Le nouveau GLB de moins de 1 Mo est versionné dans GitHub et est chargé par PlayCanvas directement dans le navigateur.
+
+Ce personnage est un modèle de compétition **plus réaliste en silhouette et équipement**, mais ne représente pas un scan photoréaliste de niveau AAA. La physique du jeu, les portes, les records, les replays et les commandes restent inchangés.

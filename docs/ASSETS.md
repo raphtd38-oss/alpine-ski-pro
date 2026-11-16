@@ -4,7 +4,7 @@ Aucun code, texture, son ni modèle de CarveMania n'est utilisé.
 
 ## Créations originales dans le dépôt
 
-- `public/assets/skier.glb` : généré par `scripts/build_skier.py` pour ce projet, 18 articulations, 20 surfaces PBR, 219 172 octets. Aucun modèle téléchargé. Le script constitue la source éditable ; qualité stylisée initiale, pas un scan humain.
+- `public/assets/skier.glb` : nouveau coureur original V1.3, 18 articulations compatibles, 46 surfaces PBR, 13 matériaux et environ 600 ko. La source de génération canonique est maintenant `scripts/build_skier_pro.mjs` (Node, aucun Blender). Le script `scripts/build_skier.py` reste seulement comme ancien prototype. La génération vérifiée en CI fournit des pondérations multi-os qui réduisent la rigidité des articulations, sans prétendre à un scan photoréaliste.
 - Géométries de pistes, montagnes, forêt, piquets, infrastructure, skis et textures Canvas : code original dans `src/render/`.
 - Glisse, vent et tonalités de départ/arrivée : synthèse Web Audio originale dans `src/game/audio.ts`.
 - L'habillage de l'arrivée est original. Aucune licence de marque FIS ou Audi n'est revendiquée et aucun partenariat n'est annoncé.
@@ -55,3 +55,11 @@ Le code charge ces fichiers seulement s'ils existent ; sinon, les trois premiers
 - `src/render/athlete.ts` : insertions originales de petit équipement 3D (masque, casque, boucles de chaussures), riggées sur le squelette existant.
 - `src/render/effects.ts` : particules de neige rendues par billboards et retombée sur le sol, sans textures téléchargées.
 - Aucune nouvelle génération ElevenLabs livrée pour ce lot. Les fichiers audio existants et leur provenance restent inchangés.
+
+## V1.3 — coureur de slalom professionnel original
+
+- Modèle entièrement regénéré : combinaison ajustée avec panneaux noirs, dossard blanc incurvé sur la poitrine, épaules plus sportives, gants, casque aérodynamique et masque cuivré, protections de genoux/tibias et coque de chaussures de compétition.
+- 18 os conservés sous leurs noms d'origine pour éviter de casser les animations, mais nouveaux sommets pondérés entre plusieurs os près des hanches, épaules, genoux et coudes.
+- Le fichier binaire `public/assets/skier.glb` est versionné et générable à l'identique par `npm run assets` à partir de `scripts/build_skier_pro.mjs`.
+- `npm run assets:verify` vérifie automatiquement la validité du conteneur GLB, les noms des os, les indices, les poids des sommets, la géométrie et le budget navigateur.
+- Les nouvelles formes sont des créations procédurales originales, sans assets tiers ou fichiers de CarveMania. La qualité est plus riche mais reste stylisée, non photogrammétrique.
