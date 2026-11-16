@@ -6,7 +6,7 @@ Construire progressivement un vrai simulateur de ski navigateur, sans installati
 
 ## Travail
 
-- Branche de travail actuelle : feat/playable-slalom. Le workflow déploie cette branche pour les versions de développement, ainsi que main. Ne pas fusionner automatiquement une PR.
+- Branche de référence pour la V1 : main après fusion de release/v1-solid-base. Le workflow déploie cette branche pour les versions de développement, ainsi que main. Les modifications V1 explicitement autorisées peuvent être fusionnées après validation de CI ; documenter précisément la publication.
 - npm ci ; npm test ; npm run build ; npm run test:e2e. Dans ce Cloud : CHROMIUM_PATH=/usr/bin/chromium npm run test:e2e.
 - Simulation pure à 120 Hz dans src/game. Ne jamais faire dépendre la physique du taux de rendu.
 - Les collisions de piquets (src/game/poles.ts) et la validation des portes (race.ts) sont distinctes : un impact légal ne disqualifie pas.
