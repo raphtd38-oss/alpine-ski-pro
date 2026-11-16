@@ -47,3 +47,9 @@ Le but est un simulateur de ski de grande qualité, amélioré sur le même dép
 - Ajouter des billboards orientés caméra ou de vraies particules instanciées si le GPU le permet ; vérifier coût de draw calls et GPU.
 - Introduire un athlète plus anatomique, son skinning multi-poids et une IK tridimensionnelle. Les effets neige seuls n'améliorent pas la qualité du corps humain.
 - Mesurer les performances sur machine utilisateur avant toute affirmation de 60 FPS.
+
+## Validation de la fluidité adaptative
+
+- Essayer en haute résolution sur un véritable PC : suivre les FPS, la qualité visuelle et les changements de résolution après 20–30 s de slalom.
+- Tester le cas faible GPU : les images doivent rester lisibles et la physique ne doit pas ralentir artificiellement ; relever les FPS réels.
+- Comparer 60 Hz et écrans à fréquence élevée. Aucun cap logiciel n'est imposé ; ajuster le seuil de qualité seulement avec des mesures réelles.
