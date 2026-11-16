@@ -52,3 +52,39 @@ export function startPushAcceleration(courseId: string, time: number): number {
   const second = 3.1 * Math.exp(-Math.pow((time - 0.58) / 0.19, 2));
   return impulse + second;
 }
+
+/** Course-centre world coordinates, sampled from broad changes of direction.
+ * The line deliberately crosses from wooded traverse to exposed glacier
+ * before looping back towards the finish. Smoothstep prevents sharp zigzags
+ * and maintains playable direction changes at speed.
+ */
+export const SUPER_G_CENTRE_KNOTS = [
+  [0, 0], [115, 0], [260, 13], [380, 24], [520, 12],
+  [660, -16], [805, -24], [945, -5], [1100, 23],
+  [1240, 25], [1390, 4], [1525, -23], [1660, -17],
+  [1810, 10], [1940, 0], [1980, 0],
+] as const;
+
+export function superGCenterX(z: number): number {
+  if (!Number.isFinite(z)) return 0;
+  if (z <= SUPER_G_CENTRE_KNOTS[0][0]) return 0;
+  for (let i = 0; i < SUPER_G_CENTRE_KNOTS.length - 1; i++) {
+    const [z0, x0] = SUPER_G_CENTRE_KNOTS[i];
+    const [z1, x1] = SUPER_G_CENTRE_KNOTS[i + 1];
+    if (z <= z1) {
+      const u = Math.max(0, Math.min(1, (z - z0) / (z1 - z0)));
+      const smooth = u * u * (3 - 2 * u);
+      return x0 + (x1 - x0) * smooth;
+    }
+  }
+  return 0;
+}
+
+/** Visual sectors that change the geology and vegetation on the course. */
+export type SuperGSector = "spruce" | "glacier" | "canyon" | "finish";
+export function superGSector(z: number): SuperGSector {
+  if (z < 490) return "spruce";
+  if (z < 1040) return "glacier";
+  if (z < 1640) return "canyon";
+  return "finish";
+}
