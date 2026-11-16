@@ -2,7 +2,7 @@
 
 Un jeu de ski alpin original, entièrement dans le navigateur, construit avec **PlayCanvas Engine 2.24, TypeScript et Vite**.
 
-**V1.0 : base de slalom jouable et testée, avec physique 120 Hz, carving progressif, caméra et animations plus souples, sons dynamiques et qualité graphique adaptative. La qualité n'est pas photoréaliste et les autres disciplines restent moins testées.**
+**V1.1 : base de slalom jouable et testée, enrichie d'une nouvelle surface de neige, avec physique 120 Hz, carving progressif, caméra et animations plus souples, sons dynamiques et qualité graphique adaptative. La qualité n'est pas photoréaliste et les autres disciplines restent moins testées.**
 
 🎮 **Alpine Ski Pro V1 publié** : https://raphtd38-oss.github.io/alpine-ski-pro/ — GitHub Actions a confirmé le déploiement réussi le 16 novembre 2026. Alternative de test navigateur via StackBlitz : https://stackblitz.com/github/raphtd38-oss/alpine-ski-pro?startScript=dev (compatibilité à vérifier selon le navigateur).
 
