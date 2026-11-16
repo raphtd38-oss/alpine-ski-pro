@@ -17,3 +17,14 @@ Construire progressivement un vrai simulateur de ski navigateur, sans installati
 - Un test CPU/Chromium SwiftShader ne constitue pas un benchmark GPU joueur.
 - Mettre à jour STATUS et ROADMAP après chaque session, avec le résultat des vérifications et les limites honnêtes.
 - L'utilisateur autorise le développement et la publication de versions jouables sur ce dépôt. Continuer les améliorations demandées sans redemander cette autorisation.
+
+
+## Ressources et outils de production 3D (référence permanente)
+
+**Avant toute modification du rendu, des textures, d'un GLB, d'un rig ou d'une animation :** lire docs/RESOURCE_CATALOG.md, docs/ASSET_WORKFLOW.md, docs/ASSETS.md et scripts/alpine-pack.json. Ce sont les connaissances vérifiées du projet.
+
+- Chercher les nouveaux modèles et textures **CC0** via npm run assets:search -- "snow" --type texture ou --type model. Les API publiques Poly Haven / ambientCG ne requièrent pas de compte ; Poly Haven exige un User-Agent identifiable et un crédit pour l'utilisation de l'API. Les téléchargements réels du jeu restent à versionner via des manifestes, pas au runtime.
+- Tester npm run assets:doctor pour détecter Blender, glTF Transform, Khronos KTX-Software et le validateur GLB présents sur le poste. L'absence d'un outil facultatif n'empêche pas de tester la physique ; ne jamais prétendre qu'il est installé.
+- Contrôler npm run assets:audit avant intégration et publication, étendre le registre des assets avec la provenance/licence de chaque nouveau fichier. Une désignation « free » ne vaut pas CC0. Respecter les restrictions exactes de Mixamo/Quaternius et ne pas créer de comptes/paiements sans intervention du propriétaire.
+- Utiliser scripts/blender/export_glb.py pour les scènes originales, et scripts/asset_tools.mjs pour inspecter/optimiser les GLB lorsque ces logiciels sont disponibles. Tester toujours joints, animations, poids, UV et chargement PlayCanvas ; ne pas écraser le skieur original avant la compatibilité des courses.
+- KTX2/BasisU et LOD dynamique nécessitent un chargement PlayCanvas / décodeur et des benchmarks GPU réels : ne pas simplement convertir les fichiers et déclarer le jeu optimisé.
