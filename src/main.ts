@@ -360,6 +360,7 @@ async function boot() {
       state.edge,
       state.slip,
       playing && !paused && race.phase === "racing",
+      settings.weather === "snow" ? 0.82 : 1,
     );
     audio.menu(!playing);
     audio.crowd(
