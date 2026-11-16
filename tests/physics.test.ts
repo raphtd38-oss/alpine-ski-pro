@@ -6,7 +6,7 @@ import {
   stepPhysics,
 } from "../src/game/physics";
 import { COURSES, EQUIPMENT } from "../src/game/course";
-import { Race, replayAt } from "../src/game/race";
+import { Race, replayAt, formatTime } from "../src/game/race";
 import { clamp, type Controls } from "../src/game/types";
 const neutral: Controls = { steer: 0, tuck: false, brake: false, jump: false };
 function run(control: Controls, seconds = 12, e = EQUIPMENT.SL) {
@@ -172,4 +172,40 @@ describe("race rules", () => {
     expect(r.result?.valid).toBe(true);
     expect(r.frames.length).toBeGreaterThan(600);
   });
+});
+
+it("loads and flexes the outside ski progressively, with length-dependent response", () => {
+  const short = { ...initialState(), vz: 18 },
+    long = { ...short };
+  for (let i = 0; i < 60; i++) {
+    stepPhysics(
+      short,
+      { ...neutral, steer: 0.6 },
+      EQUIPMENT.SL,
+      COURSES.SL,
+      FIXED_DT,
+    );
+    stepPhysics(
+      long,
+      { ...neutral, steer: 0.6 },
+      { ...EQUIPMENT.SL, length: 2.18 },
+      COURSES.SL,
+      FIXED_DT,
+    );
+  }
+  expect(short.load).toBeGreaterThan(0.5);
+  expect(short.flex).toBeGreaterThan(0.1);
+  expect(short.edge).toBeGreaterThan(long.edge);
+  expect(short.heading).toBeGreaterThan(long.heading);
+  const oldFlex = short.flex;
+  for (let i = 0; i < 180; i++)
+    stepPhysics(short, neutral, EQUIPMENT.SL, COURSES.SL, FIXED_DT);
+  expect(short.flex).toBeLessThan(oldFlex * 0.1);
+});
+
+it("shows continuous hundredths across minute boundaries", () => {
+  expect(formatTime(59.999)).toBe("00:59.99");
+  expect(formatTime(60)).toBe("01:00.00");
+  expect(formatTime(60.018)).toBe("01:00.01");
+  expect(formatTime(0)).toBe("00:00.00");
 });

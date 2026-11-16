@@ -184,23 +184,110 @@ export class Renderer {
     return CAMERAS[this.cameraMode];
   }
 }
+/** A browser may expose WebGPU without a usable adapter. Probe before binding the
+ * canvas, and leave software adapters on the verified WebGL path. */
+async function usableWebGpu(): Promise<boolean> {
+  type ProbeDevice = {
+    createBuffer: (options: {
+      size: number;
+      usage: number;
+      mappedAtCreation: boolean;
+    }) => {
+      getMappedRange: () => ArrayBuffer;
+      unmap: () => void;
+      destroy: () => void;
+    };
+    destroy: () => void;
+  };
+  type Adapter = {
+    isFallbackAdapter?: boolean;
+    info?: { isFallbackAdapter?: boolean; description?: string };
+    requestDevice: () => Promise<ProbeDevice>;
+  };
+  const gpu = (
+    navigator as Navigator & {
+      gpu?: {
+        requestAdapter: (options: {
+          powerPreference: string;
+        }) => Promise<Adapter | null>;
+      };
+    }
+  ).gpu;
+  if (!gpu) return false;
+  let probe: ProbeDevice | undefined;
+  try {
+    const adapter = await gpu.requestAdapter({
+      powerPreference: "high-performance",
+    });
+    if (
+      !adapter ||
+      adapter.isFallbackAdapter ||
+      adapter.info?.isFallbackAdapter ||
+      /swiftshader|llvmpipe|software/i.test(adapter.info?.description ?? "")
+    )
+      return false;
+    probe = await adapter.requestDevice();
+    const buffer = probe.createBuffer({
+      size: 1048576,
+      usage: 8,
+      mappedAtCreation: true,
+    });
+    new Uint8Array(buffer.getMappedRange())[0] = 1;
+    buffer.unmap();
+    buffer.destroy();
+    return true;
+  } catch {
+    return false;
+  } finally {
+    probe?.destroy();
+  }
+}
 export async function createRenderer(canvas: HTMLCanvasElement) {
+  const params = new URLSearchParams(location.search),
+    antialias = params.get("quality") !== "low";
+  const useWebGpu =
+    params.get("renderer") !== "webgl2" && (await usableWebGpu());
   let device: pc.GraphicsDevice;
   try {
     device = await pc.createGraphicsDevice(canvas, {
-      deviceTypes: [pc.DEVICETYPE_WEBGPU, pc.DEVICETYPE_WEBGL2],
-      antialias: new URLSearchParams(location.search).get("quality") !== "low",
+      deviceTypes: useWebGpu
+        ? [pc.DEVICETYPE_WEBGPU, pc.DEVICETYPE_WEBGL2]
+        : [pc.DEVICETYPE_WEBGL2],
+      antialias,
       alpha: false,
       powerPreference: "high-performance",
     });
   } catch {
+    const replacement = canvas.cloneNode(false) as HTMLCanvasElement;
+    canvas.replaceWith(replacement);
+    canvas = replacement;
     device = await pc.createGraphicsDevice(canvas, {
       deviceTypes: [pc.DEVICETYPE_WEBGL2],
-      antialias: new URLSearchParams(location.search).get("quality") !== "low",
+      antialias,
       alpha: false,
     });
   }
   const r = new Renderer(canvas, device);
   await r.load();
+  if (device.isWebGPU) {
+    let recovering = false;
+    const recover = () => {
+      if (recovering) return;
+      recovering = true;
+      const url = new URL(location.href);
+      url.searchParams.set("renderer", "webgl2");
+      url.searchParams.set("graphics-recovery", "1");
+      location.replace(url.toString());
+    };
+    window.addEventListener("error", (event) => {
+      if (
+        /GPUDevice|GPUQueue|GPUCommandEncoder|createBuffer failed|copyExternalImageToTexture/.test(
+          event.message,
+        )
+      )
+        recover();
+    });
+    device.on("devicelost", recover);
+  }
   return r;
 }

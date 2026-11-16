@@ -40,6 +40,7 @@ export interface SkierState {
   heading: number;
   edge: number;
   load: number;
+  flex: number;
   slip: number;
   balance: number;
   height: number;
@@ -49,6 +50,7 @@ export interface SkierState {
   distance: number;
 }
 export interface Frame {
+  flex?: number;
   t: number;
   x: number;
   z: number;

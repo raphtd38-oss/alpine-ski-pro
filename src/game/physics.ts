@@ -17,6 +17,7 @@ export const initialState = (): SkierState => ({
   heading: 0,
   edge: 0,
   load: 0.5,
+  flex: 0,
   slip: 0,
   balance: 1,
   height: 0,
@@ -37,9 +38,26 @@ export function stepPhysics(
   snowGrip = 1,
 ): void {
   const speed = Math.hypot(s.vx, s.vz);
+  const lengthFactor = Math.sqrt(e.length / 1.65);
   const target = input.steer * (input.brake ? 0.35 : 0.92);
-  s.edge = smooth(s.edge, target, e.response * (0.7 + e.stiffness * 0.3), dt);
+  s.edge = smooth(
+    s.edge,
+    target,
+    (e.response * (0.7 + e.stiffness * 0.3)) / lengthFactor,
+    dt,
+  );
   s.load = smooth(s.load, 0.5 + s.edge * 0.42, 7, dt);
+  const outsideLoad = 0.5 + Math.abs(s.load - 0.5);
+  s.flex = smooth(
+    s.flex,
+    clamp(
+      (Math.abs(s.edge) * outsideLoad * ((speed * speed) / 180)) / e.stiffness,
+      0,
+      1.4,
+    ),
+    9,
+    dt,
+  );
   const [gx, gz] = gradient(s.x, s.z, c);
   const gravityScale = 9.81 / (1 + gx * gx + gz * gz);
   let ax = -gx * gravityScale,
@@ -52,9 +70,13 @@ export function stepPhysics(
     s.balance = smooth(s.balance, 1, 1, dt);
   } else {
     const desiredCurvature =
-      (Math.sin(s.edge) * (0.5 + e.stiffness * 0.5)) /
-      Math.max(4, e.radius * Math.cos(s.edge));
-    const gripLimit = 9.81 * 1.3 * e.grip * snowGrip;
+      (Math.sin(s.edge) *
+        (0.5 + e.stiffness * 0.5) *
+        (0.82 + outsideLoad * 0.22)) /
+      Math.max(4, (e.radius * Math.cos(s.edge)) / (1 + s.flex * 0.12));
+    const gripLimit =
+      (9.81 * 1.3 * e.grip * snowGrip * lengthFactor) /
+      Math.sqrt(1 + gx * gx + gz * gz);
     const lateralDemand = speed * speed * desiredCurvature;
     const lateral = clamp(lateralDemand, -gripLimit, gripLimit);
     const contact = s.height < 0.005 ? 1 : 0.03;
@@ -74,8 +96,9 @@ export function stepPhysics(
       -gripLimit,
       gripLimit,
     );
-    ax += (nx * lateral + nx * alignment) * contact;
-    az += (nz * lateral + nz * alignment) * contact;
+    const totalLateral = clamp(lateral + alignment, -gripLimit, gripLimit);
+    ax += nx * totalLateral * contact;
+    az += nz * totalLateral * contact;
     s.slip = smooth(
       s.slip,
       Math.abs(sideVelocity) + (input.brake ? speed * 0.25 : 0),

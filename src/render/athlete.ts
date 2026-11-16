@@ -7,8 +7,10 @@ export class Athlete {
   rig: pc.Entity;
   joints: Record<string, pc.GraphNode> = {};
   skis: pc.Entity[] = [];
+  skiSurfaces: { mesh: pc.Mesh; base: number[] }[] = [];
   poles: pc.Entity[] = [];
   material: pc.StandardMaterial;
+  ownedMaterials: pc.StandardMaterial[] = [];
   constructor(
     public app: pc.Application,
     asset: pc.Asset,
@@ -49,6 +51,7 @@ export class Athlete {
       0.65,
     );
     const base = material("Ski graphite", "#102736", 0.45, 0.6);
+    this.ownedMaterials.push(this.material, base);
     for (const side of [-1, 1]) {
       const e = new pc.Entity("Independent ski");
       this.root.addChild(e);
@@ -70,7 +73,7 @@ export class Athlete {
       const m = this.material;
       m.cull = pc.CULLFACE_NONE;
       m.update();
-      meshEntity(
+      const surface = meshEntity(
         app.graphicsDevice,
         e,
         "Shaped ski with raised tip",
@@ -78,6 +81,10 @@ export class Athlete {
         indices,
         m,
       );
+      this.skiSurfaces.push({
+        mesh: surface.render!.meshInstances[0].mesh!,
+        base: [...p],
+      });
       shape(
         e,
         "box",
@@ -118,6 +125,7 @@ export class Athlete {
       for (const mi of (c as pc.RenderComponent).meshInstances) {
         if (mi.material?.name.startsWith("Race suit")) {
           const mat = mi.material.clone() as pc.StandardMaterial;
+          this.ownedMaterials.push(mat);
           mat.diffuse.fromString(hex);
           mat.update();
           mi.material = mat;
@@ -171,6 +179,15 @@ export class Athlete {
         (i === 0 ? -1 : 1) * (8 + Math.abs(f.edge) * 9),
       );
       j[side + "Elbow"]?.setLocalEulerAngles(-f.tuck * 36, 0, 0);
+      const surf = this.skiSurfaces[i];
+      const vertices = [...surf.base];
+      for (let k = 0; k < vertices.length; k += 3) {
+        const t = (vertices[k + 2] / this.equipment.length) * 2;
+        vertices[k + 1] -=
+          (f.flex ?? 0) * 0.018 * (1 - t * t) * (1 + load * 0.35);
+      }
+      surf.mesh.setPositions(vertices);
+      surf.mesh.update();
       this.skis[i].setLocalEulerAngles(0, load * 1.2, -f.edge * 43);
       this.skis[i].setLocalPosition(
         (i === 0 ? -1 : 1) * (0.16 + Math.abs(f.edge) * 0.035),
@@ -202,6 +219,6 @@ export class Athlete {
   }
   destroy() {
     this.root.destroy();
-    this.material.destroy();
+    this.ownedMaterials.forEach((m) => m.destroy());
   }
 }

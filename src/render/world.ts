@@ -1,5 +1,6 @@
 import * as pc from "playcanvas";
-import { terrainHeight } from "../game/course";
+import { formatTime } from "../game/race";
+import { terrainHeight, gradient } from "../game/course";
 import type { PoleState } from "../game/poles";
 import type { Course, Quality, Weather } from "../game/types";
 import { material, meshEntity, shape, beam, rng, color } from "./geometry";
@@ -8,6 +9,8 @@ export class World {
   gateEntities: pc.Entity[] = [];
   resources: pc.Texture[] = [];
   materials: pc.StandardMaterial[] = [];
+  timingSign: { canvas: HTMLCanvasElement; texture: pc.Texture } | null = null;
+  timingLabel = "";
   snow: pc.StandardMaterial;
   red: pc.StandardMaterial;
   blue: pc.StandardMaterial;
@@ -62,6 +65,30 @@ export class World {
     t.setSource(c);
     t.addressU = t.addressV = pc.ADDRESS_REPEAT;
     t.anisotropy = 8;
+    const normalCanvas = document.createElement("canvas");
+    normalCanvas.width = normalCanvas.height = 512;
+    const nc = normalCanvas.getContext("2d")!,
+      ni = nc.createImageData(512, 512);
+    for (let y = 0; y < 512; y++)
+      for (let x = 0; x < 512; x++) {
+        const i = (y * 512 + x) * 4;
+        ni.data[i] =
+          128 + Math.sin((x * Math.PI) / 6) * 24 + (random() - 0.5) * 12;
+        ni.data[i + 1] = 128 + (random() - 0.5) * 12;
+        ni.data[i + 2] = 252;
+        ni.data[i + 3] = 255;
+      }
+    nc.putImageData(ni, 0, 0);
+    const nt = new pc.Texture(this.app.graphicsDevice, {
+      name: "Original snow micro-normal",
+      mipmaps: true,
+    });
+    nt.setSource(normalCanvas);
+    nt.addressU = nt.addressV = pc.ADDRESS_REPEAT;
+    nt.anisotropy = 8;
+    this.resources.push(nt);
+    this.snow.normalMap = nt;
+    this.snow.bumpiness = 0.32;
     this.snow.diffuseMap = t;
     this.snow.diffuseMapTiling.set(1, 1);
     this.snow.update();
@@ -81,7 +108,7 @@ export class World {
         const x = (i / nx - 0.5) * width;
         const h = terrainHeight(x, z, this.course);
         p.push(x, h, z);
-        uv.push(x / 12, z / 12);
+        uv.push(x / 2, z / 3);
         const edge = Math.min(
           1,
           Math.max(0, (Math.abs(x) - this.course.width / 2) / 20),
@@ -119,10 +146,12 @@ export class World {
     mat.diffuseVertexColor = true;
     mat.update();
     const random = rng(722);
+    const granite = this.mat("Exposed granite cliffs", "#48565e", 0.05, 0.2);
     for (let side = -1; side <= 1; side += 2) {
       const p: number[] = [],
         idx: number[] = [],
         cols: number[] = [];
+      const rockIndices: number[] = [];
       const n = 72,
         m = 64;
       for (let j = 0; j <= m; j++)
@@ -152,8 +181,14 @@ export class World {
         for (let i = 0; i < n; i++) {
           const a = j * (n + 1) + i,
             b = a + n + 1;
-          if (side > 0) idx.push(a, b, a + 1, a + 1, b, b + 1);
-          else idx.push(a, a + 1, b, a + 1, b + 1, b);
+          const slopeX = Math.abs(p[(a + 1) * 3 + 1] - p[a * 3 + 1]) / 19;
+          const slopeZ =
+            Math.abs(p[b * 3 + 1] - p[a * 3 + 1]) /
+            ((this.course.length + 1300) / m);
+          const target =
+            i > 5 && (slopeX > 1.05 || slopeZ > 0.9) ? rockIndices : idx;
+          if (side > 0) target.push(a, b, a + 1, a + 1, b, b + 1);
+          else target.push(a, a + 1, b, a + 1, b + 1, b);
         }
       meshEntity(
         this.app.graphicsDevice,
@@ -164,6 +199,15 @@ export class World {
         mat,
         cols,
       );
+      if (rockIndices.length)
+        meshEntity(
+          this.app.graphicsDevice,
+          this.root,
+          "Rock outcrops",
+          p,
+          rockIndices,
+          granite,
+        );
     }
   }
   forest() {
@@ -280,7 +324,7 @@ export class World {
     m.emissiveMap = t;
     m.emissive.set(0.16, 0.16, 0.16);
     m.update();
-    return { m, width, height };
+    return { m, width, height, canvas: c, texture: t };
   }
   arch(z: number, label: string, finish: boolean) {
     const w = finish ? 14 : 7,
@@ -484,7 +528,7 @@ export class World {
       const x = side * (c.width / 2 + 8),
         y = terrainHeight(x, z, c);
       for (let tier = 0; tier < 4; tier++) {
-        shape(
+        const terrace = shape(
           this.root,
           "box",
           "Grandstand terrace",
@@ -492,10 +536,15 @@ export class World {
           [1.4, 0.28, 20],
           steel,
         );
+        terrace.setEulerAngles(
+          (-Math.atan(gradient(x, z, c)[1]) * 180) / Math.PI,
+          0,
+          0,
+        );
         for (let row = 0; row < 12; row++) {
           const zz = z - 9 + row * 1.55,
             xx = x + side * tier * 1.2,
-            yy = y + tier * 0.65 + 0.9;
+            yy = terrainHeight(x, zz, c) + tier * 0.65 + 0.9;
           shape(
             this.root,
             "box",
@@ -612,6 +661,7 @@ export class World {
       screen,
     );
     const label = this.sign("FINISH   /   ALPINE SKI PRO", 5.7, 2.6, "#102e3e");
+    this.timingSign = label;
     shape(
       this.root,
       "box",
@@ -702,6 +752,25 @@ export class World {
       previous = top;
     }
   }
+  updateTiming(time: number, missed: number) {
+    if (!this.timingSign) return;
+    const text = formatTime(time) + (missed ? "  DSQ" : "");
+    if (text === this.timingLabel) return;
+    this.timingLabel = text;
+    const { canvas, texture } = this.timingSign,
+      ctx = canvas.getContext("2d")!;
+    ctx.fillStyle = "#102634";
+    ctx.fillRect(0, 0, 1024, 192);
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#f37955";
+    ctx.font = "24px sans-serif";
+    ctx.fillText("ALPINE SKI PRO  /  LIVE TIMING", 512, 38);
+    ctx.font = "bold 108px monospace";
+    ctx.fillStyle = missed ? "#ff9e89" : "#e5fff5";
+    ctx.fillText(text, 512, 151);
+    texture.upload();
+  }
+
   updateGates(status: string[], poles: PoleState[]) {
     this.gateEntities.forEach((g, i) => {
       const hinges = g.children.filter((p) => p.name === "Pole hinge");
@@ -718,11 +787,7 @@ export class World {
     });
   }
   destroy() {
-    const meshes = new Set<pc.Mesh>();
-    for (const r of this.root.findComponents("render") as pc.RenderComponent[])
-      for (const mi of r.meshInstances) mi.mesh && meshes.add(mi.mesh);
     this.root.destroy();
-    for (const mesh of meshes) if (mesh.refCount === 0) mesh.destroy();
     this.resources.forEach((t) => t.destroy());
     this.materials.forEach((m) => m.destroy());
   }

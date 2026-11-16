@@ -2,9 +2,9 @@
 
 Un jeu de ski alpin original, entièrement dans le navigateur, construit avec **PlayCanvas Engine 2.24, TypeScript et Vite**.
 
-**Version 0.1 : première base jouable, pas le simulateur final ni un rendu photoréaliste.**
+**Version 0.1.1 : première base jouable, pas le simulateur final ni un rendu photoréaliste.**
 
-🎮 Adresse de publication : https://raphtd38-oss.github.io/alpine-ski-pro/ (voir le workflow pour l'état du déploiement).
+🎮 Adresse prévue : https://raphtd38-oss.github.io/alpine-ski-pro/ — **pas encore accessible**, activation de GitHub Pages nécessaire (voir ci-dessous).
 
 ## Jouer
 
@@ -28,14 +28,14 @@ Clavier recommandé. Commandes tactiles simples et manette (axe gauche, gâchett
 - Physique indépendante du rendu à **120 Hz** : gravité sur le relief, inertie, direction des skis indépendante de la vitesse, carres progressives, force latérale limitée par l'adhérence, freinage, aérodynamisme, impulsion et équilibre simplifié.
 - **Piquets articulés** : collision balayée, transfert d'impulsion, ressort à deux axes, amortissement et bruit d'impact ElevenLabs. Les règles de passage et les impacts sont séparés.
 - Athlète **GLB original avec skin et 18 articulations**, matériaux PBR, flexion procédurale et IK sagittale à deux segments. Asset encore stylisé.
-- Terrain partagé entre simulation et rendu, massifs, sapins, chalets, remontée, filets, corduroy de neige, traces et projections.
+- Terrain partagé entre simulation et rendu, massifs, sapins, chalets, remontée, filets, corduroy de neige avec micro-normales, traces et projections.
 - Aire d'arrivée rouge avec arche, tribunes, drapeaux, barrières, zone du leader et cabines. Présentation originale inspirée du ski de compétition, sans partenariat FIS/Audi.
 - Quatre tracés SL / GS / SG / DH et quatre paires de skis dont les caractéristiques influencent la conduite ; seuls le slalom et ses règles ont un test de parcours complet à ce stade.
 - Records locaux, fantôme du meilleur temps, replay de la dernière course ; entraînement sans inscription au classement.
 - Profil, XP, niveau et jalons locaux ; couleurs de combinaison.
 - Faible / moyen / élevé / ultra ; beau temps / couvert / brume neigeuse.
 - Musique de menu, impacts et public **générés avec ElevenLabs**, téléchargés dans le dépôt. Vent/glisse/carres synthétisés en Web Audio.
-- WebGPU avec shaders WGSL natifs PlayCanvas et repli WebGL 2. Aucun service payant ni clé nécessaire pour jouer.
+- WebGPU avec shaders WGSL natifs PlayCanvas, détection des adaptateurs et repli WebGL 2 ; `?renderer=webgl2` force la voie de secours. Aucun service payant ni clé nécessaire pour jouer.
 
 ## Limites assumées
 
@@ -75,6 +75,6 @@ Le moteur de ski utilise des unités SI. La simulation avance par pas fixes et l
 
 ## GitHub et publication
 
-La branche `feat/playable-slalom` contient la version jouable. Le workflow `Verify and publish` effectue installation reproductible, tests unitaires, compilation et tests Chromium avant d'autoriser GitHub Pages. Il publie cette branche de développement et `main` ; les pull requests sont uniquement vérifiées. Une PR permet de relire et fusionner le travail ultérieurement.
+La branche `feat/playable-slalom` contient la version jouable. **Publication encore bloquée : l’activation de Pages exige le réglage propriétaire Settings → Pages → Source : GitHub Actions.** La connexion GitHub et le workflow ont reçu HTTP 403 lors de cette activation. Le workflow `Verify and publish` effectue installation reproductible, tests unitaires, compilation et tests Chromium avant d'autoriser GitHub Pages. Il publie cette branche de développement et `main` ; les pull requests sont uniquement vérifiées. Une PR permet de relire et fusionner le travail ultérieurement.
 
 Lire [l'état de reprise](docs/STATUS.md), [les priorités](docs/ROADMAP.md) et [les crédits et licences](docs/ASSETS.md). Ne pas confondre un workflow en cours avec un déploiement déjà réussi.

@@ -60,6 +60,7 @@ export class Race {
         z: s.z,
         heading: s.heading,
         edge: s.edge,
+        flex: s.flex,
         height: s.height,
         tuck: tuck ? 1 : 0,
         fallen: s.fallen,
@@ -102,12 +103,16 @@ export function replayAt(frames: Frame[], time: number): Frame | null {
     z: a.z + (b.z - a.z) * u,
     heading: a.heading + (b.heading - a.heading) * u,
     edge: a.edge + (b.edge - a.edge) * u,
+    flex: (a.flex ?? 0) + ((b.flex ?? 0) - (a.flex ?? 0)) * u,
     height: a.height + (b.height - a.height) * u,
     tuck: a.tuck + (b.tuck - a.tuck) * u,
     fallen: a.fallen,
   };
 }
-export const formatTime = (t: number) =>
-  `${Math.floor(t / 60)
-    .toString()
-    .padStart(2, "0")}:${(t % 60).toFixed(2).padStart(5, "0")}`;
+/** Display elapsed hundredths without ever rounding a second into "60.00". */
+export function formatTime(t: number): string {
+  const hundredths = Math.floor(Math.max(0, Number.isFinite(t) ? t : 0) * 100);
+  const minutes = Math.floor(hundredths / 6000);
+  const seconds = Math.floor((hundredths % 6000) / 100);
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}.${String(hundredths % 100).padStart(2, "0")}`;
+}

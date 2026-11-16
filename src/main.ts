@@ -17,6 +17,7 @@ import {
 import { Race, replayAt, formatTime } from "./game/race";
 import { PoleSimulation } from "./game/poles";
 import { Input } from "./game/input";
+import { readSettings, writeSettings } from "./game/settings";
 import { Progress } from "./game/storage";
 import { SkiAudio } from "./game/audio";
 import { createRenderer } from "./render/engine";
@@ -24,27 +25,29 @@ import { UI, type Settings } from "./ui/ui";
 import type { Frame, Controls } from "./game/types";
 
 async function boot() {
-  const settings: Settings = {
-    course: "SL",
-    equipment: "SL",
-    quality: "high",
-    weather: "clear",
-    sound: true,
-    ghost: true,
-    edges: true,
-    suit: "#eb552d",
-  };
-  if (new URLSearchParams(location.search).get("quality") === "low")
-    settings.quality = "low";
+  const settings = readSettings();
+  const requestedQuality = new URLSearchParams(location.search).get("quality");
+  if (
+    requestedQuality &&
+    ["low", "medium", "high", "ultra"].includes(requestedQuality)
+  )
+    settings.quality = requestedQuality as Settings["quality"];
   const progress = new Progress(),
     ui = new UI(document.querySelector("#app")!, settings, progress),
     input = new Input(),
     audio = new SkiAudio();
   const renderer = await createRenderer(document.querySelector("#game")!);
-  renderer.build(COURSES.SL, EQUIPMENT.SL, settings.quality, settings.weather);
+  renderer.build(
+    COURSES[settings.course],
+    EQUIPMENT[settings.equipment],
+    settings.quality,
+    settings.weather,
+  );
+  renderer.athlete.paint(settings.suit);
+  audio.setEnabled(settings.sound);
   let state = initialState(),
     previous = { ...state },
-    race = new Race(COURSES.SL, "SL"),
+    race = new Race(COURSES[settings.course], settings.equipment),
     paused = false,
     playing = false,
     replaying = false,
@@ -53,7 +56,7 @@ async function boot() {
     best = false,
     hudTimer = 0,
     lastCountdown = 4;
-  let poles = new PoleSimulation(COURSES.SL);
+  let poles = new PoleSimulation(COURSES[settings.course]);
   const clock = new FixedClock();
   let lastFrames: Frame[] = [];
   let lastResult: ReturnType<typeof Object.assign> | null = null;
@@ -63,6 +66,7 @@ async function boot() {
     z: state.z,
     heading: state.heading,
     edge: state.edge,
+    flex: state.flex,
     height: state.height,
     tuck: input.sample().tuck ? 1 : 0,
     fallen: state.fallen,
@@ -144,12 +148,18 @@ async function boot() {
     ui.toast("Replay · C : caméra · Échap : pause · R : nouvelle course");
   };
   ui.settingsChanged = () => {
+    if (!writeSettings(settings))
+      ui.toast("Préférences conservées pour cette session uniquement.");
     build();
     if (playing) start(race.training);
   };
   input.onAction = (key) => {
     if (key === "KeyR" && playing) ui.restart();
     if (key === "KeyC" && playing) ui.toast(renderer.changeCamera());
+    if (key === "Escape" && !playing && !ui.modal.hidden) {
+      ui.close();
+      return;
+    }
     if (key === "Escape" && playing) {
       if (paused) {
         ui.close();
@@ -222,6 +232,11 @@ async function boot() {
     }
   }
   const display = () => {
+    if (state.z > race.course.length - 110)
+      renderer.world.updateTiming(
+        replaying ? replayTime : race.time,
+        race.missed,
+      );
     ui.text("time", formatTime(replaying ? replayTime : race.time));
     ui.text("speed", String(Math.round(Math.hypot(state.vx, state.vz) * 3.6)));
     ui.text(
@@ -258,11 +273,19 @@ async function boot() {
           ? "GO"
           : "",
     );
-    if (race.splits.length)
+    if (race.splits.length) {
+      const index = race.splits.length - 1,
+        current = race.splits[index],
+        reference = progress.data.records[settings.course]?.[0]?.splits[index];
+      const difference =
+        reference === undefined
+          ? ""
+          : `  /  ${current - reference >= 0 ? "+" : ""}${(current - reference).toFixed(2)} s vs record`;
       ui.text(
         "split",
-        `INTER ${race.splits.length}  ${formatTime(race.splits[race.splits.length - 1])}`,
+        `INTER ${index + 1}  ${formatTime(current)}${difference}`,
       );
+    }
     (document.querySelector("#progress") as HTMLElement).style.width =
       `${Math.min(100, (state.z / race.course.length) * 100)}%`;
     (document.querySelector("#speed-bar") as HTMLElement).style.width =
@@ -351,6 +374,8 @@ async function boot() {
   );
   document.querySelector("#loading")!.remove();
   renderer.app.start();
+  if (new URLSearchParams(location.search).has("graphics-recovery"))
+    ui.toast("Rendu WebGL 2 activé après un problème WebGPU.");
   // Explicitly development-only observability. Never included in the production bundle.
   if (import.meta.env.DEV) {
     Object.assign(window, {

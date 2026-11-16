@@ -129,7 +129,12 @@ export function terrainHeight(x: number, z: number, c: Course): number {
   const roll = Math.sin(z * 0.024) * 0.65 + Math.sin(z * 0.057) * 0.17;
   const bank = Math.pow(Math.max(0, Math.abs(x) - c.width / 2), 1.3) * 0.19;
   const jump = c.id === "DH" || c.id === "SG" ? Math.sin(z * 0.041) * 1.05 : 0;
-  return -z * c.grade + roll + bank + jump + Math.sin(x * 0.1) * 0.12;
+  // Ease the racing pitch into a run-out; the same surface drives rendering and gravity.
+  const start = c.length - 45,
+    span = 90,
+    t = Math.max(0, Math.min(1, (z - start) / span));
+  const fall = z <= start ? z : start + span * (t - (t * t) / 2);
+  return -fall * c.grade + roll + bank + jump + Math.sin(x * 0.1) * 0.12;
 }
 export function gradient(x: number, z: number, c: Course): [number, number] {
   const d = 0.15;

@@ -51,17 +51,20 @@ export class Progress {
               Number.isFinite(g.time) &&
               Array.isArray(g.frames) &&
               g.frames.length <= 30000 &&
-              g.frames.every((f: Frame) =>
-                [
-                  "t",
-                  "x",
-                  "z",
-                  "heading",
-                  "edge",
-                  "height",
-                  "tuck",
-                  "fallen",
-                ].every((k) => Number.isFinite(f[k as keyof Frame])),
+              g.frames.every(
+                (f: Frame) =>
+                  f &&
+                  (f.flex === undefined || Number.isFinite(f.flex)) &&
+                  [
+                    "t",
+                    "x",
+                    "z",
+                    "heading",
+                    "edge",
+                    "height",
+                    "tuck",
+                    "fallen",
+                  ].every((k) => Number.isFinite(f[k as keyof Frame])),
               )
             )
               this.data.ghosts[id] = g;
@@ -75,12 +78,13 @@ export class Progress {
   save() {
     try {
       localStorage.setItem(KEY, JSON.stringify(this.data));
+      this.available = true;
     } catch {
       this.available = false;
     }
   }
   record(r: Result, frames: Frame[]): boolean {
-    if (!r.valid) return false;
+    if (!r.valid || !Number.isFinite(r.time) || r.time <= 0) return false;
     const records = this.data.records[r.course] ?? [];
     const best = records.length === 0 || r.time < records[0].time;
     this.data.records[r.course] = [...records, r]

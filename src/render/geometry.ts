@@ -22,10 +22,18 @@ export function meshEntity(
 ): pc.Entity {
   const mesh = new pc.Mesh(device);
   mesh.setPositions(positions);
-  mesh.setNormals(pc.calculateNormals(positions, indices));
+  const normals = pc.calculateNormals(positions, indices);
+  mesh.setNormals(normals);
   mesh.setIndices(indices);
   if (colors) mesh.setColors(colors);
-  if (uvs) mesh.setUvs(0, uvs);
+  if (uvs) {
+    mesh.setUvs(0, uvs);
+    mesh.setVertexStream(
+      pc.SEMANTIC_TANGENT,
+      pc.calculateTangents(positions, normals, uvs, indices),
+      4,
+    );
+  }
   mesh.update(pc.PRIMITIVE_TRIANGLES);
   const e = new pc.Entity(name);
   e.addComponent("render", { meshInstances: [new pc.MeshInstance(mesh, mat)] });

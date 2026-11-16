@@ -1262,3 +1262,40 @@ meter {
 footer button span {
   font-family: Arial, sans-serif;
 }
+
+.pause-bars {
+  width: 13px;
+  height: 16px;
+  border-left: 4px solid currentColor;
+  border-right: 4px solid currentColor;
+}
+.footnote a {
+  color: #f99679;
+}
+
+@media (max-width: 760px) {
+  nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 54px;
+    justify-content: space-around;
+    gap: 0;
+    background: #112b3bf5;
+    z-index: 3;
+    border-top: 1px solid var(--border);
+  }
+  nav button {
+    font-size: 11px;
+    padding: 0 10px;
+  }
+  footer {
+    bottom: 54px;
+    height: 35px;
+  }
+  .course-preview {
+    bottom: 16%;
+  }
+}

@@ -6,7 +6,7 @@ Le but est un simulateur de ski de grande qualité, amélioré sur le même dép
 
 - Faire essayer le SL au joueur et recueillir ses sensations sur le rayon, la vitesse, les transitions et le freinage.
 - Définir un mode accessible et un mode course exigeant ; conserver les tests de parcours valides.
-- Raffiner contacts séparés des skis et charges intérieures/extérieures, flexion réelle de la géométrie, conservation d'énergie et décollage sur relief.
+- Raffiner contacts séparés des skis et charges intérieures/extérieures, flexion dynamique plus détaillée (déformation visuelle déjà présente), conservation d'énergie et décollage sur relief.
 - Calibrer les piquets sur des valeurs documentées ; distinguer contacts skis / tibias / mains / corps, plier le fût en plus de l'articulation.
 - Vérifier la règle de passage des deux skis et pieds sur plusieurs trajectoires, portes verticales, doubles et figures ; ne pas annoncer conformité FIS sans validation.
 - Ajouter collisions avec obstacles, réaction corporelle et ragdoll avec un moteur physique navigateur approprié, sans casser le solveur de carving.
@@ -23,7 +23,7 @@ Le but est un simulateur de ski de grande qualité, amélioré sur le même dép
 - Relief alpin crédible à plusieurs échelles, texture de neige PBR normale/roughness, roches et arbres de meilleure qualité.
 - LOD et chunks de végétation, instancing, culling des infrastructures, budget de draw calls mesuré.
 - Améliorer le ciel, nuages, brume et précipitations ; supprimer l'aspect géométrique encore visible.
-- Finaliser l'aire de Coupe du monde : vrais écrans de temps, foule animée, photographes, podium et zone mixte.
+- Finaliser l'aire de Coupe du monde : étendre les écrans chronométrés existants, foule animée, photographes, podium et zone mixte.
 - Développer les ambiances ElevenLabs (public plus long, vent, carving, contacts différenciés) et leur mixage. Une boucle de public de 2 s est actuellement courte.
 
 ## Priorité 4 — contenu et carrière
