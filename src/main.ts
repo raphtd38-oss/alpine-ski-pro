@@ -238,7 +238,10 @@ async function boot() {
     );
     poles.update(previous, state, dt);
     if (poles.lastImpacts)
-      audio.impact(Math.hypot(state.vx, state.vz), state.edge);
+      audio.impact(
+        Math.hypot(state.vx, state.vz), state.edge,
+        race.course.id !== "SL",
+      );
     const oldGate = race.nextGate;
     race.update(previous, state, dt, control.tuck);
     if (race.nextGate !== oldGate) {
