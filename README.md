@@ -4,7 +4,7 @@ Un jeu de ski alpin original, entièrement dans le navigateur, construit avec **
 
 **V1.0 : base de slalom jouable et testée, avec physique 120 Hz, carving progressif, caméra et animations plus souples, sons dynamiques et qualité graphique adaptative. La qualité n'est pas photoréaliste et les autres disciplines restent moins testées.**
 
-🎮 Publication visée : https://raphtd38-oss.github.io/alpine-ski-pro/ — l'administrateur doit d'abord activer **Settings → Pages → Source → GitHub Actions**. En attendant, l'import navigateur StackBlitz du dépôt public fournit une solution de test : https://stackblitz.com/github/raphtd38-oss/alpine-ski-pro?startScript=dev (l'exécution dépend de WebContainers et du navigateur).
+🎮 **Alpine Ski Pro V1 publié** : https://raphtd38-oss.github.io/alpine-ski-pro/ — GitHub Actions a confirmé le déploiement réussi le 16 novembre 2026. Alternative de test navigateur via StackBlitz : https://stackblitz.com/github/raphtd38-oss/alpine-ski-pro?startScript=dev (compatibilité à vérifier selon le navigateur).
 
 ## Jouer
 
@@ -75,7 +75,7 @@ Le moteur de ski utilise des unités SI. La simulation avance par pas fixes et l
 
 ## GitHub et publication
 
-La branche `main` contient la version V1 une fois la PR de sortie fusionnée. **La publication GitHub Pages demande une activation initiale par un administrateur dans Settings → Pages → Source : GitHub Actions.** La connexion GitHub et le workflow ont reçu HTTP 403 lors de cette activation. Le workflow `Verify and publish` effectue l'installation reproductible, les tests unitaires, la compilation et les tests Chromium. Il tente ensuite de publier `main` ou la branche de développement, uniquement une fois Pages activé ; les pull requests sont seulement vérifiées. Une PR permet de relire et fusionner le travail ultérieurement.
+La branche `main` contient la version V1 une fois la PR de sortie fusionnée. **GitHub Pages est activé : la V1 a été déployée avec succès le 16 novembre 2026.** La connexion GitHub et le workflow ont reçu HTTP 403 lors de cette activation. Le workflow `Verify and publish` effectue l'installation reproductible, les tests unitaires, la compilation et les tests Chromium. Il publie ensuite `main` et la branche de développement lorsque la source Pages est activée ; les pull requests sont seulement vérifiées. Une PR permet de relire et fusionner le travail ultérieurement.
 
 Lire [l'état de reprise](docs/STATUS.md), [les priorités](docs/ROADMAP.md) et [les crédits et licences](docs/ASSETS.md). Ne pas confondre un workflow en cours avec un déploiement déjà réussi.
 
