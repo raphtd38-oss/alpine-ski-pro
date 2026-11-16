@@ -1,5 +1,5 @@
 import type { Course, Discipline, Equipment } from "./types";
-import { superGRelief, superGCenterX } from "./superg";
+import { superGRelief, superGCenterX, superGGateZ } from "./superg";
 export const courseCenterX = (z: number, c: Course): number =>
   c.id === "SG" ? superGCenterX(z) : 0;
 export const EQUIPMENT: Record<Discipline, Equipment> = {
@@ -122,12 +122,13 @@ export const COURSES: Record<Discipline, Course> = Object.fromEntries(
           // The race genuinely traverses the mountainside. Each flag is
           // offset from the curved corridor, not the former straight x=0.
           x: id === "SG"
-            ? superGCenterX(56 + i * space) +
+            ? superGCenterX(superGGateZ(i)) +
               Math.sin(i * 1.37 + 0.45) * 5.4 +
               Math.sin(i * 0.41) * 1.9
             : Math.sin((i * Math.PI) / 2 + 0.5) * swing,
-          z: id === "SG" ? 56 + i * space : 40 + i * space,
-          width: id === "SG" && i % 9 === 7 ? 10 : gateWidth,
+          z: id === "SG" ? superGGateZ(i) : 40 + i * space,
+          width: id === "SG" && i % 9 === 7 ? 10 :
+            id === "SG" ? 7.6 : gateWidth,
         })),
       },
     ],
