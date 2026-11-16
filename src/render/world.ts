@@ -1094,10 +1094,40 @@ export class World {
         this.root,
         "box",
         "Timing photocell",
-        [x, h + 0.45, z],
+        [x, terrainHeight(x, z, c) + 0.44, z],
         [0.22, 0.22, 0.22],
         this.dark,
       );
+    if (this.course.id === "SG") {
+      const emitter = this.mat("Finish photocell indicator glass",
+        "#65cbe9", 0.12, 0.86);
+      const beamMat = this.mat("Subtle optical finish timing beam",
+        "#66d9f6", 0, 0.62);
+      beamMat.emissive.set(0.05, 0.17, 0.23);
+      beamMat.opacity = 0.16;
+      beamMat.blendType = pc.BLEND_NORMAL;
+      beamMat.depthWrite = false;
+      beamMat.update();
+      // Secondary redundant beam housings, both at knee-level, with a
+      // nearly invisible light indication across the finish corridor.
+      for (const side of [-1, 1])
+        for (const dz of [0, 0.32]) {
+          const x = side * 6.6;
+          const y = terrainHeight(x, z + dz, c);
+          shape(this.root, "box", "SG twin photoelectric finish sensor",
+            [x, y + 0.38, z + dz],
+            [0.24, 0.19, 0.25], emitter);
+        }
+      for (let x = -6.3; x < 6.3; x += 0.7) {
+        const y0 = terrainHeight(x, z, c) + 0.38;
+        const y1 = terrainHeight(x + 0.7, z, c) + 0.38;
+        const p = [x,y0,z, x+0.7,y1,z,
+          x+0.7,y1+0.016,z, x,y0+0.016,z];
+        const segment = meshEntity(this.app.graphicsDevice, this.root,
+          "Low finish beam marker", p, [0,1,2,0,2,3], beamMat);
+        segment.render!.castShadows = false;
+      }
+    }
   }
 
   lift() {
