@@ -181,3 +181,15 @@ Références : vidéos joueur de 55 s (Giant Slalom Switchback B) et 36 s (versi
 Le sol simulé et le rendu restent basés sur une seule fonction de hauteur continue, à 120 Hz pour la physique. Les dispositifs de porte sont des approximations visuelles de compétition et ne sont **pas homologués FIS**. Le modèle original 18 articulations reste semi-réaliste ; la pose des épaules est une animation procédurale, pas une simulation anatomique rigide.
 
 **Publication :** vérifier les checks CI Playwright et l'exécution GitHub Pages de main après fusion ; ne pas déclarer les étapes réussies sans résultats.
+
+## V1.8 — relief, tracé sinueux et chrono final
+
+Le 16 novembre 2026, à partir de la photo Saalbach 2025 et des demandes du joueur :
+- `courseCenterX` partage le tracé entre terrain de jeu, limites physiques, neige molle, filets, roches, forêt et portes. Les distances entre portes SG varient d'environ 33 à 70 m.
+- Quatre secteurs visuels (forêt / glacier / combe rocheuse / arrivée) et végétation plus naturelle sur une seule géométrie groupée. De la teinture bleue est ajoutée en bords de piste et aux crêtes.
+- Tissus de portes refaits comme surfaces incurvées, texture originale haute définition (512→1024 × 512), sans copie d'autre jeu.
+- Nouvelle façade de la cabane de départ à panneaux de protection et affichage, et tige du chronomètre qui pivote au passage.
+- Le geste d'arrivée a changé : extension de la main basse en direction du faisceau, au lieu d'un bras levé après l'arrivée. Le résultat est interpolé au sous-tick via `finishBeamFraction` et n'est validé qu'après la traversée de la ligne par le skieur. Replays anciens compatibles.
+- Les règles de dimension / intervalle SG sont inspirées du règlement FIS 2026 et les marquages bleus d'explications FIS, sans utiliser d'assets ni marque propriétaire.
+- Validation et publication : se référer à la PR, aux checks CI et à GitHub Pages, jamais supposer succès ou FPS non mesurés.
+- Limite : le modèle GLB 18 articulations et les arbres procéduraux restent semi-réalistes. Pour une marche graphique qualitative supérieure, fournir/modéliser un skieur humain riggé original, textures PBR et mouvements professionnels capturés ou animés, puis optimiser GLB/KTX2/LOD dans PlayCanvas.
