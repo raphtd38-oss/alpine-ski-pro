@@ -126,3 +126,9 @@ Le haut du corps reste mieux stabilisé dans les virages, l'appui extérieur est
 Aucun Blender ni téléchargement de modèle payant n'est nécessaire : `npm run assets` génère le GLB depuis `scripts/build_skier_pro.mjs`. `npm run assets:verify` vérifie le skinning. Le nouveau GLB de moins de 1 Mo est versionné dans GitHub et est chargé par PlayCanvas directement dans le navigateur.
 
 Ce personnage est un modèle de compétition **plus réaliste en silhouette et équipement**, mais ne représente pas un scan photoréaliste de niveau AAA. La physique du jeu, les portes, les records, les replays et les commandes restent inchangés.
+
+## V1.3.1 — équipement de slalom à l’échelle
+
+Le modèle de skieur professionnel de la V1.3 est conservé, avec ses 18 articulations et ses animations. Un problème du panier de bâton a été corrigé : l'ancien objet mesurait **3 mètres** de large dans le code et pouvait dénaturer la silhouette en caméra rapprochée. Les nouveaux bâtons ont un panier d'environ 13 cm, une poignée et une pointe métallisée aux proportions réelles, ainsi que des protège-mains de slalom. Les dimensions sont définies dans `src/render/equipment-specs.ts` et contrôlées par les tests.
+
+Tout reste accessible dans un navigateur sans Blender : aucune nouvelle dépendance ni texture externe, et les contrôles/chronos sont préservés.
