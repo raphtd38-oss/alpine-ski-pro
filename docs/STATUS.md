@@ -88,3 +88,11 @@ Le projet n'est **pas terminé**. Pas de certification FIS, pas de sponsoring Au
 - Numéro de version affiché : V1.0.0. Tests GitHub Actions à exécuter avant fusion sur main.
 - Publication : source GitHub Pages à activer côté dépôt, sans pouvoir faire ce réglage avec les permissions du connecteur. Import StackBlitz possible comme solution de navigation provisoire, sous réserve de compatibilité du navigateur.
 - Les quatre nouveaux fichiers ElevenLabs n'ont pas été livrés à cause de la saturation du service. Ne pas les annoncer comme intégrés.
+
+## Livraison effective V1 (16 novembre 2026)
+
+- Fusion de la V1.0.0 sur `main` avec PR #7 (SHA `d31e53f81c11cb951b6a2e5564cc5388cb689302`).
+- Workflow GitHub Actions `43863934709` : tests unitaires, compilation, navigateur Chromium et déploiement GitHub Pages **réussis**.
+- URL de test : https://raphtd38-oss.github.io/alpine-ski-pro/ . GitHub Actions rapporte un déploiement réussi ; retours de rendu/performance attendus de l'utilisateur sur GPU réel.
+- Alternative navigateur : https://stackblitz.com/github/raphtd38-oss/alpine-ski-pro?startScript=dev (import public du dépôt ; compatibilité propre au navigateur non vérifiée).
+- Quatre nouveaux MP3 ElevenLabs toujours indisponibles, le jeu utilise ses anciennes pistes ElevenLabs et ses bruitages ski de synthèse dynamique.
