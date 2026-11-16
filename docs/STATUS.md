@@ -139,3 +139,16 @@ Le projet n'est **pas terminé**. Pas de certification FIS, pas de sponsoring Au
 - Mixage des impacts `src/game/audio.ts` : bruit de ressort et de contact original, variation de hauteur/volume avec vitesse; froissement synthétique pour drapeaux; ancienne piste ElevenLabs conservée.
 - Une création ElevenLabs supplémentaire de carving de 7 secondes a abouti sur le flow de l'utilisateur (70 crédits). Le contenu audio n'a pas pu être téléchargé dans l'environnement de développement ; **ne pas prétendre qu'il est livré dans le jeu**.
 - Tests CI (build et Playwright) à vérifier avant fusion/publication; aucune copie du code ou des assets du jeu de référence.
+
+## V1.5 — carving, posture et piquets réactifs (branche feat/v15-carve-animation-gate-response)
+
+Référence : vidéos fournies par le joueur le 16 novembre (55 s Giant Slalom et 36 s de la version de travail). Le jeu de référence montre des portes et pentes plus détaillées ; notre modèle original demeure stylisé.
+
+- La distribution de charge gauche/droite progresse avec la vitesse, à pas fixe 120 Hz ; une réserve de force latérale modérée est associée à l'appui du ski extérieur.
+- Un signal déterministe de « chatter » dépend de la dureté de neige, de la prise de carre et de la vitesse. La piste ne tremble pas aléatoirement ; les données sont propagées vers le personnage et les replays.
+- La posture du GLB existant (18 articulations) bénéficie d'un bassin plus engagé, de deux jambes/chevilles aux angles différenciés, d'une compensation du haut du corps, d'un léger tremblement de carres et d'un recul bref lors du choc avec un piquet.
+- Les piquets disposent d'une section supérieure élastique qui se déforme en plus de la charnière de base, avec ressort non linéaire amorti et retour contrôlé. Le passage de porte reste indépendant de l'impact.
+- Mixage de neige dure légèrement plus granuleux ; aucun son propriétaire copié. La génération ElevenLabs `twV2FljboNunWB9zOUVI` de 7 s est confirmée existante mais non ajoutée au dépôt : accès aux octets MP3 non obtenu.
+- Tests ajoutés pour pression extérieure, neige dure, collision et rétrocompatibilité des replays ; contrôle du nombre de sections de piquets dans Chromium.
+- **Validation / publication :** se référer à la PR et aux checks GitHub Actions. Ce texte ne revendique pas la réussite des tests avant lecture de leurs résultats.
+- Limitations : modèle 3D toujours procédural et semi-réaliste, non AAA. Aucune mesure de FPS sur GPU joueur ; l'animation des piquets ajoute un mesh léger par piquet.
