@@ -24,6 +24,8 @@ export class UI {
   restart: () => void = () => {};
   home: () => void = () => {};
   replay: () => void = () => {};
+  onReplaySpeed: (speed: number) => void = () => {};
+  onReplaySeek: (fraction: number) => void = () => {};
   settingsChanged: () => void = () => {};
   hud: HTMLElement;
   modal: HTMLElement;
@@ -39,6 +41,7 @@ export class UI {
   <aside class="course-preview"><div class="preview-top"><span>VOTRE PROCHAINE DESCENTE</span><span class="live-dot">●</span></div><div class="course-title"><div><small id="discipline-label">SLALOM / SL</small><h2 id="course-name">Les Aiguilles</h2></div><svg class="route-art" viewBox="0 0 70 105"><path d="M45 5C-5 22 75 30 27 47S70 70 22 90" stroke="#f96c48" fill="none" stroke-width="2" stroke-dasharray="4 3"/><circle cx="45" cy="5" r="4" fill="white"/><circle cx="22" cy="90" r="4" fill="#f96c48"/></svg></div><div class="course-stats"><div><strong id="course-gates">22</strong><small>PORTES</small></div><div><strong id="course-length">570 <small>m</small></strong><small>DISTANCE</small></div><div><strong id="course-drop">140 <small>m</small></strong><small>DÉNIVELÉ</small></div></div><button class="course-link" data-nav="courses">Choisir une autre piste <span>→</span></button></aside>
   <footer><span><i class="status-dot"></i> ALPINE SKI PRO V1.1 · NEIGE AMÉLIORÉE <b>·</b> 100 % NAVIGATEUR</span><button data-nav="leaderboard">VOS RECORDS <span>${launchIcon}</span></button><span id="renderer-info">PLAYCANVAS ENGINE</span></footer></main>
   <section id="hud" hidden><div class="race-top"><div class="race-brand">ALPINE <b>SKI PRO</b><small id="hud-course">LES AIGUILLES · SL</small></div><div class="timing"><small>TEMPS DE COURSE</small><strong id="time">00:00.00</strong><span id="split">À vous de tracer la ligne</span></div><button id="pause" class="icon-button" aria-label="Pause"><span class="pause-bars"></span></button></div><div id="countdown" aria-live="polite"></div><div id="race-message"></div><div class="race-bottom"><div class="speed"><strong id="speed">0</strong><span>KM/H</span><div class="speed-bar"><i id="speed-bar"></i></div></div><div class="race-instruments"><div class="gate-info"><span>PORTES <strong id="gates">0 / 22</strong></span><span id="race-status">EN PISTE</span></div><div class="course-progress"><i id="progress"></i></div><div class="edge-info"><span id="equipment-label">PRECISION 165</span><span id="edge-label">CARRES 0°</span><span id="surface-label">NEIGE DAMÉE</span></div><div class="race-keys"><span id="fps-meter" aria-label="Images par seconde">FPS —</span><span> A / D &nbsp; DIRECTION <b>·</b> W &nbsp; VITESSE <b>·</b> S &nbsp; FREIN <b>·</b> ESPACE &nbsp; IMPULSION <b>·</b> C &nbsp; CAMÉRA <b>·</b> R &nbsp; RECOMMENCER</span></div></div><div class="altitude"><small>RESTANT</small><strong id="remaining">570</strong><span>MÈTRES</span></div></div><div id="touch-controls"><button data-touch="left" aria-label="Tourner à gauche"><svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="m6 12 12-8v16Z"/></svg></button><button data-touch="brake">FREIN</button><button data-touch="right" aria-label="Tourner à droite"><svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="m18 12-12-8v16Z"/></svg></button></div></section>
+  <div id="replay-controls" hidden aria-label="Commandes du replay"><span class="replay-title">REPLAY · ANALYSEZ VOTRE TRAJECTOIRE</span><div class="replay-toolbar"><span id="replay-timecode">00:00.00 / 00:00.00</span><input id="replay-seek" aria-label="Position de la vidéo" type="range" min="0" max="1000" value="0"><div class="replay-speeds" aria-label="Vitesse de lecture"><button type="button" data-replay-speed="0.5">0,5×</button><button type="button" data-replay-speed="1" class="active">1×</button><button type="button" data-replay-speed="2">2×</button></div><span>CAMÉRA : C</span></div></div>
   <div id="modal" class="modal-backdrop" hidden></div><div id="toast" role="status"></div>`;
     this.menu = el.querySelector("#menu")!;
     this.hud = el.querySelector("#hud")!;
@@ -58,7 +61,36 @@ export class UI {
     el.querySelectorAll<HTMLElement>("[data-nav]").forEach((b) =>
       b.addEventListener("click", () => this.open(b.dataset.nav!)),
     );
+    this.el.querySelectorAll<HTMLButtonElement>("[data-replay-speed]").forEach((button) =>
+      button.addEventListener("click", () => {
+        const speed = Number(button.dataset.replaySpeed);
+        this.el.querySelectorAll("[data-replay-speed]").forEach((b) =>
+          b.classList.toggle("active", b === button),
+        );
+        this.onReplaySpeed(speed);
+      }),
+    );
+    this.el.querySelector<HTMLInputElement>("#replay-seek")?.addEventListener(
+      "input",
+      (event) => {
+        this.onReplaySeek(Number((event.target as HTMLInputElement).value) / 1000);
+      },
+    );
     this.updateCourse();
+  }
+  setReplayUI(on: boolean) {
+    this.el.querySelector<HTMLElement>("#replay-controls")!.hidden = !on;
+    if (on) {
+      this.el.querySelectorAll("[data-replay-speed]").forEach((b) =>
+        b.classList.toggle("active", (b as HTMLElement).dataset.replaySpeed === "1"),
+      );
+    }
+  }
+  updateReplayTime(time: number, duration: number) {
+    this.text("replay-timecode", `${formatTime(time)} / ${formatTime(duration)}`);
+    const seek = this.el.querySelector<HTMLInputElement>("#replay-seek");
+    if (seek) seek.value = String(Math.round(1000 * Math.max(0, Math.min(1,
+      time / Math.max(0.001, duration)))));
   }
   text(id: string, text: string) {
     const el = this.el.querySelector("#" + id);
@@ -88,6 +120,7 @@ export class UI {
     this.hud.hidden = !on;
     this.el.querySelector<HTMLElement>("#header")!.hidden = on;
     this.el.classList.toggle("in-race", on);
+    if (!on) this.setReplayUI(false);
     this.close();
   }
   close() {
