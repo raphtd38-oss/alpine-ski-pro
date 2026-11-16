@@ -70,3 +70,11 @@ Le projet n'est **pas terminé**. Pas de certification FIS, pas de sponsoring Au
 - **Pas de plafond de 40 FPS ou 60 FPS**, le navigateur choisit la cadence maximale effective. La physique reste sur son pas fixe de 120 Hz.
 - Affichage FPS/résolution relative en jeu ; nouveaux tests de performance adaptative.
 - Vérifier la CI et les performances sur GPU matériel avant de fusionner ; aucun FPS garanti.
+
+## Audio immersif — branche feat/immersive-ski-audio
+
+- Ajout d'un mixeur de sons de ski indépendant du moteur graphique : glisse, carving, glace/dérapage, vent. Intensités modulées par vitesse, prise de carre, glissement, type d'adhérence.
+- Boucles Web Audio à filtres dédiés, transitions de volume douces, sons des piquets existants conservés avec panoramique.
+- Chargement conditionnel de quatre futurs assets ElevenLabs : `carving.mp3`, `ice.mp3`, `wind.mp3`, `crowd-long.mp3`. Sans ces fichiers, le jeu fonctionne avec synthèse originale et l'ancienne ambiance public.
+- Génération ElevenLabs essayée (flow documenté dans ASSETS) mais **refusée avant lancement : service occupé, zéro crédit consommé, aucun nouveau fichier livré**.
+- Nouveaux tests de mixeur; CI à vérifier avant fusion. Aucun fichier additionnel ElevenLabs n'est revendiqué comme intégré dans cette branche.
