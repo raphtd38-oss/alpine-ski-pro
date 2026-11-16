@@ -75,3 +75,10 @@ Le but est un simulateur de ski de grande qualité, amélioré sur le même dép
 - Faire évoluer le modèle GLB vers un skinning multi-poids, un anatomie plus détaillée et une vraie IK 3D.
 - Ajouter des portes de slalom doubles, tracés combinés et modes course plus exigeants après stabilisation de la V1.
 - Générer les nouveaux sons ElevenLabs lorsqu'ils deviennent disponibles, avec licences vérifiées, sans conserver d'appels payants au runtime.
+
+## Après le nouvel avatar V1.3
+
+- Tester sur GPU réel la nouvelle silhouette en caméra rapprochée et lors des rotations rapides de carving, puis affiner proportion et forme du dossard selon les retours.
+- Améliorer à terme l'IK tridimensionnelle et des animations spécifiques pour petits sauts, collisions et départ de course.
+- Mesurer les draw calls de l'avatar à 46 surfaces (plus un fantôme) sur machines modestes avant d'augmenter encore les polygones.
+- Éviter toute promesse de photoréalisme sans scan/modèle source autorisé et mesure FPS sur le matériel joueur.
