@@ -498,7 +498,8 @@ async function boot() {
           celebrationTime,
           finishBeamTime: race.finishBeamTime,
           finishBeamTriggeredBy: race.finishBeamTriggeredBy,
-          finishReach: frame.finishReach ?? 0,
+          finishReach: finishReachAmount(race.course.id, state.z,
+            race.course.length, Math.hypot(state.vx, state.vz), state.fallen),
           blueBorderDye: Boolean(renderer.world.blueBorderDye),
           gateFlagCount: renderer.world.gateEntities.reduce(
             (count, gate) => count + gate.children.reduce(
