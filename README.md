@@ -2,9 +2,9 @@
 
 Un jeu de ski alpin original, entièrement dans le navigateur, construit avec **PlayCanvas Engine 2.24, TypeScript et Vite**.
 
-**Version 0.1.1 : première base jouable, pas le simulateur final ni un rendu photoréaliste.**
+**V1.0 : base de slalom jouable et testée, avec physique 120 Hz, carving progressif, caméra et animations plus souples, sons dynamiques et qualité graphique adaptative. La qualité n'est pas photoréaliste et les autres disciplines restent moins testées.**
 
-🎮 Adresse prévue : https://raphtd38-oss.github.io/alpine-ski-pro/ — **pas encore accessible**, activation de GitHub Pages nécessaire (voir ci-dessous).
+🎮 Publication visée : https://raphtd38-oss.github.io/alpine-ski-pro/ — l'administrateur doit d'abord activer **Settings → Pages → Source → GitHub Actions**. En attendant, l'import navigateur StackBlitz du dépôt public fournit une solution de test : https://stackblitz.com/github/raphtd38-oss/alpine-ski-pro?startScript=dev (l'exécution dépend de WebContainers et du navigateur).
 
 ## Jouer
 
@@ -75,7 +75,7 @@ Le moteur de ski utilise des unités SI. La simulation avance par pas fixes et l
 
 ## GitHub et publication
 
-La branche `feat/playable-slalom` contient la version jouable. **Publication encore bloquée : l’activation de Pages exige le réglage propriétaire Settings → Pages → Source : GitHub Actions.** La connexion GitHub et le workflow ont reçu HTTP 403 lors de cette activation. Le workflow `Verify and publish` effectue installation reproductible, tests unitaires, compilation et tests Chromium avant d'autoriser GitHub Pages. Il publie cette branche de développement et `main` ; les pull requests sont uniquement vérifiées. Une PR permet de relire et fusionner le travail ultérieurement.
+La branche `main` contient la version V1 une fois la PR de sortie fusionnée. **La publication GitHub Pages demande une activation initiale par un administrateur dans Settings → Pages → Source : GitHub Actions.** La connexion GitHub et le workflow ont reçu HTTP 403 lors de cette activation. Le workflow `Verify and publish` effectue l'installation reproductible, les tests unitaires, la compilation et les tests Chromium. Il tente ensuite de publier `main` ou la branche de développement, uniquement une fois Pages activé ; les pull requests sont seulement vérifiées. Une PR permet de relire et fusionner le travail ultérieurement.
 
 Lire [l'état de reprise](docs/STATUS.md), [les priorités](docs/ROADMAP.md) et [les crédits et licences](docs/ASSETS.md). Ne pas confondre un workflow en cours avec un déploiement déjà réussi.
 
@@ -88,3 +88,15 @@ Ce mode optimise la fluidité sans garantir un nombre de FPS sur un PC spécifiq
 ## Sons dynamiques de ski
 
 La glisse, les carres de carving, le dérapage glacé et le vent sont maintenant mixés séparément suivant la vitesse et la trajectoire du skieur. Les boucles du menu, les impacts et le public de la première version restent disponibles. Quatre nouveaux MP3 peuvent être ajoutés dans `public/audio` pour remplacer automatiquement le rendu synthétisé ou la courte boucle du public. Les fichiers optionnels ne sont pas encore dans le dépôt : la tentative de génération ElevenLabs a été bloquée avant démarrage (voir `docs/ASSETS.md`). Sans MP3 supplémentaires, le jeu reste jouable et sonore, sans clé ElevenLabs ni installation.
+
+
+## Nouveautés V1
+
+- Transition des carres et animations du bassin/jambes/épaules plus progressives, appui extérieur relié à la flexion.
+- Dérapage perceptible quand la demande de courbe dépasse l'adhérence, avec légère perte d'énergie (la physique reste simplifiée, pas certifiée).
+- Cadrage caméra et champ de vision amortis pour éviter les à-coups.
+- Qualité adaptative sans plafond à 40 FPS, calcul ski à 120 Hz indépendant du rendu.
+- Mixage séparé glisse, carving, glace/dérapage et vent, avec l'ancienne musique et les impacts ElevenLabs.
+- Quatre nouveaux MP3 ElevenLabs **non disponibles** : génération refusée avant démarrage car le service était occupé ; l'audio additionnel de la V1 utilise Web Audio en attendant (voir `docs/ASSETS.md`).
+
+Les améliorations sont des travaux originaux. Rien de propriétaire n'a été copié depuis CarveMania.
