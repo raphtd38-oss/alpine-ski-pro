@@ -27,7 +27,14 @@ export function computeSkiSoundMix(
   const speedFactor = clamp(v / 10, 0, 1);
   const carving = clamp((e - 0.10) * 1.55, 0, 1) * speedFactor;
   const skid = clamp((s - 0.5) / 6, 0, 1);
-  const ice = skid * speedFactor * clamp((1.3 - grip) / 0.5, 0.1, 1);
+  // A pressured, hardpack edge also rasps before the ski fully breaks loose.
+  // This is a subtle procedural layer, not a substitute for ElevenLabs audio.
+  const brittleEdge = clamp((1.035 - grip) * 3.4, 0, 1) *
+    carving * 0.23;
+  const ice = clamp(
+    skid * speedFactor * clamp((1.3 - grip) / 0.5, 0.1, 1) +
+      brittleEdge, 0, 1,
+  );
   return {
     glide: clamp(v / 40, 0, 0.55),
     carving: clamp(carving * (1 - ice * 0.3), 0, 0.6),
