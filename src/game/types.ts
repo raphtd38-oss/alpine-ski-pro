@@ -42,6 +42,10 @@ export interface SkierState {
   load: number;
   flex: number;
   slip: number;
+  /** Normalized micro-vibration of ski edges on hardpack and ice. */
+  chatter: number;
+  /** Recent breakaway-gate collision, eased down at the physics tick. */
+  poleImpact: number;
   balance: number;
   height: number;
   verticalSpeed: number;
@@ -51,6 +55,11 @@ export interface SkierState {
 }
 export interface Frame {
   flex?: number;
+  /** Optional for backwards-compatible saved replays. */
+  load?: number;
+  slip?: number;
+  chatter?: number;
+  poleImpact?: number;
   t: number;
   x: number;
   z: number;

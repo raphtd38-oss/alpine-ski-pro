@@ -1,5 +1,7 @@
 # Alpine Ski Pro
 
+**V1.5 — carving expressif, réaction des piquets et animations dépendantes de la neige.** La physique reste à 120 Hz, le modèle original et les quatre disciplines sont conservés. Voir [docs/STATUS.md](docs/STATUS.md) pour les validations et limitations de cette version.
+
 Un jeu de ski alpin original, entièrement dans le navigateur, construit avec **PlayCanvas Engine 2.24, TypeScript et Vite**.
 
 **V1.1 : base de slalom jouable et testée, enrichie d'une nouvelle surface de neige, avec physique 120 Hz, carving progressif, caméra et animations plus souples, sons dynamiques et qualité graphique adaptative. La qualité n'est pas photoréaliste et les autres disciplines restent moins testées.**

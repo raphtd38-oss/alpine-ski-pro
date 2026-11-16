@@ -19,6 +19,8 @@ export const initialState = (): SkierState => ({
   load: 0.5,
   flex: 0,
   slip: 0,
+  chatter: 0,
+  poleImpact: 0,
   balance: 1,
   height: 0,
   verticalSpeed: 0,
@@ -46,8 +48,18 @@ export function stepPhysics(
     (e.response * (0.7 + e.stiffness * 0.3)) / lengthFactor,
     dt,
   );
-  s.load = smooth(s.load, 0.5 + s.edge * 0.42, 7, dt);
+  // Load transfers progressively to the downhill/outside ski. Faster turns
+  // increase pressure without teleporting the centre of mass.
+  const pressureFactor = clamp(0.65 + speed / 35, 0.65, 1.17);
+  s.load = smooth(s.load, 0.5 + s.edge * 0.42 * pressureFactor, 7, dt);
   const outsideLoad = 0.5 + Math.abs(s.load - 0.5);
+  // Fine hard-snow chatter is a filtered contact signal, not random physics:
+  // render FPS and playback cannot change the path taken through a gate.
+  const hardSnow = clamp((1.055 - snowGrip) / 0.27, 0, 1);
+  const edgePressure = clamp(Math.abs(s.edge) / 0.9, 0, 1);
+  s.chatter = smooth(s.chatter,
+    hardSnow * edgePressure * clamp(speed / 22, 0, 1), 13, dt);
+  s.poleImpact = Math.max(0, s.poleImpact - dt * 4.5);
   s.flex = smooth(
     s.flex,
     clamp(
@@ -75,7 +87,8 @@ export function stepPhysics(
         (0.82 + outsideLoad * 0.22)) /
       Math.max(4, (e.radius * Math.cos(s.edge)) / (1 + s.flex * 0.12));
     const gripLimit =
-      (9.81 * 1.3 * e.grip * snowGrip * lengthFactor) /
+      (9.81 * 1.3 * e.grip * snowGrip * lengthFactor *
+        (0.94 + outsideLoad * 0.095)) /
       Math.sqrt(1 + gx * gx + gz * gz);
     const lateralDemand = speed * speed * desiredCurvature;
     const lateral = clamp(lateralDemand, -gripLimit, gripLimit);

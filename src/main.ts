@@ -70,6 +70,10 @@ async function boot() {
     heading: state.heading,
     edge: state.edge,
     flex: state.flex,
+    load: state.load,
+    slip: state.slip,
+    chatter: state.chatter,
+    poleImpact: state.poleImpact,
     height: state.height,
     tuck: input.sample().tuck ? 1 : 0,
     fallen: state.fallen,
@@ -342,6 +346,10 @@ async function boot() {
             heading: f.heading,
             edge: f.edge,
             flex: f.flex ?? 0,
+            load: f.load ?? 0.5,
+            slip: f.slip ?? 0,
+            chatter: f.chatter ?? 0,
+            poleImpact: f.poleImpact ?? 0,
             height: f.height,
             fallen: f.fallen,
             vz: Math.max(0, Math.min(70, (f.z - prevZ) / elapsed)),
@@ -432,6 +440,13 @@ async function boot() {
                 (child) => child.name === "Gate textile flag",
               ).length, 0,
             ), 0,
+          ),
+          flexiblePoleTips: renderer.world.gateEntities.reduce(
+            (count, gate) => count + gate.children.filter(
+              (pivot) => pivot.children.some(
+                (child) => child.name === "Pole elastic upper section",
+              ),
+            ).length, 0,
           ),
           texturedGatePoles: renderer.world.gateEntities.reduce(
             (count, gate) => count + gate.children.reduce(

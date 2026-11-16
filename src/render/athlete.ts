@@ -17,6 +17,9 @@ export class Athlete {
   plantEnergy = 0;
   visualFall = 0;
   visualUpperBody = 0;
+  visualPressure = 0.5;
+  visualChatter = 0;
+  visualImpact = 0;
   material: pc.StandardMaterial;
   ownedMaterials: pc.StandardMaterial[] = [];
   constructor(
@@ -226,29 +229,52 @@ export class Athlete {
     if (side !== 0) this.lastTurnSide = side;
     this.plantEnergy *= Math.exp(-Math.max(0, dt) * 7);
     const load = Math.max(0, Math.min(1.4, f.flex ?? 0));
-    const torsoTarget = -edge * (9 + load * 5);
+    // Replays generated before V1.5 provide no contact channels: keep their
+    // posture and apply only physically grounded data when present.
+    const targetPressure = Math.max(0.06, Math.min(0.94,
+      f.load ?? (0.5 + edge * 0.42)));
+    this.visualPressure += (targetPressure - this.visualPressure) * blend;
+    const outsidePressure = Math.abs(this.visualPressure - 0.5) * 2;
+    this.visualChatter += (
+      Math.max(0, Math.min(1, f.chatter ?? 0)) - this.visualChatter
+    ) * blend;
+    this.visualImpact += (
+      Math.max(0, Math.min(1, f.poleImpact ?? 0)) - this.visualImpact
+    ) * blend;
+    const shake = this.visualChatter * Math.sin(f.t * 62) * 0.008;
+    const torsoTarget = -edge * (9 + load * 5) +
+      this.visualImpact * (edge >= 0 ? -9 : 9);
     this.visualUpperBody += (torsoTarget - this.visualUpperBody) * blend;
     const crouchTarget = 0.055 + f.tuck * 0.18 +
       Math.abs(edge) * 0.085 + load * 0.045;
     this.visualCrouch += (crouchTarget - this.visualCrouch) * blend;
     const crouch = this.visualCrouch;
     const j = this.joints;
-    const lean = edge * (0.14 + load * 0.04);
-    j.Pelvis?.setLocalPosition(lean, 0.92 - crouch, -0.055 * f.tuck);
-    j.Spine?.setLocalEulerAngles(10 + f.tuck * 27, edge * -3, -edge * 19);
+    // The hips move inside the turn while the shoulders look downhill.
+    // The outside leg is visibly longer and keeps the ski pressurized.
+    const lean = edge * (0.19 + load * 0.065);
+    j.Pelvis?.setLocalPosition(lean + shake, 0.92 - crouch, -0.055 * f.tuck);
+    j.Spine?.setLocalEulerAngles(
+      10 + f.tuck * 27, edge * -4 + this.visualImpact * 6,
+      -edge * (18 + outsidePressure * 8),
+    );
     // Stabilize the professional racer's upper body toward the fall line while
     // hips and loaded outside leg continue carving below.
     j.Chest?.setLocalEulerAngles(
-      5 + f.tuck * 12, this.visualUpperBody, edge * (12 - load * 2),
+      5 + f.tuck * 12 + this.visualImpact * 5,
+      this.visualUpperBody, edge * (12 - load * 2) + shake * 90,
     );
-    j.Head?.setLocalEulerAngles(-12 - f.tuck * 23, edge * 7, edge * 3);
-    j.Pelvis?.setLocalEulerAngles(0, 0, -edge * 19);
+    j.Head?.setLocalEulerAngles(
+      -12 - f.tuck * 23 + this.visualImpact * 3,
+      edge * 7 - this.visualImpact * 3, edge * 3 - shake * 80,
+    );
+    j.Pelvis?.setLocalEulerAngles(0, edge * 2, -edge * (19 + outsidePressure * 7));
     // Analytic sagittal two-link IK. Flexion follows COM height and outside-leg loading.
     for (const [i, side] of ["L", "R"].entries()) {
       const outside = (i === 0 ? 1 : -1) * edge;
       // The outside leg extends under pressure, the unloaded inside leg
       // retracts slightly. Both ankles remain animated by the existing IK.
-      const hipY = 0.9 - crouch + outside * 0.048;
+      const hipY = 0.9 - crouch + outside * (0.048 + outsidePressure * 0.027);
       const dy = Math.min(0.81, hipY - 0.12),
         dz = 0.02 + f.tuck * 0.055,
         L1 = 0.421,
@@ -265,14 +291,21 @@ export class Athlete {
       const hipRot = (-(thigh - Math.atan2(0.13, 0.4)) * 180) / Math.PI;
       const kneeRot =
         (-(calf - Math.atan2(-0.11, 0.38)) * 180) / Math.PI - hipRot;
-      j[side + "Hip"]?.setLocalEulerAngles(hipRot, 0, edge * 12);
-      j[side + "Knee"]?.setLocalEulerAngles(kneeRot, 0, 0);
-      j[side + "Ankle"]?.setLocalEulerAngles(-hipRot - kneeRot, 0, -edge * 10);
+      j[side + "Hip"]?.setLocalEulerAngles(
+        hipRot, -outside * 6, edge * (12 + outsidePressure * 5),
+      );
+      j[side + "Knee"]?.setLocalEulerAngles(
+        kneeRot, 0, outside * (3 + outsidePressure * 3),
+      );
+      j[side + "Ankle"]?.setLocalEulerAngles(
+        -hipRot - kneeRot, 0,
+        -edge * (10 + outsidePressure * 6) + shake * 150,
+      );
       const activePlant = ((i === 0 ? 1 : -1) === this.plantingSide)
         ? this.plantEnergy : 0;
       j[side + "Shoulder"]?.setLocalEulerAngles(
         -f.tuck * 15 + Math.sin(f.t * 3 + i) * Math.abs(edge) * 4 -
-          activePlant * 23,
+          activePlant * 23 - this.visualImpact * 13,
         0,
         (i === 0 ? -1 : 1) * (8 + Math.abs(edge) * 12),
       );
@@ -287,10 +320,13 @@ export class Athlete {
       }
       surf.mesh.setPositions(vertices);
       surf.mesh.update();
-      this.skis[i].setLocalEulerAngles(0, outside * 1.2, -edge * 45);
+      this.skis[i].setLocalEulerAngles(
+        0, outside * 1.5,
+        -edge * (45 + outsidePressure * 6) + shake * 90,
+      );
       this.skis[i].setLocalPosition(
         (i === 0 ? -1 : 1) * (0.16 + Math.abs(edge) * 0.035),
-        Math.max(0, -outside) * 0.022 + Math.abs(outside) * 0.008,
+        Math.max(0, -outside) * 0.029 + Math.abs(outside) * 0.008,
         0.02,
       );
       const wrist = j[side + "Wrist"];

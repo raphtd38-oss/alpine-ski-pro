@@ -9,6 +9,7 @@ test("renders a real 3D scene, responds to keys, pauses, restarts and changes eq
   const athlete = await page.evaluate(() => (window as any).__ski.getState());
   expect(athlete.athleteBones).toBeGreaterThanOrEqual(17);
   expect(athlete.athleteSurfaces).toBeGreaterThanOrEqual(40);
+  expect(athlete.flexiblePoleTips).toBe(44);
   await expect(page.locator("h1")).toContainText("VOTRE");
   await page.screenshot({ path: "test-results/menu.png" });
   await page.locator("#play").click();
