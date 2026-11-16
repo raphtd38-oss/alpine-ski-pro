@@ -7,7 +7,7 @@ import {
   type Course,
   type Equipment,
 } from "./types";
-import { gradient, terrainHeight } from "./course";
+import { gradient, terrainHeight, courseCenterX } from "./course";
 import { shouldLaunchAtCrest } from "./superg";
 import {
   nextSkid,
@@ -230,12 +230,25 @@ export function stepPhysics(
     }
   }
   const bound = c.width / 2 - 0.7;
-  if (Math.abs(s.x) > bound) {
-    s.x = clamp(s.x, -bound, bound);
-    s.vx *= -0.15;
-    s.vz *= 0.65;
-    s.fallen = 1.5;
-    s.balance = 0.5;
+  const centre = courseCenterX(s.z, c);
+  if (Math.abs(s.x - centre) > bound) {
+    if (c.id === "SG") {
+      // A safety net dissipates momentum and returns the racer INSIDE the
+      // turning piste. Snapping exactly onto a moving border used to apply
+      // the 35% penalty every 120-Hz tick, trapping athletes indefinitely.
+      const side = Math.sign(s.x - centre) || 1;
+      s.x = centre + side * (bound - 1.5);
+      s.vx = -side * Math.max(5, Math.abs(s.vx) * 0.4);
+      s.vz = Math.max(6, s.vz * 0.86);
+      s.fallen = Math.max(s.fallen, 0.3);
+      s.balance = Math.max(s.balance, 0.65);
+    } else {
+      s.x = centre + clamp(s.x - centre, -bound, bound);
+      s.vx *= -0.15;
+      s.vz *= 0.65;
+      s.fallen = 1.5;
+      s.balance = 0.5;
+    }
   }
   if (!Number.isFinite(s.z) || s.z < oldZ)
     throw new Error("État physique invalide");

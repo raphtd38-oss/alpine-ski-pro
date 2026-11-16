@@ -1,3 +1,15 @@
+## 1.8.0 — 16 novembre 2026 — Super-G sinueux et vrai geste de chronométrage
+
+- Nouvelle ligne centrale de vitesse qui s'enroule à travers plusieurs vallons ; le sol, les bords neigeux, les filets et les portes suivent la même trajectoire.
+- Espacement des portes SG non uniforme (minimum >25 m), portes ouvertes 7,6 m / verticales 10 m, alternance rouge/bleu inchangée.
+- Marquages bleus continus de part et d'autre de la piste, rappels sur bosses et aux portes, tous épousant le terrain et regroupés en un mesh.
+- Évolution originale du paysage : forêt d'épicéas, glacier dénudé, roche d'arête, puis zone d'arrivée, avec rochers groupés et panneaux de secteur.
+- Fanions textiles incurvés et structurés, textures originales 1024×512 tissées avec ourlets et œillets. Toujours des piquets flexibles amortis au contact.
+- Départ plus ressemblant à une cabane de compétition avec parois jaunes originales, cadres, compteurs et portillon amorti à ouverture lors du passage.
+- Fin du geste de célébration : le coureur tend la main vers l'avant et vers le bas pour rencontrer une cellule photoélectrique. Interruption de faisceau et chrono interpolés à l'intérieur du tick 120 Hz.
+- Replays précédents compatibles grâce au champ d'animation facultatif `finishReach`. Tests du chronométrage, des nouvelles courbes et captures Chromium.
+- L'ensemble reste original, sans assets CarveMania ni logo sponsor non autorisé ; ni photoréalisme AAA ni homologation officielle revendiqués.
+
 ## 1.7.0 — 16 novembre 2026 — Super-G entièrement repensé
 
 - Course originale `Glacier Express` étendue à 1 980 m avec 34 portes alternées, virages espacés, reliefs de compression et cinq bosses importantes.

@@ -1,5 +1,14 @@
 # Alpine Ski Pro
 
+## V1.8 — Super-G sinueux, marquages bleus, chrono photoélectrique
+
+La piste Super-G de 1 980 m ne suit plus un simple axe droit : ses passages en forêt, en glacier et en combe rocheuse ont une ligne centrale commune au terrain, aux filets, aux limites physiques et aux portes. Espacements variables (plus de 25 m), lignes de colorant bleu de chaque côté, traverses des crêtes, drapeaux textiles à maillage incurvé et texture originale plus fine (1024×512). La cabine de départ possède parois, façade, protections et deux panneaux de chronométrage ; les tiges s'ouvrent lors du passage du skieur.
+
+À l'arrivée, une main s'étend vers l'avant et vers le bas pour rencontrer la cellule photoélectrique, contrairement à l'ancien bras levé pour célébrer. Le chrono reste un modèle de jeu calculé à 120 Hz, avec interpolation de la traversée du faisceau, et n'est pas un système agréé FIS.
+
+Les autres disciplines, leurs records et les replays restent disponibles. La qualité reste semi-réaliste : pour aller plus loin, le moteur peut recevoir des assets PBR riggés, des animations mocap/IK et des textures KTX2 légalement acquises.
+
+
 ## V1.7 — Super-G de Coupe alpine : bosses, vrai départ et gestuelle du skieur
 
 Le **Super-G « Glacier Express »** possède désormais un tracé original de 1 980 m et 34 portes, avec une dénivellation simulée d'environ 545 m, des compressions et cinq zones de crêtes. À vitesse suffisante, le skieur peut décoller naturellement, suivre une trajectoire balistique et amortir sa réception ; la touche de saut reste disponible. Les portes de vitesse comportent deux paires de piquets (quatre piquets) et deux petits fanions texturés. Le départ Super-G se déroule sous un abri original avec portillons de chronométrage, impulsion et animation des bâtons ; l'arrivée comporte un bref geste de célébration avant l'affichage des résultats.

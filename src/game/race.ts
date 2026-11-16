@@ -7,6 +7,7 @@ import type {
   SkierState,
 } from "./types";
 import { angleDiff } from "./types";
+import { finishReachAmount, lowHandLead, finishBeamFraction } from "./finish-timing";
 export class Race {
   phase: RacePhase = "ready";
   time = 0;
@@ -18,6 +19,9 @@ export class Race {
   frames: Frame[] = [];
   result: Result | null = null;
   recordTimer = 0;
+  /** First photoelectric beam interruption, before the skier has fully passed. */
+  finishBeamTime: number | null = null;
+  finishBeamTriggeredBy: "hand" | "body" | null = null;
   constructor(
     public course: Course,
     public equipment: Discipline,
@@ -39,6 +43,23 @@ export class Race {
     if (this.phase !== "racing") return;
     const startTime = this.time;
     this.time += dt;
+    // SG reaches forward and DOWN into the low photocell beam near the line.
+    // The timing signal can precede the ski-boot reference by a small
+    // geometric distance, but results are only validated after full crossing.
+    if (this.finishBeamTime === null) {
+      const previousReach = finishReachAmount(this.course.id,
+        previous.z, this.course.length, Math.hypot(previous.vx, previous.vz),
+        previous.fallen);
+      const currentReach = finishReachAmount(this.course.id,
+        s.z, this.course.length, Math.hypot(s.vx, s.vz), s.fallen);
+      const a = lowHandLead(previousReach);
+      const b = lowHandLead(currentReach);
+      const f = finishBeamFraction(previous.z, s.z, a, b, this.course.length);
+      if (f !== null) {
+        this.finishBeamTime = startTime + dt * f;
+        this.finishBeamTriggeredBy = b > 0.05 ? "hand" : "body";
+      }
+    }
     while (
       this.nextGate < this.course.gates.length &&
       s.z >= this.course.gates[this.nextGate].z
@@ -68,6 +89,8 @@ export class Race {
         poleImpact: s.poleImpact,
         poleImpactSide: s.poleImpactSide,
         landingShock: s.landingShock,
+        finishReach: finishReachAmount(this.course.id,
+          s.z, this.course.length, Math.hypot(s.vx, s.vz), s.fallen),
         startPush: this.course.id === "SG" ? Math.max(0, 1 - this.time / 1.5) : 0,
         skid: s.skid,
         pressure: s.pressure,
@@ -78,10 +101,11 @@ export class Race {
       this.recordTimer = 0;
     }
     if (s.z >= this.course.length) {
-      this.time =
+      this.time = this.finishBeamTime ?? (
         startTime +
         (dt * (this.course.length - previous.z)) /
-          Math.max(1e-9, s.z - previous.z);
+          Math.max(1e-9, s.z - previous.z)
+      );
       this.phase = "finished";
       this.result = {
         time: this.time,
@@ -122,6 +146,7 @@ export function replayAt(frames: Frame[], time: number): Frame | null {
     landingShock: (a.landingShock ?? 0) + ((b.landingShock ?? 0) - (a.landingShock ?? 0)) * u,
     startPush: (a.startPush ?? 0) + ((b.startPush ?? 0) - (a.startPush ?? 0)) * u,
     finishGesture: (a.finishGesture ?? 0) + ((b.finishGesture ?? 0) - (a.finishGesture ?? 0)) * u,
+    finishReach: (a.finishReach ?? 0) + ((b.finishReach ?? 0) - (a.finishReach ?? 0)) * u,
     skid: (a.skid ?? 0) + ((b.skid ?? 0) - (a.skid ?? 0)) * u,
     pressure: (a.pressure ?? 1) + ((b.pressure ?? 1) - (a.pressure ?? 1)) * u,
     height: a.height + (b.height - a.height) * u,

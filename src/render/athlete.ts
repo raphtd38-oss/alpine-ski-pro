@@ -230,7 +230,10 @@ export class Athlete {
     this.plantEnergy *= Math.exp(-Math.max(0, dt) * 7);
     const load = Math.max(0, Math.min(1.4, f.flex ?? 0));
     const startPush = Math.max(0, Math.min(1, f.startPush ?? 0));
-    const finishGesture = Math.max(0, Math.min(1, f.finishGesture ?? 0));
+    // New reach is before the finish, toward a LOW photoelectric beam.
+    // Legacy finishGesture is retained as a fallback for old replays.
+    const finishReach = Math.max(0, Math.min(1,
+      f.finishReach ?? f.finishGesture ?? 0));
     const landing = Math.max(0, Math.min(1, f.landingShock ?? 0));
     const airborne = Math.max(0, Math.min(1, f.height * 1.4));
     const impactSide = Math.sign(f.poleImpactSide ?? 0);
@@ -257,7 +260,8 @@ export class Athlete {
     const crouchTarget = 0.055 + f.tuck * 0.18 +
       Math.abs(edge) * 0.085 + load * 0.045 +
       pressureAbsorption + skidStance +
-      startPush * 0.11 + landing * 0.075 + airborne * 0.095;
+      startPush * 0.11 + landing * 0.075 + airborne * 0.095 +
+      finishReach * 0.065;
     this.visualCrouch += (crouchTarget - this.visualCrouch) * blend;
     const crouch = this.visualCrouch;
     const j = this.joints;
@@ -269,19 +273,20 @@ export class Athlete {
     // alternating pole-drive phase. Airborne posture retracts legs.
     const pushCycle = Math.sin((1 - startPush) * 2 * Math.PI * 1.65);
     j.Spine?.setLocalEulerAngles(
-      10 + f.tuck * 27 + startPush * 23 - airborne * 7,
+      10 + f.tuck * 27 + startPush * 23 - airborne * 7 +
+        finishReach * 23,
       edge * -4 + this.visualImpact * 6,
       -edge * (18 + outsidePressure * 8),
     );
     // Stabilize the professional racer's upper body toward the fall line while
     // hips and loaded outside leg continue carving below.
     j.Chest?.setLocalEulerAngles(
-      5 + f.tuck * 12 + this.visualImpact * 5,
+      5 + f.tuck * 12 + this.visualImpact * 5 + finishReach * 10,
       this.visualUpperBody, edge * (12 - load * 2) + shake * 90,
     );
     j.Head?.setLocalEulerAngles(
       -12 - f.tuck * 23 + this.visualImpact * 3 -
-        startPush * 12 + finishGesture * 9,
+        startPush * 12 + finishReach * 9,
       edge * 7 - this.visualImpact * 3, edge * 3 - shake * 80,
     );
     j.Pelvis?.setLocalEulerAngles(0, edge * 2, -edge * (19 + outsidePressure * 7));
@@ -324,24 +329,24 @@ export class Athlete {
       const activePlant = ((i === 0 ? 1 : -1) === this.plantingSide)
         ? this.plantEnergy : 0;
       const nearGate = impactSide === (i === 0 ? -1 : 1);
-      // The gate-side shoulder drives around the flex pole; the opposite
-      // elbow stays in front. At finish the right arm rises in celebration.
+      // Gate-side shoulder wraps the pole. The finish hand extends
+      // FORWARD and DOWN towards the beam, never raised above the head.
       const shoulderWrap = this.visualImpact * (nearGate ? 38 : -9);
       const pushStroke = startPush * (-36 + pushCycle * (i === 0 ? 20 : -20));
       j[side + "Shoulder"]?.setLocalEulerAngles(
         -f.tuck * 15 + Math.sin(f.t * 3 + i) * Math.abs(edge) * 4 -
           activePlant * 23 + shoulderWrap +
-          pushStroke - (i === 1 ? 112 : 18) * finishGesture,
+          pushStroke - (i === 1 ? 51 : 8) * finishReach,
         0,
         (i === 0 ? -1 : 1) * (8 + Math.abs(edge) * 12 +
           (f.skid ?? 0) * 13),
       );
       j[side + "Elbow"]?.setLocalEulerAngles(
         -f.tuck * 36 - activePlant * 15 +
-          startPush * 31 - (i === 1 ? 18 : 0) * finishGesture,
+          startPush * 31 + (i === 1 ? 26 : 0) * finishReach,
         0, 0);
       j[side + "Wrist"]?.setLocalEulerAngles(
-        -startPush * 9 + (i === 1 ? 18 : 0) * finishGesture,
+        -startPush * 9 + (i === 1 ? 9 : 0) * finishReach,
         0, 0,
       );
       const surf = this.skiSurfaces[i];
@@ -374,7 +379,8 @@ export class Athlete {
         const activePlant = ((i === 0 ? 1 : -1) === this.plantingSide)
           ? this.plantEnergy : 0;
         this.poles[i].setLocalEulerAngles(
-          27 - f.tuck * 12 - activePlant * 28,
+          27 - f.tuck * 12 - activePlant * 28 +
+            (i === 1 ? 36 : 0) * finishReach,
           0,
           (i === 0 ? -1 : 1) * (9 + activePlant * 7),
         );

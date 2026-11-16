@@ -1,14 +1,14 @@
 import * as pc from "playcanvas";
 import { formatTime } from "../game/race";
 import { AlpineAssets } from "./alpine-assets";
-import { terrainHeight, gradient } from "../game/course";
+import { terrainHeight, gradient, courseCenterX } from "../game/course";
 import { trainingLineX } from "../game/guide";
 import { sampleSnowSurface } from "../game/surface";
 import { snowTexel } from "./snow-texture";
 import { gatePoleCanvas, gateBannerCanvas } from "./gate-textures";
 import { gateFlagFlutter } from "../game/gates-visual";
 import { tipVibration, type PoleState } from "../game/poles";
-import { SUPER_G_ROLLERS } from "../game/superg";
+import { SUPER_G_ROLLERS, superGSector } from "../game/superg";
 import type { Course, Quality, Weather } from "../game/types";
 import { material, meshEntity, shape, beam, rng, color } from "./geometry";
 export class World {
@@ -31,6 +31,7 @@ export class World {
   redFlag: pc.StandardMaterial;
   blueFlag: pc.StandardMaterial;
   gateVisualTime = 0;
+  blueBorderDye = false;
   constructor(
     public app: pc.Application,
     public course: Course,
@@ -53,8 +54,12 @@ export class World {
     this.buildTrainingGuide();
     this.mountains();
     this.forest();
+    if (this.course.id === "SG") this.superGScenery();
     this.gates();
-    if (this.course.id === "SG") this.superGMarkers();
+    if (this.course.id === "SG") {
+      this.superGMarkers();
+      this.superGBlueDye();
+    }
     this.fences();
     this.buildings();
     this.finishArena();
@@ -228,8 +233,9 @@ export class World {
       for (let j = 0; j <= m; j++)
         for (let i = 0; i <= n; i++) {
           const z = -500 + (j * (this.course.length + 1300)) / m,
-            x = side * (120 + i * 19);
-          const base = terrainHeight(side * 120, z, this.course);
+            x = courseCenterX(z, this.course) + side * (120 + i * 19);
+          const base = terrainHeight(courseCenterX(z, this.course) +
+            side * 120, z, this.course);
           const envelope = Math.sin(Math.min(1, i / n) * Math.PI) * 265;
           const ridges =
             Math.abs(Math.sin(z * 0.0048 + x * 0.009)) +
@@ -293,11 +299,19 @@ export class World {
       this.quality
     ];
     for (let t = 0; t < count; t++) {
-      const x = (t % 2 ? 1 : -1) * (this.course.width / 2 +
-        (this.alpineAssets?.has("fir") ? 39 : 6) + random() * 75),
-        z = -50 + random() * (this.course.length + 140),
-        y = terrainHeight(x, z, this.course),
-        h = 4 + random() * 8;
+      const z = -50 + random() * (this.course.length + 140);
+      const section = this.course.id === "SG" ? superGSector(z) : "spruce";
+      // Evergreen woodland, exposed glacier, then steeper mixed forest.
+      // The tree mesh stays fully batched and changes NO draw calls.
+      const density = section === "glacier" ? 0.18 :
+        section === "canyon" ? 0.58 : section === "finish" ? 0.38 : 1;
+      if (random() > density) continue;
+      const x = courseCenterX(z, this.course) +
+        (t % 2 ? 1 : -1) * (this.course.width / 2 +
+          (this.alpineAssets?.has("fir") ? 39 : 6) + random() * 75);
+      const y = terrainHeight(x, z, this.course);
+      const h = (section === "glacier" ? 3 : 4) +
+        random() * (section === "canyon" ? 12 : 8);
       for (let level = 0; level < 6; level++) {
         const by = y + h * 0.12 + level * h * 0.135,
           r = h * 0.26 * (1 - level / 7),
@@ -339,6 +353,102 @@ export class World {
     );
     e.render!.castShadows = this.quality !== "low";
   }
+
+  /** Area-specific, fully batched rock geometry. Unlike repetitive cones,
+   * every sector has separate density, silhouettes, exposed granite and
+   * frost colour, with the glacier intentionally almost treeless. */
+  superGScenery() {
+    const random = rng(17122026);
+    const vertices: number[] = [], indices: number[] = [],
+      colors: number[] = [];
+    const count = {
+      low: 88, medium: 155, high: 260, ultra: 370,
+    }[this.quality];
+    const addRock = (x: number, z: number, radius: number, altitude: number,
+      tint: number) => {
+      const n = vertices.length / 3;
+      const y = terrainHeight(x, z, this.course);
+      const sides = 7;
+      vertices.push(x, y + altitude, z);
+      colors.push(tint * 0.78, tint * 0.86, tint * 0.91, 1);
+      for (let k = 0; k < sides; k++) {
+        const a = k * Math.PI * 2 / sides;
+        const rough = 0.7 + random() * 0.6;
+        vertices.push(x + Math.cos(a) * radius * rough,
+          y + (random() - 0.35) * radius * 0.4,
+          z + Math.sin(a) * radius * rough);
+        const shade = tint * (0.5 + random() * 0.37);
+        colors.push(shade * 0.79, shade * 0.86, shade * 0.91, 1);
+      }
+      for(let k=0;k<sides;k++)
+        indices.push(n, n + 1 + k, n + 1 + ((k + 1) % sides));
+    };
+    for (let i = 0; i < count; i++) {
+      const z = 90 + random() * (this.course.length - 140);
+      const sector = superGSector(z);
+      const side = i % 2 ? 1 : -1;
+      const shoulder = this.course.width / 2;
+      const distance = shoulder + 8 + random() *
+        (sector === "glacier" ? 66 : 48);
+      const x = courseCenterX(z, this.course) + side * distance;
+      const radius = (sector === "glacier" ? 3.8 :
+        sector === "canyon" ? 3 : 1.8) * (0.6 + random() * 1.1);
+      const height = radius * (sector === "glacier" ? 2.3 : 1.3);
+      addRock(x, z, radius, height,
+        sector === "glacier" ? 0.79 : sector === "canyon" ? 0.63 : 0.76);
+    }
+    const granite = this.mat("Batched rock faces and glacier moraine", "#ffffff");
+    granite.diffuseVertexColor = true;
+    granite.update();
+    const mesh = meshEntity(this.app.graphicsDevice, this.root,
+      "Terrain sector granite and moraine", vertices, indices, granite, colors);
+    mesh.render!.castShadows = this.quality !== "low";
+    const signs: { z: number; text: string; tone: string }[] = [
+      { z: 400, text: "FORET DES AIGUILLES", tone: "#245b49" },
+      { z: 850, text: "GLACIER / 110 KM H", tone: "#477a99" },
+      { z: 1260, text: "COMBE DU ROC", tone: "#465968" },
+      { z: 1725, text: "SPRINT FINAL", tone: "#b52937" },
+    ];
+    for (const signInfo of signs) {
+      const z = signInfo.z;
+      const x = courseCenterX(z, this.course) +
+        this.course.width / 2 + 3.6;
+      const base = terrainHeight(x, z, this.course);
+      const panel = this.sign(signInfo.text, 5.3, 0.7, signInfo.tone);
+      shape(this.root, "box", "Super-G sector sign",
+        [x, base + 2.3, z], [5.3, 0.76, 0.16], panel.m);
+      shape(this.root, "cylinder", "Sector sign support",
+        [x, base + 1.0, z], [0.075, 2.0, 0.075], this.dark);
+    }
+  }
+
+  /** Original curved textile panel: thin woven fabric rather than a
+   * rectangular box. Tessellation and seam shading are baked once, with
+   * shared 1024px textile materials; hinges retain elastic pole movement. */
+  fabricFlag(parent: pc.Entity, side: number, textile: pc.StandardMaterial) {
+    const p: number[] = [], uv: number[] = [], idx: number[] = [];
+    const nx = 8, ny = 4, width = 0.79, height = 0.5;
+    for (let y = 0; y <= ny; y++)
+      for (let x = 0; x <= nx; x++) {
+        const u = x / nx, v = y / ny;
+        const fold = 0.040 * Math.sin(u * Math.PI) *
+          Math.sin(v * Math.PI * 1.65) +
+          0.012 * Math.sin(u * Math.PI * 4 + v * Math.PI);
+        p.push(side * width * u, 1.20 + height * v,
+          -0.08 + fold);
+        uv.push(u, 1 - v);
+      }
+    for(let y=0;y<ny;y++)
+      for(let x=0;x<nx;x++) {
+        const a = y * (nx+1) + x, b = a + nx + 1;
+        idx.push(a, b, a + 1, a + 1, b, b + 1);
+      }
+    const flag = meshEntity(this.app.graphicsDevice, parent,
+      "Gate textile flag", p, idx, textile, undefined, uv);
+    flag.render!.castShadows = false;
+    return flag;
+  }
+
   gates() {
     for (const g of this.course.gates) {
       const parent = new pc.Entity(`Gate ${g.id + 1}`);
@@ -383,12 +493,7 @@ export class World {
             [0.034, 1.88, 0.034], m,
           );
           partner.render!.castShadows = this.quality !== "low";
-          const banner = shape(
-            pivot, "box", "Gate textile flag",
-            [side * 0.40, 1.45, -0.08],
-            [0.79, 0.5, 0.026], textile,
-          );
-          banner.render!.castShadows = false;
+          this.fabricFlag(pivot, side, textile);
         }
       }
       this.gateEntities.push(parent);
@@ -452,6 +557,38 @@ export class World {
       6.4, 0.65, "#183247");
     shape(root, "box", "Start house illuminated race header",
       [0, h + 3.48, 4.44], [6.4, 0.65, 0.1], header.m);
+    // Enclosed start box: wind shields and side sponsor-style boards from
+    // Saalbach 2025 reference, with completely original Alpine Ski Pro art.
+    const sunny = this.mat("Start house yellow safety cladding", "#f4c332",
+      0.02, 0.38);
+    const black = this.mat("Start bay padded jambs", "#202936", 0, 0.21);
+    for (const side of [-1, 1]) {
+      const x = side * 3.79;
+      for (const z of [-2.55, 1.25]) {
+        shape(root, "box", "Weatherproof start hut side wall",
+          [x, terrainHeight(x, z, this.course) + 1.83, z],
+          [0.22, 3.47, 3.45], sunny);
+        const graphic = this.sign("ALPINE RACE", 3.0, 0.8, "#c99c20");
+        shape(root, "box", "Original start cabin sponsor panel",
+          [x - side * 0.13, terrainHeight(x, z, this.course) + 2.3, z],
+          [0.05, 0.86, 2.90], graphic.m);
+      }
+      shape(root, "box", "Padded entry race door jamb",
+        [side * 1.53, gateH + 1.7, 4.4],
+        [0.19, 3.34, 0.38], black);
+      shape(root, "box", "Bright race start facade",
+        [side * 2.7, gateH + 1.85, 4.4],
+        [2.25, 3.25, 0.26], sunny);
+      const timer = this.sign("TIME  /  READY", 2.2, 0.55, "#1d3046");
+      shape(root, "box", "Original electronic start timer display",
+        [side * 2.73, gateH + 1.8, 4.23],
+        [2.05, 0.54, 0.05], timer.m);
+      shape(root, "box", "Start cabling and protective padding",
+        [side * 1.6, gateH + 0.82, 4.36],
+        [0.18, 1.52, 0.32], black);
+    }
+    shape(root, "box", "Start cabin overhead dark opening frame",
+      [0, gateH + 3.55, 4.35], [3.25, 0.45, 0.35], black);
     const slab = this.mat("Starting runway blue ink", "#3e93b9", 0, 0.35);
     for (const x of [-1.78, 1.78])
       shape(root, "box", "Timing alignment strip",
@@ -460,24 +597,90 @@ export class World {
   }
 
   /** Smoothly open hinged chronometric wands after the launch. */
-  updateStartWands(startPush = 0, positionZ = 3, raceStarted = false) {
+  updateStartWands(_startPush = 0, positionZ = 3,
+    raceStarted = false, dt = 1 / 60) {
     if (!this.startWands.length) return;
-    const opening = positionZ > 5 ? 1 :
-      raceStarted ? Math.max(0, Math.min(1, (1 - startPush) * 6)) : 0;
+    // Contact-driven: the mechanism bends when the racer passes z=4.05,
+    // not instantly when GO appears during the double-pole push.
+    const opening = raceStarted
+      ? Math.max(0, Math.min(1, (positionZ - 3.1) / 1.7)) : 0;
+    const blend = 1 - Math.exp(-Math.min(0.1, Math.max(0, dt)) * 14);
     this.startWands.forEach((wand, i) => {
-      wand.setLocalEulerAngles(0, (i === 0 ? 1 : -1) * opening * 76, 0);
+      const target = (i === 0 ? 1 : -1) * opening * 76;
+      const current = wand.getLocalEulerAngles().y;
+      wand.setLocalEulerAngles(0, current + (target - current) * blend, 0);
     });
   }
 
   /** Blue terrain marks on the approach to the five speed crests.
    * One batched geometry, no expensive per-frame decal updates. */
+
+  /** World Cup-inspired blue-dye lane: BOTH curving side markers and short
+   * crossing bars at compressions/crests. Painted on the real sampled terrain.
+   * A single batched mesh, rather than hundreds of draw calls. */
+  superGBlueDye() {
+    this.blueBorderDye = true;
+    const p: number[] = [], indices: number[] = [];
+    const meshQuad = (
+      ax: number, az: number, bx: number, bz: number, width: number,
+    ) => {
+      const dx = bx - ax, dz = bz - az;
+      const distance = Math.max(0.001, Math.hypot(dx, dz));
+      const nx = dz / distance * width / 2;
+      const nz = -dx / distance * width / 2;
+      const corners: [number, number][] = [
+        [ax + nx, az + nz], [ax - nx, az - nz],
+        [bx + nx, bz + nz], [bx - nx, bz - nz],
+      ];
+      const n = p.length / 3;
+      for (const [x, z] of corners)
+        p.push(x, terrainHeight(x, z, this.course) + 0.055, z);
+      indices.push(n, n + 2, n + 1, n + 1, n + 2, n + 3);
+    };
+    const stripeWidth = this.quality === "low" ? 0.30 : 0.23;
+    for (let z = 0; z < this.course.length; z += 3.6) {
+      const next = Math.min(this.course.length, z + 3.6);
+      for (const side of [-1, 1]) {
+        const offset = side * (this.course.width / 2 - 1.9);
+        meshQuad(courseCenterX(z, this.course) + offset, z,
+          courseCenterX(next, this.course) + offset, next, stripeWidth);
+      }
+    }
+    for (const bump of SUPER_G_ROLLERS) {
+      for (const z of [bump.z - 15, bump.z - 2, bump.z + 9])
+        for (let i = 0; i < 30; i++) {
+          const centre = courseCenterX(z, this.course);
+          const x0 = centre - 18 + i * 1.2;
+          meshQuad(x0, z, x0 + 1.2, z, 0.22);
+        }
+    }
+    // Short outer-edge alignment markings beside each gate give the player
+    // a visual cue before setting the edges into the next long turn.
+    for (const gate of this.course.gates) {
+      for (const side of [-1, 1]) {
+        const x = gate.x + side * (gate.width / 2 + 1.5);
+        meshQuad(x, gate.z - 2.5, x, gate.z + 2.5, 0.22);
+      }
+    }
+    const material = this.mat("World-cup blue snow dye", "#337eb2", 0, 0.32);
+    material.opacity = 0.88;
+    material.blendType = pc.BLEND_NORMAL;
+    material.depthWrite = false;
+    material.cull = pc.CULLFACE_NONE;
+    material.update();
+    const mesh = meshEntity(this.app.graphicsDevice, this.root,
+      "Blue dye on both winding piste borders and jump crests",
+      p, indices, material);
+    mesh.render!.castShadows = false;
+  }
+
   superGMarkers() {
     const p: number[] = [], indices: number[] = [];
     for (const bump of SUPER_G_ROLLERS) {
       const z = bump.z - 14;
       for (let i = 0; i < 32; i++) {
-        const x0 = (i / 32 - 0.5) * 27;
-        const x1 = ((i + 1) / 32 - 0.5) * 27;
+        const x0 = courseCenterX(z, this.course) + (i / 32 - 0.5) * 27;
+        const x1 = courseCenterX(z, this.course) + ((i + 1) / 32 - 0.5) * 27;
         const y0 = terrainHeight(x0, z, this.course) + 0.044;
         const y1 = terrainHeight(x1, z, this.course) + 0.044;
         const n = p.length / 3;
@@ -486,7 +689,7 @@ export class World {
           x0, terrainHeight(x0, z + 0.21, this.course) + 0.044, z + 0.21);
         indices.push(n, n + 1, n + 2, n, n + 2, n + 3);
       }
-      const x = -this.course.width / 2 - 3;
+      const x = courseCenterX(z, this.course) - this.course.width / 2 - 3;
       const y = terrainHeight(x, z, this.course) + 1.2;
       const sign = this.sign(bump.name.toUpperCase(), 4.4, 0.7, "#205a83");
       shape(this.root, "box", "Super-G crest sector marker",
@@ -592,40 +795,30 @@ export class World {
       idx.push(n, n + 1, n + 2, n, n + 2, n + 3);
     };
     for (const side of [-1, 1]) {
-      const x = (side * this.course.width) / 2;
       for (let z = 0; z < this.course.length + 30; z += 6) {
-        const a = terrainHeight(x, z, this.course),
-          b = terrainHeight(x, z + 6, this.course);
+        const x = courseCenterX(z, this.course) +
+          side * this.course.width / 2;
+        const nextX = courseCenterX(z + 6, this.course) +
+          side * this.course.width / 2;
+        const a = terrainHeight(x, z, this.course);
+        const b = terrainHeight(nextX, z + 6, this.course);
         for (let y = 0.25; y <= 1.25; y += 0.25)
-          quad([x, a + y, z], [x, b + y, z + 6], 0.025);
-        for (let dz = 0; dz < 6; dz += 0.5) {
-          const y = terrainHeight(x, z + dz, this.course),
-            n = p.length / 3;
-          p.push(
-            x,
-            y + 0.2,
-            z + dz,
-            x,
-            y + 1.3,
-            z + dz,
-            x,
-            y + 1.3,
-            z + dz + 0.02,
-            x,
-            y + 0.2,
-            z + dz + 0.02,
-          );
+          quad([x, a + y, z], [nextX, b + y, z + 6], 0.025);
+        // Flexible safety net strands trace the serpentine piste, not x=const.
+        for (let dz = 0; dz < 6; dz += 0.75) {
+          const xx = courseCenterX(z + dz, this.course) +
+            side * this.course.width / 2;
+          const y = terrainHeight(xx, z + dz, this.course);
+          const n = p.length / 3;
+          p.push(xx, y + 0.2, z + dz,
+            xx, y + 1.3, z + dz,
+            xx, y + 1.3, z + dz + 0.02,
+            xx, y + 0.2, z + dz + 0.02);
           idx.push(n, n + 1, n + 2, n, n + 2, n + 3);
         }
-        if (z % 18 === 0)
-          shape(
-            this.root,
-            "cylinder",
-            "Net support",
-            [x, a + 0.7, z],
-            [0.06, 1.6, 0.06],
-            this.red,
-          );
+        if (z % 24 === 0)
+          shape(this.root, "cylinder", "Net support",
+            [x, a + 0.7, z], [0.06, 1.6, 0.06], this.red);
       }
     }
     const e = meshEntity(
@@ -906,10 +1099,40 @@ export class World {
         this.root,
         "box",
         "Timing photocell",
-        [x, h + 0.45, z],
+        [x, terrainHeight(x, z, c) + 0.44, z],
         [0.22, 0.22, 0.22],
         this.dark,
       );
+    if (this.course.id === "SG") {
+      const emitter = this.mat("Finish photocell indicator glass",
+        "#65cbe9", 0.12, 0.86);
+      const beamMat = this.mat("Subtle optical finish timing beam",
+        "#66d9f6", 0, 0.62);
+      beamMat.emissive.set(0.05, 0.17, 0.23);
+      beamMat.opacity = 0.16;
+      beamMat.blendType = pc.BLEND_NORMAL;
+      beamMat.depthWrite = false;
+      beamMat.update();
+      // Secondary redundant beam housings, both at knee-level, with a
+      // nearly invisible light indication across the finish corridor.
+      for (const side of [-1, 1])
+        for (const dz of [0, 0.32]) {
+          const x = side * 6.6;
+          const y = terrainHeight(x, z + dz, c);
+          shape(this.root, "box", "SG twin photoelectric finish sensor",
+            [x, y + 0.38, z + dz],
+            [0.24, 0.19, 0.25], emitter);
+        }
+      for (let x = -6.3; x < 6.3; x += 0.7) {
+        const y0 = terrainHeight(x, z, c) + 0.38;
+        const y1 = terrainHeight(x + 0.7, z, c) + 0.38;
+        const p = [x,y0,z, x+0.7,y1,z,
+          x+0.7,y1+0.016,z, x,y0+0.016,z];
+        const segment = meshEntity(this.app.graphicsDevice, this.root,
+          "Low finish beam marker", p, [0,1,2,0,2,3], beamMat);
+        segment.render!.castShadows = false;
+      }
+    }
   }
 
   lift() {

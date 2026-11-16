@@ -72,7 +72,9 @@ export interface Frame {
   poleImpactSide?: number;
   landingShock?: number;
   startPush?: number;
-  finishGesture?: number;
+  finishGesture?: number; // V1.7 legacy replay field
+  /** Low, forward-reaching hand crossing the timing beam, 0..1. */
+  finishReach?: number;
   skid?: number;
   pressure?: number;
   t: number;

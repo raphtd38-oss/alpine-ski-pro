@@ -1,7 +1,8 @@
 import * as pc from "playcanvas";
 import pack from "../../scripts/alpine-pack.json";
 import type { Course, Quality } from "../game/types";
-import { terrainHeight } from "../game/course";
+import { terrainHeight, courseCenterX } from "../game/course";
+import { superGSector } from "../game/superg";
 import { rng } from "./geometry";
 
 /**
@@ -129,8 +130,11 @@ export class AlpineAssets {
     const rocks = { low: 3, medium: 10, high: 18, ultra: 28 }[quality];
     for (let i = 0; i < trees; i++) {
       const side = i % 2 ? 1 : -1;
-      const x = side * (edge + 10 + random() * 28);
       const z = 16 + random() * Math.max(50, course.length - 32);
+      const sector = course.id === "SG" ? superGSector(z) : "spruce";
+      if (sector === "glacier" && random() > 0.22) continue;
+      const x = courseCenterX(z, course) +
+        side * (edge + 10 + random() * 28);
       const key = i % 5 === 0 ? "sapling" : i % 4 === 0 ? "pine" : "fir";
       this.place(parent, course, quality, key, x, z,
         key === "sapling" ? 1.2 + random() * 0.65 : 1.15 + random() * 0.9,
@@ -138,8 +142,9 @@ export class AlpineAssets {
     }
     for (let i = 0; i < rocks; i++) {
       const side = i % 2 ? -1 : 1;
-      const x = side * (edge + 7 + random() * 24);
       const z = 14 + random() * Math.max(50, course.length - 28);
+      const x = courseCenterX(z, course) +
+        side * (edge + 7 + random() * 24);
       const key = i % 5 === 0 ? "glacial-rock" : i % 2 ? "outcrop" : "boulder";
       this.place(parent, course, quality, key, x, z,
         0.9 + random() * 1.4, random() * 360);
@@ -147,7 +152,7 @@ export class AlpineAssets {
     if (this.has("wayfinding")) {
       for (let z = 85; z < course.length - 35; z += 165) {
         this.place(parent, course, quality, "wayfinding",
-          -edge - 4.7, z, 1, 90);
+          courseCenterX(z, course) - edge - 4.7, z, 1, 90);
       }
     }
   }
