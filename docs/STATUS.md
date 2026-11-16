@@ -193,3 +193,9 @@ Le 16 novembre 2026, à partir de la photo Saalbach 2025 et des demandes du joue
 - Les règles de dimension / intervalle SG sont inspirées du règlement FIS 2026 et les marquages bleus d'explications FIS, sans utiliser d'assets ni marque propriétaire.
 - Validation et publication : se référer à la PR, aux checks CI et à GitHub Pages, jamais supposer succès ou FPS non mesurés.
 - Limite : le modèle GLB 18 articulations et les arbres procéduraux restent semi-réalistes. Pour une marche graphique qualitative supérieure, fournir/modéliser un skieur humain riggé original, textures PBR et mouvements professionnels capturés ou animés, puis optimiser GLB/KTX2/LOD dans PlayCanvas.
+
+## 16 novembre 2026 — premier lot d'assets 3D CC0
+
+Le moteur est raccordé à 9 modèles GLB Alpine Snow Village et 3 cartes PBR Snow 02 (Poly Haven), avec origine et droits dans ASSETS.md. Les chalets primitifs sont remplacés lorsque les modèles sont disponibles, des arbres et rochers détaillés enrichissent les abords de piste, et la forêt procédurale groupée assure un fond à moindre coût. Le niveau de qualité limite les instances et les ombres.
+
+Les téléchargements doivent réussir dans GitHub Actions pour être présents dans l'artefact publié ; sinon les décors d'origine restent utilisables. Le skieur, la physique déterministe, le chrono et les collisions ne sont pas modifiés. Le skieur photoréaliste, les animations mocap, les textures KTX2 et le LOD dynamique ne sont pas encore livrés. FPS réels non mesurés.

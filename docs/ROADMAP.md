@@ -104,3 +104,11 @@ Le but est un simulateur de ski de grande qualité, amélioré sur le même dép
 - Tester visuellement en qualités Élevé et Ultra sur GPU joueur et affiner courbes, textures de neige et forme du start gate selon le retour de la vidéo.
 - Améliorer davantage la silhouette anatomique, le rig à 18 joints (poignets, épaules, hanches), et animer une course FIS à partir de clips droits/licenciés ou de mocap originale.
 - Exporter un futur avatar en glTF/GLB + KTX2, LOD de décors et animation retargetée ; aucun besoin intrinsèque de changer de moteur.
+
+## Suite après la sélection GLB CC0
+
+- Examiner les logs du dernier workflow Actions pour confirmer les téléchargements et la publication des neuf GLB et des trois cartes PBR.
+- Tester la hauteur des chalets, les normales des arbres, le rendu Snow 02 et l'absence de clignotement à toutes les qualités dans un vrai navigateur.
+- Mesurer les performances PC/mobile et optimiser le nombre d'instances, puis ajouter un vrai LOD dynamique avec instancing par secteurs.
+- Convertir les cartes JPG photo-PBR en KTX2/BasisU lorsque les décodeurs et tests WebGL2/WebGPU seront prêts.
+- Refaire le coureur avec un rig de meilleure qualité et des animations compétitives autorisées, puis retargeter l'IK sans casser les modes de course.

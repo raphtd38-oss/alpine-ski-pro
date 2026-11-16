@@ -1,5 +1,6 @@
 import * as pc from "playcanvas";
 import { formatTime } from "../game/race";
+import { AlpineAssets } from "./alpine-assets";
 import { terrainHeight, gradient, courseCenterX } from "../game/course";
 import { trainingLineX } from "../game/guide";
 import { sampleSnowSurface } from "../game/surface";
@@ -35,6 +36,7 @@ export class World {
     public app: pc.Application,
     public course: Course,
     public quality: Quality,
+    public alpineAssets: AlpineAssets | null = null,
   ) {
     app.root.addChild(this.root);
     this.snow = this.mat("Crystalline snow", "#e8f1f5", 0.03, 0.32);
@@ -47,7 +49,7 @@ export class World {
     this.bluePole = this.gateMaterial("blue", false);
     this.redFlag = this.gateMaterial("red", true);
     this.blueFlag = this.gateMaterial("blue", true);
-    this.snowTexture();
+    if (!this.alpineAssets?.applySnowMaterial(this.snow)) this.snowTexture();
     this.terrain();
     this.buildTrainingGuide();
     this.mountains();
@@ -62,6 +64,7 @@ export class World {
     this.buildings();
     this.finishArena();
     this.lift();
+    this.alpineAssets?.populate(this.root, this.course, this.quality);
   }
   mat(name: string, hex: string, metal = 0, gloss = 0.25) {
     const m = material(name, hex, metal, gloss);
@@ -304,7 +307,8 @@ export class World {
         section === "canyon" ? 0.58 : section === "finish" ? 0.38 : 1;
       if (random() > density) continue;
       const x = courseCenterX(z, this.course) +
-        (t % 2 ? 1 : -1) * (this.course.width / 2 + 6 + random() * 75);
+        (t % 2 ? 1 : -1) * (this.course.width / 2 +
+          (this.alpineAssets?.has("fir") ? 39 : 6) + random() * 75);
       const y = terrainHeight(x, z, this.course);
       const h = (section === "glacier" ? 3 : 4) +
         random() * (section === "canyon" ? 12 : 8);
@@ -831,6 +835,7 @@ export class World {
     const timber = this.mat("Larch timber", "#5a3a2b");
     const glass = this.mat("Glacier glass", "#497887", 0.65, 0.8);
     for (const z of [0, this.course.length + 25]) {
+      if (this.alpineAssets?.has("chalet")) break;
       const x = -this.course.width / 2 - 15,
         h = terrainHeight(x, z, this.course);
       shape(
