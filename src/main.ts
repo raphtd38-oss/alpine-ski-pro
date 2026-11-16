@@ -263,6 +263,10 @@ async function boot() {
       surface.ice > 0.38 ? "NEIGE TRÈS DURE" :
         surface.packed > 0.65 ? "NEIGE COMPACTÉE" : "NEIGE DAMÉE");
     ui.text("fps-meter", `${Math.round(renderer.fps)} FPS · RENDU ${Math.round(renderer.renderScale * 100)}%`);
+    const upcoming = race.course.gates[race.nextGate];
+    ui.text("next-gate", upcoming
+      ? `PORTE ${String(race.nextGate + 1).padStart(2, "0")} · ${Math.max(0, Math.round(upcoming.z - state.z))} m`
+      : "ARRIVÉE · DERNIÈRE LIGNE DROITE");
     ui.text(
       "gates",
       `${race.nextGate - race.missed} / ${race.course.gates.length}`,
@@ -418,6 +422,9 @@ async function boot() {
           paused,
           course: race.course.id,
           fps: renderer.fps,
+          guideActive: Boolean(renderer.world.trainingGuide?.enabled),
+          replaying,
+          replaySpeed,
           renderer: renderer.app.graphicsDevice.deviceType,
         }),
         start,
