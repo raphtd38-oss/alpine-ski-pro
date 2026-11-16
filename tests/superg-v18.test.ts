@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { COURSES, courseCenterX, terrainHeight } from "../src/game/course";
-import { initialState } from "../src/game/physics";
+import { initialState, stepPhysics, FIXED_DT } from "../src/game/physics";
 import { Race, replayAt } from "../src/game/race";
 import {
   SUPER_G_CENTRE_KNOTS, superGCenterX, superGGateZ, superGSector,
@@ -52,6 +52,27 @@ describe("V1.8 Super-G winding route, markers and FIS-inspired finish", () => {
       const highBank = terrainHeight(center + sg.width / 2 + 12, z, sg);
       expect(highBank).toBeGreaterThan(middle + 3.7);
     }
+  });
+
+  it("recovers inward after safety-net contact instead of freezing at 120 Hz", () => {
+    const course = COURSES.SG;
+    const state = { ...initialState(),
+      z: 360, x: superGCenterX(360) - course.width / 2 - 0.2,
+      vx: -7, vz: 22 };
+    const control = { steer: 0, tuck: false, brake: false, jump: false };
+    stepPhysics(state, control, {
+      id:"SG", name:"velocity", length:2.05, radius:36,
+      stiffness:.92, grip:1.07, response:3.8, stability:.94,
+    }, course, FIXED_DT);
+    expect(state.vx).toBeGreaterThan(4);
+    expect(state.vz).toBeGreaterThan(6);
+    for (let i = 0; i < 130; i++)
+      stepPhysics(state, control, {
+        id:"SG", name:"velocity", length:2.05, radius:36,
+        stiffness:.92, grip:1.07, response:3.8, stability:.94,
+      }, course, FIXED_DT);
+    expect(state.z).toBeGreaterThan(371);
+    expect(Number.isFinite(state.x + state.vx + state.vz)).toBe(true);
   });
 
   it("reaches downward and forward before the beam but not while falling", () => {
