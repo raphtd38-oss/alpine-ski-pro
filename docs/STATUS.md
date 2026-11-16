@@ -61,3 +61,12 @@ Le projet n'est **pas terminé**. Pas de certification FIS, pas de sponsoring Au
 - Quatre tests unitaires ajoutés dans `tests/snow.test.ts` ; vérifier les résultats du workflow CI sur la PR avant fusion.
 - Code original, aucun modèle, texture, son ou code tiers copié des dépôts GitHub consultés (leurs licences ne sont pas toutes permissives).
 - **Non fusionné :** modification sur branche séparée pour revue ; ce travail ne constitue pas un rendu photoréaliste ni une validation FPS sur GPU réel.
+
+## Lot de fluidité adaptative — branche feat/adaptive-high-fps (16 novembre 2026)
+
+- Mode **Fluidité automatique** activé par défaut, désactivable en paramètres et mémorisé localement.
+- Contrôleur purement visuel de résolution interne basé sur cadence mesurée, intervalles de 2 s, seuils distincts de dégradation et récupération et plancher raisonnable selon niveau graphique.
+- Ajustement des ombres uniquement en dernier recours : détails de neige, personnage, pistes, arbres, collisions et règles de course sont conservés.
+- **Pas de plafond de 40 FPS ou 60 FPS**, le navigateur choisit la cadence maximale effective. La physique reste sur son pas fixe de 120 Hz.
+- Affichage FPS/résolution relative en jeu ; nouveaux tests de performance adaptative.
+- Vérifier la CI et les performances sur GPU matériel avant de fusionner ; aucun FPS garanti.
