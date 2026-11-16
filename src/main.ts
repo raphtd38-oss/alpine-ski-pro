@@ -423,6 +423,10 @@ async function boot() {
           course: race.course.id,
           fps: renderer.fps,
           guideActive: Boolean(renderer.world.trainingGuide?.enabled),
+          athleteBones: Object.keys(renderer.athlete.joints).length,
+          athleteSurfaces: renderer.athlete.rig.findComponents("render").reduce(
+            (n, c) => n + (c as import("playcanvas").RenderComponent).meshInstances.length, 0,
+          ),
           replaying,
           replaySpeed,
           replayTime,
