@@ -60,3 +60,10 @@ Le but est un simulateur de ski de grande qualité, amélioré sur le même dép
 - Refinement avec retours du joueur : intégration d'un modèle humain mieux skinné, IK en 3D, textures PBR plus abouties, performance du spray sur scènes complexes.
 - Générer les quatre sons ElevenLabs additionnels lorsque le service est de nouveau disponible et importer les MP3 localement après vérification des droits.
 - Déployer GitHub Pages dès que le propriétaire a configuré Source → GitHub Actions, vérifier URL et sécurité de l'audio.
+
+## Priorités après mise à jour des surfaces
+
+- Tester l'effet réel des zones de neige très dure sur la trajectoire du slalom, sans modifier la validation des 22 portes.
+- Comparer visuellement neige PBR et rendu précédente sur machine avec GPU ; ajuster l'intensité de la coloration si elle devient trop visible.
+- Optimiser le chargement des textures sur les navigateurs mobiles si cela rallonge le premier lancement.
+- Réessayer les sons ElevenLabs dans une autre session seulement lorsque le service redevient disponible, puis importer les MP3 localement.
