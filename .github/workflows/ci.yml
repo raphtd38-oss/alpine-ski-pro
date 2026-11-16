@@ -20,6 +20,8 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      - name: Bundle licensed alpine GLB and PBR textures
+        run: npm run assets:alpine
       - run: npm test
       - run: npm run build
       - run: npx playwright install --with-deps chromium
