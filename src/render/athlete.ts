@@ -9,6 +9,8 @@ export class Athlete {
   skis: pc.Entity[] = [];
   skiSurfaces: { mesh: pc.Mesh; base: number[] }[] = [];
   poles: pc.Entity[] = [];
+  visualEdge = 0;
+  visualCrouch = 0.045;
   material: pc.StandardMaterial;
   ownedMaterials: pc.StandardMaterial[] = [];
   constructor(
@@ -142,18 +144,29 @@ export class Athlete {
       (f.heading * 180) / Math.PI,
       0,
     );
-    const j = this.joints,
-      crouch = 0.045 + f.tuck * 0.18 + Math.abs(f.edge) * 0.07,
-      lean = f.edge * 0.12;
+    // Blend the athlete between turns in rendering time, independently of
+    // the deterministic 120 Hz physics. Fast turn transitions stay readable
+    // without the "rigid mannequin snaps sideways" appearance.
+    const blend = 1 - Math.exp(-Math.max(0, Math.min(0.1, dt)) * 12);
+    const edgeTarget = Math.max(-1.1, Math.min(1.1, f.edge));
+    this.visualEdge += (edgeTarget - this.visualEdge) * blend;
+    const edge = this.visualEdge;
+    const load = Math.max(0, Math.min(1.4, f.flex ?? 0));
+    const crouchTarget = 0.055 + f.tuck * 0.18 +
+      Math.abs(edge) * 0.085 + load * 0.045;
+    this.visualCrouch += (crouchTarget - this.visualCrouch) * blend;
+    const crouch = this.visualCrouch;
+    const j = this.joints;
+    const lean = edge * (0.14 + load * 0.04);
     j.Pelvis?.setLocalPosition(lean, 0.92 - crouch, -0.055 * f.tuck);
-    j.Spine?.setLocalEulerAngles(10 + f.tuck * 27, 0, -f.edge * 15);
-    j.Chest?.setLocalEulerAngles(5 + f.tuck * 12, -f.edge * 9, f.edge * 8);
-    j.Head?.setLocalEulerAngles(-12 - f.tuck * 23, f.edge * 7, 0);
-    j.Pelvis?.setLocalEulerAngles(0, 0, -f.edge * 16);
+    j.Spine?.setLocalEulerAngles(10 + f.tuck * 27, edge * -3, -edge * 19);
+    j.Chest?.setLocalEulerAngles(5 + f.tuck * 12, -edge * 11, edge * 12);
+    j.Head?.setLocalEulerAngles(-12 - f.tuck * 23, edge * 7, edge * 3);
+    j.Pelvis?.setLocalEulerAngles(0, 0, -edge * 19);
     // Analytic sagittal two-link IK. Flexion follows COM height and outside-leg loading.
     for (const [i, side] of ["L", "R"].entries()) {
-      const load = (i === 0 ? 1 : -1) * f.edge;
-      const hipY = 0.9 - crouch + load * 0.035;
+      const outside = (i === 0 ? 1 : -1) * edge;
+      const hipY = 0.9 - crouch + outside * 0.035;
       const dy = Math.min(0.81, hipY - 0.12),
         dz = 0.02 + f.tuck * 0.055,
         L1 = 0.421,
@@ -170,13 +183,13 @@ export class Athlete {
       const hipRot = (-(thigh - Math.atan2(0.13, 0.4)) * 180) / Math.PI;
       const kneeRot =
         (-(calf - Math.atan2(-0.11, 0.38)) * 180) / Math.PI - hipRot;
-      j[side + "Hip"]?.setLocalEulerAngles(hipRot, 0, f.edge * 9);
+      j[side + "Hip"]?.setLocalEulerAngles(hipRot, 0, edge * 12);
       j[side + "Knee"]?.setLocalEulerAngles(kneeRot, 0, 0);
-      j[side + "Ankle"]?.setLocalEulerAngles(-hipRot - kneeRot, 0, -f.edge * 8);
+      j[side + "Ankle"]?.setLocalEulerAngles(-hipRot - kneeRot, 0, -edge * 10);
       j[side + "Shoulder"]?.setLocalEulerAngles(
-        -f.tuck * 15 + Math.sin(f.t * 3 + i) * Math.abs(f.edge) * 4,
+        -f.tuck * 15 + Math.sin(f.t * 3 + i) * Math.abs(edge) * 4,
         0,
-        (i === 0 ? -1 : 1) * (8 + Math.abs(f.edge) * 9),
+        (i === 0 ? -1 : 1) * (8 + Math.abs(edge) * 12),
       );
       j[side + "Elbow"]?.setLocalEulerAngles(-f.tuck * 36, 0, 0);
       const surf = this.skiSurfaces[i];
@@ -184,14 +197,14 @@ export class Athlete {
       for (let k = 0; k < vertices.length; k += 3) {
         const t = (vertices[k + 2] / this.equipment.length) * 2;
         vertices[k + 1] -=
-          (f.flex ?? 0) * 0.018 * (1 - t * t) * (1 + load * 0.35);
+          (f.flex ?? 0) * 0.018 * (1 - t * t) * (1 + outside * 0.35);
       }
       surf.mesh.setPositions(vertices);
       surf.mesh.update();
-      this.skis[i].setLocalEulerAngles(0, load * 1.2, -f.edge * 43);
+      this.skis[i].setLocalEulerAngles(0, outside * 1.2, -edge * 45);
       this.skis[i].setLocalPosition(
-        (i === 0 ? -1 : 1) * (0.16 + Math.abs(f.edge) * 0.035),
-        Math.abs(load) * 0.012,
+        (i === 0 ? -1 : 1) * (0.16 + Math.abs(edge) * 0.035),
+        Math.abs(outside) * 0.012,
         0.02,
       );
       const wrist = j[side + "Wrist"];
