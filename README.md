@@ -167,3 +167,15 @@ L'utilisateur a fourni un enregistrement de 55 s (1920 × 1038, 30 i/s, piste de
 **ElevenLabs** : une génération originale *carving sur neige dure* de 7 s a abouti sur le flow existant (ID `twV2FljboNunWB9zOUVI`) mais le MP3 n'a pas pu être importé depuis son URL signée dans le dépôt. Le jeu utilise donc toujours son mixage local dynamique et ses sons ElevenLabs préexistants. Le son généré est disponible dans le compte ElevenLabs : https://elevenlabs.io/app/flows/3a7o6vXZTCRaMICykpbt .
 
 Les assets du jeu filmé ne sont pas copiés et aucun photoréalisme AAA n'est annoncé.
+
+## Boîte à outils modèles 3D, textures PBR et animations
+
+Le dépôt contient une [base de connaissances sur les sources CC0, outils 3D et licences](docs/RESOURCE_CATALOG.md), un [pipeline Blender/GLB/KTX2](docs/ASSET_WORKFLOW.md), ainsi que des instructions dans [AGENTS.md](AGENTS.md) pour les développeurs et assistants de code.
+
+Commandes de développement (Node) :
+- Recherche sur les API officielles Poly Haven et ambientCG : npm run assets:search -- snow --type texture
+- Diagnostic Blender / glTF Transform / KTX2 : npm run assets:doctor
+- Audit des binaires 3D et de la provenance : npm run assets:audit
+- Récupération des modèles et textures CC0 déjà sélectionnés : npm run assets:alpine
+
+Les CLI optionnelles (Blender, glTF Transform et Khronos KTX-Software) s'installent **sur le poste du développeur**, pas sur le navigateur du joueur. Le jeu n'appelle pas ces catalogues au runtime ; aucun compte ni jeton requis pour les recherches gratuites. Les animations humanoïdes tierces ne sont pas importées automatiquement et les nouveaux formats KTX2 doivent être validés avant activation.
