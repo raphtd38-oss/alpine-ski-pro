@@ -164,3 +164,11 @@ Le but est un simulateur de ski de grande qualité, amélioré sur le même dép
 - Héberger localement `ammo.wasm.js`, `ammo.wasm.wasm` et `ammo.js` pour éviter la dépendance aux assets distants PlayCanvas, avec attribution/licence.
 - Mesurer le chargement, la mémoire, la fluidité et la consommation sur mobile ; optimiser les triggers si nécessaire.
 - Développer ensuite une vraie réponse physique du corps aux obstacles et un ragdoll, sans laisser Bullet écraser la dynamique de carving réglée à 120 Hz.
+
+## Après étude des deux vidéos du 17 novembre 2026
+
+- Vérifier en vues rapprochées le départ à -1,2 / -0,4 / +0,1 / +0,5 / +1,0 s : les contacts de bâtons doivent toucher la neige et rester fluides.
+- Capturer des poses en gros plan pour edge -1, 0 et +1 avec f.load, pression et dérapage variables, en vérifiant les contacts et l'absence de traversée des articulations du monobloc.
+- Mesurer l'occupation du cadre et retoucher la caméra de poursuite actuelle seulement si son rendu vérifié en navigateur reste trop éloigné, car les captures reçues peuvent représenter une autre build.
+- Filmer l'arrivée et vérifier visuellement l'extension basse de la main plutôt que supposer le geste d'après la diffusion olympique distante.
+- Produire/retargeter de véritables clips de Super-G aux droits vérifiés, une interpolation IK pelvis/cuisse/genou/cheville et des mains aux bâtons ; la calibration actuelle est artistique, pas une reconstitution 3D mesurée.
