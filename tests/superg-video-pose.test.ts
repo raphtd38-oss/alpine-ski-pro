@@ -1,8 +1,21 @@
 import { describe, expect, it } from "vitest";
 import {
   superGEdgePose, superGStartBrace, superGLegIK,
-  superGSkiFootLift, superGFinishGesture,
+  superGSkiFootLift, superGFinishGesture, superGRacerBank,
 } from "../src/render/superg-video-pose";
+
+describe("visible carve banking", () => {
+  it("leans into either turn but returns upright when flat", () => {
+    expect(superGRacerBank(0, 0)).toBe(0);
+    expect(superGRacerBank(.8, .8)).toBeLessThan(-20);
+    expect(superGRacerBank(-.8, .8)).toBeGreaterThan(20);
+    expect(superGRacerBank(.8, .8)).toBeCloseTo(-superGRacerBank(-.8, .8));
+  });
+  it("releases bank on a jump and never produces extreme tilt", () => {
+    expect(superGRacerBank(1, 1, 1)).toBe(0);
+    expect(Math.abs(superGRacerBank(2, 3))).toBeLessThanOrEqual(34);
+  });
+});
 
 describe("source-video guided Super-G animation intent (rendering only)", () => {
   it("keeps neutral straight-line stance without forced edge lean", () => {
