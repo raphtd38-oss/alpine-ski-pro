@@ -12,7 +12,7 @@ describe("training gate guidance", () => {
     for (let z = 4; z <= c.length; z++) {
       const x = trainingLineX(c, z);
       expect(Number.isFinite(x)).toBe(true);
-      expect(Math.abs(x)).toBeLessThan(c.width / 2 - 1);
+      expect(Math.abs(x - courseCenterX(z, c))).toBeLessThan(c.width / 2 - 1);
       expect(Math.abs(x - previous)).toBeLessThan(2.5);
       previous = x;
     }
