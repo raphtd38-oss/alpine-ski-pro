@@ -3,6 +3,7 @@ import type { Course, Equipment, Frame } from "../game/types";
 import { terrainHeight, gradient } from "../game/course";
 import { shape, material, meshEntity } from "./geometry";
 import { PRO_POLE } from "./equipment-specs";
+import { SuperGRacePoseDirector, type SGDirectorDiagnostics } from "./superg-race-pose-director";
 import { startDrivePhase, startDriveBlend, startPoleContact } from "../game/start-gate";
 import {
   superGEdgePose, superGStartBrace, superGLegIK,
@@ -36,6 +37,8 @@ export class Athlete {
   material: pc.StandardMaterial;
   ownedMaterials: pc.StandardMaterial[] = [];
   ownedTextures: pc.Texture[] = [];
+  /** Connected 25-bone racer owns its own 3D carving solver. Ghost/fallback unchanged. */
+  private competitionDirector: SuperGRacePoseDirector | null = null;
   constructor(
     public app: pc.Application,
     asset: pc.Asset,
@@ -297,6 +300,14 @@ export class Athlete {
       this.material.depthWrite = false;
       this.material.update();
     }
+    // Only the original connected SG player uses this new articulating IK.
+    // Do not run both controllers: the old sagittal loop would undo ski heading.
+    if (this.isSeamless && !ghost && equipment.id === "SG") {
+      this.competitionDirector = new SuperGRacePoseDirector(this, equipment);
+    }
+  }
+  getCompetitionDiagnostics(): SGDirectorDiagnostics | null {
+    return this.competitionDirector?.getDiagnostics() ?? null;
   }
   paint(hex: string) {
     for (const c of this.rig.findComponents("render")) {
@@ -319,6 +330,12 @@ export class Athlete {
     }
   }
   update(f: Frame, c: Course, dt: number) {
+    // Never execute legacy rotations after the 3D director: the feet, bindings,
+    // and tips need to retain their own world direction and edge angle.
+    if (this.competitionDirector) {
+      this.competitionDirector.update(f, c, dt);
+      return;
+    }
     const y = terrainHeight(f.x, f.z, c) + f.height;
     this.root.setPosition(f.x, y + 0.015, f.z);
     const [, grade] = gradient(f.x, f.z, c);
