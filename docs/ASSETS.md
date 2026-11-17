@@ -1,3 +1,10 @@
+## Extension originale Cortina cinematic (17 novembre 2026)
+
+- `src/render/cortina-cinematic-detail.ts` : roches dolomitiques stratifiées, pics enneigés, forêts (épicéa/mélèze), piste damée, filets A rouges, postes caméra, hameau et fenêtres. Matériaux et géométries **entièrement procéduraux**, sans GLB/PBR externe.
+- `src/render/cortina-light-accents.ts` : halo des LED et taches de lumière chaude au sol ; une texture RGBA de gradient radial 192×192 est dessinée par Canvas localement à chaque création de course, jamais téléchargée.
+- `src/render/cortina-atmosphere.ts` : nuances de cirrus roses calculées dans les couleurs du dôme de coucher de soleil. Aucun ajout de modèle 3D, photo, audio ou marque protégée par des tiers.
+- L'image conceptuelle de sunset est une **référence visuelle seulement**, elle n'est pas chargée ni redistribuée dans le jeu ; le terrain n'est pas un jumeau numérique de Cortina.
+
 ## Extension Cortina sunset / LED (17 novembre 2026)
 
 - `src/render/cortina-atmosphere.ts` crée un ciel synthétique, des mâts de projecteur et panneaux lumineux procéduraux. **Aucun fichier photo ou vidéo, PBR commercial, GLB externe, audio ou logo n'est téléchargé.**
