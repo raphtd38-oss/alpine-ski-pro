@@ -36,7 +36,7 @@ describe("V1.6 — supplied best-of mechanics", () => {
     const s = { ...initialState(), vz: 23 };
     let lowest = 2, highest = 0;
     for (let i = 0; i < 600; i++) {
-      stepPhysics(s, neutral, EQUIPMENT.DH, COURSES.DH, FIXED_DT);
+      stepPhysics(s, neutral, EQUIPMENT.SG, COURSES.SG, FIXED_DT);
       lowest = Math.min(lowest, s.pressure);
       highest = Math.max(highest, s.pressure);
       expect(Number.isFinite(s.pressure + s.skid + s.x)).toBe(true);
@@ -47,7 +47,7 @@ describe("V1.6 — supplied best-of mechanics", () => {
   });
 
   it("piste shoulders collect powder; extra snow causes greater drag", () => {
-    const course = COURSES.SL;
+    const course = COURSES.SG;
     const mid = sampleSnowSurface(0, 90, course, "clear");
     const edge = sampleSnowSurface(course.width / 2 - 1, 90, course, "clear");
     expect(mid.depth).toBe(0);
@@ -58,8 +58,8 @@ describe("V1.6 — supplied best-of mechanics", () => {
     const slide = (depth: number) => {
       const s = { ...initialState(), vz: 18 };
       for (let i = 0; i < 220; i++) {
-        stepPhysics(s, { ...neutral, steer: 0.2 }, EQUIPMENT.SL,
-          COURSES.SL, FIXED_DT, 1, 0, depth);
+        stepPhysics(s, { ...neutral, steer: 0.2 }, EQUIPMENT.SG,
+          COURSES.SG, FIXED_DT, 1, 0, depth);
       }
       return Math.hypot(s.vx, s.vz);
     };
@@ -86,7 +86,7 @@ describe("V1.6 — supplied best-of mechanics", () => {
   });
 
   it("separates shin guard impacts from glancing arm strikes", () => {
-    const c = { ...COURSES.SL, gates: [{ id: 0, x: 0, z: 10, width: 7 }] };
+    const c = { ...COURSES.SG, gates: [{ id: 0, x: 0, z: 10, width: 7 }] };
     const strike = (x: number) => {
       const poles = new PoleSimulation(c);
       const before = { ...initialState(), x, z: 9, vz: 18 };
