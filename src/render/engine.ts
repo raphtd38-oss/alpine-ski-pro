@@ -97,11 +97,12 @@ export class Renderer {
     });
     // A missing or invalid optional GLB must never block a race or browser boot.
     // When the file is deployed, enable the authentic 25-bone athlete by default.
+    const candidateUrl = import.meta.env.BASE_URL + "assets/asp-superg-monobloc-mobile.glb";
     const candidate = new pc.Asset("Original seamless 25-bone Super-G racer", "container", {
-      url: import.meta.env.BASE_URL + "assets/asp-superg-monobloc-mobile.glb",
+      url: candidateUrl,
     });
     try {
-      const response = await fetch(candidate.file!.url!, { method: "HEAD" });
+      const response = await fetch(candidateUrl, { method: "HEAD" });
       if (!response.ok) throw new Error("25-bone asset not published yet");
       await new Promise<void>((resolve, reject) => {
         candidate.ready(() => resolve());
