@@ -75,9 +75,11 @@ export class World {
     this.mountains();
     this.forest();
     // Three-dimensional Tofane peaks, dark conifers, realistic red A-nets and grooming.
-    this.materials.push(...addCortinaCinematicDetails(
+    const cinematic = addCortinaCinematicDetails(
       this.app, this.root, this.course, this.quality,
-    ));
+    );
+    this.materials.push(...cinematic.materials);
+    this.resources.push(...cinematic.textures);
     // Original warm sunset, 15 LED floodlight towers and nearby light pools.
     const atmosphere = createCortinaAtmosphere(
       this.app, this.root, this.course, this.quality,
