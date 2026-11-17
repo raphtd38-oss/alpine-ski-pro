@@ -1,5 +1,8 @@
 import type { Discipline, Frame, Result } from "./types";
-const KEY = "alpine-ski-pro:v1";
+// Cortina is a different course: old Glacier Express ghosts must not race here.
+// Keep the old key untouched so previous performances remain recoverable.
+const KEY = "alpine-ski-pro:cortina-2026:v1";
+const LEGACY_KEY = "alpine-ski-pro:v1";
 export interface Save {
   version: 1;
   name: string;
@@ -32,8 +35,10 @@ export class Progress {
   constructor() {
     try {
       const raw = localStorage.getItem(KEY);
-      if (raw) {
-        const d = JSON.parse(raw);
+      const fromOldCourse = !raw;
+      const source = raw ?? localStorage.getItem(LEGACY_KEY);
+      if (source) {
+        const d = JSON.parse(source);
         if (d.version === 1) {
           this.data.name =
             typeof d.name === "string" ? d.name.slice(0, 32) : "Athlète";
@@ -41,13 +46,14 @@ export class Progress {
           this.data.completed = Number.isFinite(d.completed)
             ? Math.max(0, d.completed)
             : 0;
+          // Migrate career progress, never the old piste-specific records or ghost.
           for (const id of disciplines) {
-            this.data.records[id] = Array.isArray(d.records?.[id])
+            this.data.records[id] = !fromOldCourse && Array.isArray(d.records?.[id])
               ? d.records[id].filter(validResult).slice(0, 10)
               : [];
             const g = d.ghosts?.[id];
             if (
-              g &&
+              !fromOldCourse && g &&
               Number.isFinite(g.time) &&
               Array.isArray(g.frames) &&
               g.frames.length <= 30000 &&
