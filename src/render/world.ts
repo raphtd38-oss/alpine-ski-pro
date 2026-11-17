@@ -152,18 +152,27 @@ export class World {
         const h = terrainHeight(x, z, this.course);
         p.push(x, h, z);
         uv.push(x / 2, z / 3);
+        // Edge weathering must follow the actual winding race corridor.
+        // The older shading field remained at x=0 while the Super-G swung
+        // almost 25m to each side, making groomed/powder borders misalign.
+        const localX = x - courseCenterX(z, this.course);
         const edge = Math.min(
           1,
-          Math.max(0, (Math.abs(x) - this.course.width / 2) / 20),
+          Math.max(0, (Math.abs(localX) - this.course.width / 2) / 20),
         );
+        // More exposed blue ice above the tree line and cooler hardpack in
+        // the rocky canyon, without changing friction or course geometry.
+        const region = this.course.id === "SG" ? superGSector(z) : "spruce";
+        const glacierTint = region === "glacier" ? 0.038 : 0;
+        const canyonTint = region === "canyon" ? 0.016 : 0;
         const n =
           Math.sin(x * 1.2 + z * 0.38) * Math.sin(z * 0.63 + x * 0.2) * 0.018;
         // Broad, subtle blue-grey compressed patches match the grip field.
         const icy = sampleSnowSurface(x, z, this.course).ice;
         col.push(
-          1 - edge * 0.11 + n - icy * 0.075,
-          1 - edge * 0.075 + n - icy * 0.036,
-          1 - edge * 0.04 + n - icy * 0.012,
+          1 - edge * 0.11 + n - icy * 0.075 - glacierTint - canyonTint,
+          1 - edge * 0.075 + n - icy * 0.036 - canyonTint * 0.55,
+          1 - edge * 0.04 + n - icy * 0.012 + glacierTint * 0.25,
           1,
         );
       }
