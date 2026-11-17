@@ -525,6 +525,7 @@ async function boot() {
               ).length, 0,
             ), 0,
           ),
+          visibleAlpineDetails: renderer.alpineAssets.visibleDetails,
           athleteBones: Object.keys(renderer.athlete.joints).length,
           raceSkiTextureCount: renderer.athlete.ownedTextures.length,
           cameraTerrainClearance: (() => {
