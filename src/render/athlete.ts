@@ -287,9 +287,9 @@ export class Athlete {
         // Preserve the graphite compression side panels and the white bib.
         // Only recolour the base fabric; pro racewear needs multiple materials.
         if (
-          mi.material?.name.startsWith("Race suit / alpine navy") ||
-          mi.material?.name.startsWith("Race suit / alpine crimson") ||
-          mi.material?.name.startsWith("Race suit / ember") ||
+          mi.material?.name?.startsWith("Race suit / alpine navy") ||
+          mi.material?.name?.startsWith("Race suit / alpine crimson") ||
+          mi.material?.name?.startsWith("Race suit / ember") ||
           (this.monobloc && /Original navy speed-suit Lycra|One-piece anatomically joined PBR speed suit/.test(mi.material?.name ?? ""))
         ) {
           const mat = mi.material.clone() as pc.StandardMaterial;
