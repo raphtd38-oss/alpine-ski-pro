@@ -10,6 +10,7 @@ import { gatePoleCanvas, gateBannerCanvas } from "./gate-textures";
 import { gateFlagFlutter } from "../game/gates-visual";
 import { tipVibration, type PoleState } from "../game/poles";
 import { SUPER_G_ROLLERS, superGSector } from "../game/superg";
+import { ALPINE_START_GATE } from "../game/start-gate";
 import type { Course, Quality, Weather } from "../game/types";
 import { material, meshEntity, shape, beam, rng, color } from "./geometry";
 export class World {
@@ -559,113 +560,182 @@ export class World {
     this.arch(this.course.length, "ARRIVÉE", true);
   }
 
-  /** An original start hut inspired by World Cup speed events. This is
-   * competition set dressing, not an official FIS-certified installation. */
+  /** V1.11: enclosed mountain timing cabin with a single mechanical wand.
+   * All meshes/textures are project originals, not any championship's branding.
+   * Roof and walls track the sampled slope instead of resting on a flat slab. */
   superGStartBooth() {
     const root = new pc.Entity("Super-G competition start house");
-    this.startBooth = root;
     this.root.addChild(root);
-    const h = terrainHeight(0, 0, this.course);
-    const timber = this.mat("Start house weathered timber", "#594a41", 0, 0.28);
-    const painted = this.mat("Start house race blue", "#24445c", 0.08, 0.32);
-    const glass = this.mat("Timer hut safety glass", "#608c9e", 0.25, 0.75);
-    const metal = this.mat("Start timing aluminium", "#aebdc6", 0.75, 0.55);
-    // Open front and rear: the chase camera keeps a clear sightline to skier.
-    for (const z of [-4.5, 4.3])
-      for (const x of [-3.8, 3.8])
-        shape(root, "box", "Start hut structural post",
-          [x, terrainHeight(x, z, this.course) + 1.9, z],
-          [0.23, 3.8, 0.23], timber);
-    for (const z of [-4.5, 4.3]) {
-      shape(root, "box", "Start chalet roof frame",
-        [0, h + 3.9, z], [7.9, 0.18, 0.28], timber);
-      shape(root, "box", "Start timing station fascia",
-        [0, h + 3.45, z], [7.7, 0.52, 0.22], painted);
-    }
-    for (const side of [-1, 1]) {
-      const roof = shape(root, "box", "Insulated pitched start roof",
-        [side * 2.0, h + 4.56, -0.10],
-        [4.45, 0.24, 10.0], this.snow);
-      roof.setEulerAngles(0, 0, side * -21);
-      for (const z of [-2.8, 1.2])
-        shape(root, "box", "Start hut windscreen",
-          [side * 3.83, h + 2.20, z],
-          [0.11, 1.95, 2.7], glass);
-      shape(root, "box", "Gate safety handrail",
-        [side * 2.23, h + 0.8, 5.1],
-        [0.08, 0.09, 2.7], metal);
-    }
-    // Start line and pressure-sensitive hinged timing wands at ski level.
-    const gateZ = 4.05, gateH = terrainHeight(0, gateZ, this.course);
-    for (const side of [-1, 1]) {
-      const hinge = new pc.Entity("Chronometric start wand hinge");
-      hinge.setLocalPosition(side * 1.55, gateH + 0.64, gateZ);
-      root.addChild(hinge);
-      this.startWands.push(hinge);
-      shape(hinge, "cylinder", "Start wand support",
-        [0, -0.30, 0], [0.065, 0.74, 0.065], painted);
-      shape(hinge, "box", "Releasing timing wand",
-        [-side * 0.78, 0, 0], [1.55, 0.032, 0.043], metal);
-      shape(hinge, "box", "Light gate sensor",
-        [0, 0.11, 0], [0.18, 0.16, 0.16], painted);
-    }
-    const header = this.sign("ALPINE SKI PRO   /   SUPER-G",
-      6.4, 0.65, "#183247");
-    shape(root, "box", "Start house illuminated race header",
-      [0, h + 3.48, 4.44], [6.4, 0.65, 0.1], header.m);
-    // Enclosed start box: wind shields and side sponsor-style boards from
-    // Saalbach 2025 reference, with completely original Alpine Ski Pro art.
-    const sunny = this.mat("Start house yellow safety cladding", "#f4c332",
-      0.02, 0.38);
-    const black = this.mat("Start bay padded jambs", "#202936", 0, 0.21);
-    for (const side of [-1, 1]) {
-      const x = side * 3.79;
-      for (const z of [-2.55, 1.25]) {
-        shape(root, "box", "Weatherproof start hut side wall",
-          [x, terrainHeight(x, z, this.course) + 1.83, z],
-          [0.22, 3.47, 3.45], sunny);
-        const graphic = this.sign("ALPINE RACE", 3.0, 0.8, "#c99c20");
-        shape(root, "box", "Original start cabin sponsor panel",
-          [x - side * 0.13, terrainHeight(x, z, this.course) + 2.3, z],
-          [0.05, 0.86, 2.90], graphic.m);
+    this.startBooth = root;
+    const h = (x: number, z: number) => terrainHeight(x, z, this.course);
+    const timber = this.mat("PBR fir board cladding", "#e1cbb4", 0, 0.20);
+    const steel = this.mat("Brushed start-timing steel", "#728993", 0.78, 0.54);
+    const rubber = this.mat("Black shock-absorbing race padding", "#20292c", 0.03, 0.12);
+    const fabric = this.mat("Weatherproof competition tarpaulin", "#26476a", 0, 0.30);
+    const roofMetal = this.mat("Dark matt roof seams", "#35434c", 0.55, 0.25);
+    const signal = this.mat("Timing status amber LED", "#f4b94a", 0, 0.50);
+    signal.emissive.set(0.65, 0.32, 0.04); signal.update();
+    const panel = this.mat("Original race blue line", "#2b9bbd", 0, 0.34);
+
+    // One reusable, authored timber grain instead of flat coloured cubes.
+    const c = document.createElement("canvas");
+    c.width = c.height = 256;
+    const ctx = c.getContext("2d")!;
+    ctx.fillStyle = "#736252"; ctx.fillRect(0,0,256,256);
+    for (let x=0; x<256; x+=32) {
+      ctx.fillStyle = x % 64 ? "#887665" : "#796858";
+      ctx.fillRect(x+2,0,29,256);
+      ctx.fillStyle = "#3d3630";ctx.fillRect(x,0,2,256);
+      for(let i=0;i<26;i++) {
+        const xx=x+3+((i*17)%24), yy=(i*39+x*3)%256;
+        ctx.fillStyle=i%3 ? "rgba(234,211,179,.14)" : "rgba(29,22,18,.15)";
+        ctx.fillRect(xx,yy,1,11+(i%5)*6);
       }
-      shape(root, "box", "Padded entry race door jamb",
-        [side * 1.53, gateH + 1.7, 4.4],
-        [0.19, 3.34, 0.38], black);
-      shape(root, "box", "Bright race start facade",
-        [side * 2.7, gateH + 1.85, 4.4],
-        [2.25, 3.25, 0.26], sunny);
-      const timer = this.sign("TIME  /  READY", 2.2, 0.55, "#1d3046");
-      shape(root, "box", "Original electronic start timer display",
-        [side * 2.73, gateH + 1.8, 4.23],
-        [2.05, 0.54, 0.05], timer.m);
-      shape(root, "box", "Start cabling and protective padding",
-        [side * 1.6, gateH + 0.82, 4.36],
-        [0.18, 1.52, 0.32], black);
+      for(const yy of [34,215]) {
+        ctx.fillStyle="#3b3834";ctx.fillRect(x+6,yy,3,3);
+      }
     }
-    shape(root, "box", "Start cabin overhead dark opening frame",
-      [0, gateH + 3.55, 4.35], [3.25, 0.45, 0.35], black);
-    const slab = this.mat("Starting runway blue ink", "#3e93b9", 0, 0.35);
-    for (const x of [-1.78, 1.78])
-      shape(root, "box", "Timing alignment strip",
-        [x, terrainHeight(x, gateZ, this.course) + 0.02, gateZ],
-        [0.055, 0.025, 1.0], slab);
+    const woodMap = new pc.Texture(this.app.graphicsDevice,{name:"Original competition timber grain albedo",mipmaps:true});
+    woodMap.setSource(c);
+    woodMap.addressU = woodMap.addressV = pc.ADDRESS_REPEAT;
+    woodMap.anisotropy = 4;
+    this.resources.push(woodMap);
+    timber.diffuseMap = woodMap;
+    timber.update();
+
+    // Wall quads combine into a single triangulated cladding mesh.
+    const p:number[]=[],uv:number[]=[],tri:number[]=[];
+    const quad=(a:number[],b:number[],d:number[],e:number[],repeatU=1,repeatV=1)=>{
+      const i=p.length/3;
+      p.push(...a,...b,...d,...e);
+      uv.push(0,0,repeatU,0,repeatU,repeatV,0,repeatV);
+      tri.push(i,i+1,i+2,i,i+2,i+3,
+        i,i+2,i+1,i,i+3,i+2);
+    };
+    // Sides and back CLOSED; front stays open for a 2.2 m race corridor.
+    for(const side of [-1,1]) for(let z=-4.5;z<4.25;z+=1.75) {
+      const next=Math.min(4.25,z+1.75);
+      const x=side*2.48;
+      quad([x,h(x,z)-.12,z],[x,h(x,next)-.12,next],
+        [x,h(x,next)+2.95,next],[x,h(x,z)+2.95,z],1.4,3.2);
+    }
+    for(let x=-2.48;x<2.48;x+=.62) {
+      const next=Math.min(2.48,x+.62), z=-4.50;
+      quad([x,h(x,z)-.15,z],[next,h(next,z)-.15,z],
+        [next,h(next,z)+2.95,z],[x,h(x,z)+2.95,z],.6,3.3);
+    }
+    const walls=meshEntity(this.app.graphicsDevice,root,"Closed start cabin textured timber wall",p,tri,timber,undefined,uv);
+    walls.render!.castShadows=this.quality!=="low";
+
+    // Sloped, double-pitched roof: actual mesh triangles, not two large boxes.
+    const roofP:number[]=[],roofUV:number[]=[],roofT:number[]=[];
+    for(let i=0;i<=10;i++) {
+      const z=-5.05+i*.99;
+      const base=h(0,z);
+      for(const x of [-2.92,0,2.92]) {
+        roofP.push(x,base+(x===0?3.96:3.13),z);
+        roofUV.push((x+2.92)/2.1,i*.48);
+      }
+      if(i) for(let k=0;k<2;k++) {
+        const a=(i-1)*3+k,b=i*3+k;
+        roofT.push(a,b,a+1,b,b+1,a+1,
+          a,a+1,b,b,a+1,b+1);
+      }
+    }
+    const roof=meshEntity(this.app.graphicsDevice,root,"Angled timber and snow start house roof",
+      roofP,roofT,this.snow,undefined,roofUV);
+    roof.render!.castShadows=this.quality!=="low";
+    for(const side of [-1,1]) for(let z=-4.92;z<=4.85;z+=2.45) {
+      const y=h(0,z)+3.12;
+      beam(root,new pc.Vec3(side*2.88,y,z),new pc.Vec3(side*2.88,y-.15,z+.12),
+        .055,roofMetal,"Metal standing seam roof");
+    }
+
+    // Genuine narrow launch bay; front columns and buffer pads flank the skis.
+    const zFront=4.28;
+    for(const side of [-1,1]) {
+      const x=side*1.21,ground=h(x,zFront);
+      shape(root,"cylinder","Cylindrical padded launch jamb",
+        [x,ground+1.25,zFront],[.23,2.5,.23],rubber);
+      shape(root,"cylinder","Start timber facade post",
+        [side*2.5,h(side*2.5,zFront)+1.5,zFront],[.14,3.0,.14],steel);
+      shape(root,"box","Slim front sponsor panel",
+        [side*1.92,h(side*1.92,zFront)+1.84,zFront+.10],[1.20,2.17,.055],fabric);
+      shape(root,"box","Front lower foam cushion",
+        [side*1.52,h(side*1.52,zFront)+.5,zFront+.20],[.18,.82,.30],rubber);
+      for(let z=-4.3;z<=3.5;z+=1.3) {
+        const xOuter=side*2.48;
+        shape(root,"cylinder","Cabin corner aluminum rivet",
+          [xOuter-side*.012,h(xOuter,z)+2.45,z],[.035,.04,.035],steel);
+      }
+      beam(root,new pc.Vec3(side*2.45,h(side*2.45,-4.2)+2.96,-4.2),
+        new pc.Vec3(side*.35,h(0,-4.2)+3.9,-4.2),.07,steel,
+        "Triangulated roof bearing beam");
+      // Side signage is original and sits over the wooden structural wall.
+      const plate=this.sign(side<0?"ALPINE  /  RACE":"SPEED  /  SERIES",3.9,.54,"#233f59");
+      const signEntity=shape(root,"box","Non-branded side sponsor sign",
+        [side*2.51,h(side*2.51,0)+2.05,0],[.055,.55,3.90],plate.m);
+      signEntity.render!.castShadows=false;
+    }
+    const top=this.sign("ALPINE SKI PRO   •   SUPER-G",4.75,.54,"#18364f");
+    shape(root,"box","Competition race front fascia",
+      [0,h(0,zFront)+3.06,zFront+.11],[4.76,.57,.12],top.m);
+    shape(root,"box","Protected start marshal timing equipment",
+      [-1.89,h(-1.89,3.70)+1.0,3.70],[.30,.40,.30],rubber);
+    const ready=this.sign("READY   /   00",1.0,.36,"#152d38");
+    shape(root,"box","Race start electronic timer",
+      [-1.87,h(-1.87,3.7)+1.27,4.1],[1.0,.34,.06],ready.m);
+    shape(root,"sphere","Tiny countdown status lamp",
+      [-1.55,h(-1.55,3.7)+1.62,4.05],[.08,.08,.07],signal);
+
+    // Two deep, compacted grooves aligned with the real ski base surfaces.
+    const scuff=this.mat("Compacted launch ski grooves", "#9bafba",0,.12);
+    const grooveP:number[]=[],grooveT:number[]=[];
+    for(const side of [-1,1]) for(let i=0;i<30;i++) {
+      const z=-3.55+i*.44,x=side*.16;
+      const y=h(x,z)+.018+(i%5)*.001;
+      const index=grooveP.length/3;
+      grooveP.push(x-.043,y,z,x+.043,y,z,x-.043,y,z+.41,x+.043,y,z+.41);
+      grooveT.push(index,index+2,index+1,index+1,index+2,index+3);
+    }
+    const marks=meshEntity(this.app.graphicsDevice,root,
+      "Two compacted ski launch tracks",grooveP,grooveT,scuff);
+    marks.render!.castShadows=false;
+    // Single FIS-dimensioned wand with exposed hinge, switch, and cable.
+    const gate=ALPINE_START_GATE;
+    const supportX=gate.postX,supportY=h(supportX,gate.z)+gate.height;
+    shape(root,"cylinder","Start gate protected steel mounting post",
+      [supportX,supportY*.5,gate.z],[.068,2*supportY-.09,.068],steel);
+    const hinge=new pc.Entity("FIS single start wand hinge");
+    hinge.setLocalPosition(supportX,supportY,gate.z);
+    root.addChild(hinge);
+    this.startWands.push(hinge);
+    shape(hinge,"cylinder","Compact mechanical timing pivot",
+      [0,0,0],[.125,.135,.125],rubber);
+    shape(hinge,"cylinder","One low athlete-contact timing bar",
+      [-gate.wandLength*.5,0,0],[.035,gate.wandLength,.035],steel)
+      .setLocalEulerAngles(0,0,90);
+    shape(hinge,"sphere","Sealed rounded timing bar end",
+      [-gate.wandLength,0,0],[.065,.045,.045],rubber);
+    shape(root,"box","Sealed start microswitch housing",
+      [supportX+.14,supportY+.08,gate.z],[.24,.17,.24],rubber);
+    beam(root,new pc.Vec3(supportX+.15,supportY+.04,gate.z-.1),
+      new pc.Vec3(supportX+.27,h(supportX,gate.z)+.06,gate.z-.5),
+      .015,rubber,"Covered timing cable");
+    this.startWands[0].setLocalEulerAngles(0,0,0);
   }
 
-  /** Smoothly open hinged chronometric wands after the launch. */
-  updateStartWands(_startPush = 0, positionZ = 3,
-    raceStarted = false, dt = 1 / 60) {
-    if (!this.startWands.length) return;
-    // Contact-driven: the mechanism bends when the racer passes z=4.05,
-    // not instantly when GO appears during the double-pole push.
-    const opening = raceStarted
-      ? Math.max(0, Math.min(1, (positionZ - 3.1) / 1.7)) : 0;
-    const blend = 1 - Math.exp(-Math.min(0.1, Math.max(0, dt)) * 14);
-    this.startWands.forEach((wand, i) => {
-      const target = (i === 0 ? 1 : -1) * opening * 76;
-      const current = wand.getLocalEulerAngles().y;
-      wand.setLocalEulerAngles(0, current + (target - current) * blend, 0);
-    });
+  /** The mechanical single wand opens on shin contact and stays open until
+   * the next launch. The trigger time is resolved independently at 120 Hz. */
+  updateStartWands(gateAngle = 0, dt = 1/60) {
+    const hinge=this.startWands[0];
+    if(!hinge) return;
+    const target=Math.max(0,Math.min(ALPINE_START_GATE.maximumAngle,gateAngle));
+    const previous=hinge.getLocalEulerAngles().y;
+    // Fast opening when pushed, slower positioning when a new run is reset.
+    const response=target>previous?35:8;
+    const blend=1-Math.exp(-Math.max(0,Math.min(dt,.1))*response);
+    hinge.setLocalEulerAngles(0,previous+(target-previous)*blend,0);
   }
 
   /** Blue terrain marks on the approach to the five speed crests.
