@@ -23,12 +23,12 @@ La liste d'outils est une **boîte à outils**, pas une obligation de tout insta
 
 **INTÉGRÉ / VÉRIFIÉ**
 
-- **PlayCanvas Engine 2.24.1**, moteur de rendu principal (déclaré dans \`package.json\`).
+- **PlayCanvas Engine 2.24.1**, moteur de rendu principal (déclaré dans `package.json`).
 - **TypeScript 5.9**, JavaScript, **Vite 8**, Node.js/npm : code et chaîne de build.
 - **Physique personnalisée du ski à 120 Hz** : gravité, dérapage, charge sur les carres, carving, sauts, réceptions et filet de sécurité.
 - **WebGL 2** : chemin de rendu utilisé par les tests Chromium.
-- **Ammo.js / Bullet WASM** : chargeur optionnel et capteurs/collisions de portes dans \`src/render/ammo-physics.ts\`. Le chargeur a un fallback et peut échouer côté navigateur ; **ne pas annoncer une physique Bullet complète ni une disponibilité garantie sans mesure d'exécution**.
-- **WebGPU** : voie de création graphique conditionnelle avec vérification de l'adaptateur et retour vers WebGL 2, dans \`src/render/engine.ts\` ; résultats GPU matériels à confirmer.
+- **Ammo.js / Bullet WASM** : chargeur optionnel et capteurs/collisions de portes dans `src/render/ammo-physics.ts`. Le chargeur a un fallback et peut échouer côté navigateur ; **ne pas annoncer une physique Bullet complète ni une disponibilité garantie sans mesure d'exécution**.
+- **WebGPU** : voie de création graphique conditionnelle avec vérification de l'adaptateur et retour vers WebGL 2, dans `src/render/engine.ts` ; résultats GPU matériels à confirmer.
 
 **CATALOGUE / OPTION** : Rapier 3D Physics (moteur distinct de l'application ChatGPT « Rapier »), Three.js, Babylon.js, Unity, Unreal Engine, Godot. Ces solutions **ne remplacent pas** PlayCanvas dans le projet.
 
@@ -36,9 +36,9 @@ La liste d'outils est une **boîte à outils**, pas une obligation de tout insta
 
 **PLUGIN PRIVÉ CONFIRMÉ** par Plugin Creator le 17/11/2026 :
 
-- Identifiant : \`plugins_6afc86ee0178819193be642c81878ee0\`
-- Nom : \`blender-mcp-alpine-ski\`, version \`0.2.0\`, portée personnelle \`USER\`, visibilité \`PRIVATE\`.
-- Configuration locale : \`mcp.json\`, \`.mcp.json\` ; compétences \`skills/blender-game-assets/SKILL.md\` et \`skills/studio-3d-toolchain/SKILL.md\` ; références pour qualité Super-G et catalogue d'environ 38 outils.
+- Identifiant : `plugins_6afc86ee0178819193be642c81878ee0`
+- Nom : `blender-mcp-alpine-ski`, version `0.2.0`, portée personnelle `USER`, visibilité `PRIVATE`.
+- Configuration locale : `mcp.json`, `.mcp.json` ; compétences `skills/blender-game-assets/SKILL.md` et `skills/studio-3d-toolchain/SKILL.md` ; références pour qualité Super-G et catalogue d'environ 38 outils.
 - Rôle : consignes de modélisation, rigging, animations, PBR, validation GLB/glTF et intégration PlayCanvas.
 - **Non vérifié :** connexion effective à l'application Blender sur un ordinateur, installation des dépendances locales et capacité de pilotage de cette instance par ce ChatGPT. Des fichiers MCP ne suffisent pas à garantir une session ouverte.
 
@@ -62,8 +62,8 @@ Usages ciblés : corps humain avec topologie continue, combinaison et casque, ch
 
 **INTÉGRÉ / VÉRIFIÉ, état V1.13 :**
 
-- **Coureur monobloc à 25 os intégré** : 9 clips glTF fournis, corps continu, retarget du contrôle procédural et rotation d'axe \`-Z\` → \`+Z\`.
-- Modèle \`public/assets/racer/seamless-full.glb\` (**17 259 488 octets**) et \`seamless-mobile.glb\` (**5 539 148 octets**) ; leur provenance et les empreintes SHA-256 figurent dans \`docs/ASSETS.md\`.
+- **Coureur monobloc à 25 os intégré** : 9 clips glTF fournis, corps continu, retarget du contrôle procédural et rotation d'axe `-Z` → `+Z`.
+- Modèle `public/assets/racer/seamless-full.glb` (**17 259 488 octets**) et `seamless-mobile.glb` (**5 539 148 octets**) ; leur provenance et les empreintes SHA-256 figurent dans `docs/ASSETS.md`.
 - Skis de compétition de **212 cm**, chaussures et fixations liés aux pieds. Départ avec poussées, positions sur les carres, saut/réception et arrivée pilotés par le jeu.
 - Ancien skieur **18 os** conservé comme fallback et fantôme ; il ne doit plus être présenté comme le seul personnage actif.
 - Animations **procédurales et originales, pas de motion capture professionnelle** ; les mouvements et les articulations restent à affiner.
@@ -72,7 +72,7 @@ Usages ciblés : corps humain avec topologie continue, combinaison et casque, ch
 
 ## 6. Textures, matériaux et habillage
 
-**INTÉGRÉ / VÉRIFIÉ** : PBR, cartes albédo/diffuse, normales, rugosité et occlusion ambiante, combinaison de ski, neige damée, roches/granite et équipements. Les matériaux/UV existants sont documentés dans \`docs/ASSETS.md\` et \`docs/STUDIO_KIT_2026.md\`.
+**INTÉGRÉ / VÉRIFIÉ** : PBR, cartes albédo/diffuse, normales, rugosité et occlusion ambiante, combinaison de ski, neige damée, roches/granite et équipements. Les matériaux/UV existants sont documentés dans `docs/ASSETS.md` et `docs/STUDIO_KIT_2026.md`.
 
 **CATALOGUE / OPTION** : Adobe Substance 3D Painter/Designer, Mari, Material Maker, ArmorPaint, Krita, GIMP. Pas d'installation implicite. Les marques et logos réels nécessitent les droits correspondants.
 
@@ -90,13 +90,13 @@ Usages ciblés : corps humain avec topologie continue, combinaison et casque, ch
 
 **CATALOGUE / OPTION** : ambientCG, Kenney, Quaternius, PureRef, Sketchfab, Poly Haven API, ambientCG API.
 
-La présence d'un asset sur un catalogue ou l'étiquette « gratuit » n'autorise **jamais** à recopier sans vérifier licence, attribution, marques, redistribution, animation et contraintes d'hébergement. Toute ressource importée doit être traçable dans \`docs/ASSETS.md\`.
+La présence d'un asset sur un catalogue ou l'étiquette « gratuit » n'autorise **jamais** à recopier sans vérifier licence, attribution, marques, redistribution, animation et contraintes d'hébergement. Toute ressource importée doit être traçable dans `docs/ASSETS.md`.
 
 ## 9. Programmation, tests et publication
 
 **INTÉGRÉ / VÉRIFIÉ** : GitHub, GitHub Actions, GitHub Pages, Git, Node.js/npm, TypeScript, Vite, Vitest, Playwright/Chromium, Prettier, build et tests des assets.
 
-Documents existants : \`AGENTS.md\`, \`README.md\`, \`docs/STATUS.md\`, \`docs/ROADMAP.md\`, \`docs/ASSETS.md\`, \`docs/RESOURCE_CATALOG.md\`, \`docs/ASSET_WORKFLOW.md\`.
+Documents existants : `AGENTS.md`, `README.md`, `docs/STATUS.md`, `docs/ROADMAP.md`, `docs/ASSETS.md`, `docs/RESOURCE_CATALOG.md`, `docs/ASSET_WORKFLOW.md`.
 
 **Dernier contrôle rapporté au 17/11/2026** : workflow de V1.13 terminé avec succès. Le résultat ne garantit pas la fluidité d'un GPU réel ; Chromium logiciel ne remplace pas une session de test joueur.
 
@@ -118,7 +118,7 @@ Documents existants : \`AGENTS.md\`, \`README.md\`, \`docs/STATUS.md\`, \`docs/R
 
 ## 12. Commandes de développement
 
-\`\`\`bash
+```bash
 npm ci
 npm run dev
 npm run build
@@ -134,9 +134,9 @@ npm run studio:doctor
 npm run studio:inspect
 npm run studio:verify
 npm run studio:optimize
-\`\`\`
+```
 
-Ces commandes sont déclarées dans \`package.json\`. Certaines requièrent des logiciels locaux ou une connectivité externes ; leur existence ne signifie pas que toutes ont été exécutées ou que toutes leurs dépendances sont disponibles.
+Ces commandes sont déclarées dans `package.json`. Certaines requièrent des logiciels locaux ou une connectivité externes ; leur existence ne signifie pas que toutes ont été exécutées ou que toutes leurs dépendances sont disponibles.
 
 ## 13. Instructions de développement — priorité permanente
 
@@ -147,6 +147,6 @@ Ces commandes sont déclarées dans \`package.json\`. Certaines requièrent des 
 5. **Vérifier avant adoption** les formats GLB, joints, rotations/axes, animations, skinning, UV, textures, licences et coûts GPU.
 6. **Ne pas copier** code ni modèles propriétaires de CarveMania. Les références servent à analyser des caractéristiques générales du ski, pas à extraire des ressources protégées.
 7. **Avant publication** : tests unitaires, build TypeScript/Vite, tests navigateur, inspection des erreurs et conservation du fallback 18 os. Documenter ce qui est réellement mesuré et ce qui reste à vérifier.
-8. Mettre à jour \`docs/STATUS.md\`, \`docs/ASSETS.md\` et la feuille de route après les évolutions significatives. **Ne jamais confondre disponibilité d'un plugin, installation locale et connexion effective.**
+8. Mettre à jour `docs/STATUS.md`, `docs/ASSETS.md` et la feuille de route après les évolutions significatives. **Ne jamais confondre disponibilité d'un plugin, installation locale et connexion effective.**
 
-Voir aussi : \`docs/RESOURCE_CATALOG.md\`, \`docs/ASSET_WORKFLOW.md\`, \`docs/STUDIO_KIT_2026.md\` et \`docs/ASSETS.md\`.
+Voir aussi : `docs/RESOURCE_CATALOG.md`, `docs/ASSET_WORKFLOW.md`, `docs/STUDIO_KIT_2026.md` et `docs/ASSETS.md`.
