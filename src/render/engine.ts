@@ -227,7 +227,19 @@ export class Renderer {
       if (!this.smoothedLook) this.smoothedLook = look.clone();
       else this.smoothedLook.lerp(this.smoothedLook, look, focusBlend);
     }
-    // Preserve an unshaken position for smoothing next frame.
+    // The pre-interpolation eye clamp above is not enough on SG crests:
+    // smoothing can carry the camera THROUGH a fast rising relief, exposing
+    // the blue clear background below the piste (visible in V1.8 screenshots).
+    // Reapply contact clearance after smoothing, before camera shake.
+    if (this.course.id === "SG" && this.cameraMode !== 2 && !this.menu) {
+      const pos = this.camera.getPosition().clone();
+      const floor = terrainHeight(pos.x, pos.z, this.course) + 1.9;
+      if (pos.y < floor) {
+        pos.y = floor;
+        this.camera.setPosition(pos);
+      }
+    }
+    // Preserve the corrected, unshaken position for the next chase frame.
     this.cleanCameraPos = this.camera.getPosition().clone();
     this.camera.lookAt(this.smoothedLook!);
     if (!this.menu && active) {
