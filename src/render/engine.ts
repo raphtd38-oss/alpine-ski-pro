@@ -29,6 +29,9 @@ export class Renderer {
   ghost!: Athlete;
   effects!: SnowEffects;
   asset!: pc.Asset;
+  /** Original baseline retained for graceful fallback when candidate is absent. */
+  monoblocAsset: pc.Asset | null = null;
+  monoblocError: string | null = null;
   course!: Course;
   cameraMode = 0;
   cameraReady = false;
@@ -92,6 +95,33 @@ export class Renderer {
       this.app.assets.add(this.asset);
       this.app.assets.load(this.asset);
     });
+    // A missing or invalid optional GLB must never block a race or browser boot.
+    // When the file is deployed, enable the authentic 25-bone athlete by default.
+    const candidate = new pc.Asset("Original seamless 25-bone Super-G racer", "container", {
+      url: import.meta.env.BASE_URL + "assets/asp-superg-monobloc-mobile.glb",
+    });
+    try {
+      const response = await fetch(candidate.file!.url!, { method: "HEAD" });
+      if (!response.ok) throw new Error("25-bone asset not published yet");
+      await new Promise<void>((resolve, reject) => {
+        candidate.ready(() => resolve());
+        candidate.once("error", reject);
+        this.app.assets.add(candidate);
+        this.app.assets.load(candidate);
+      });
+      const visual = (candidate.resource as pc.ContainerResource).instantiateRenderEntity();
+      if (!visual.findByName("ONE seamless fused skinned athlete body") ||
+          !visual.findByName("LeftUpLeg") || !visual.findByName("RightForeArm") ||
+          !visual.findByName("LeftFoot") || !visual.findByName("RightFoot")) {
+        visual.destroy();
+        throw new Error("25-bone GLB missing expected joints / body");
+      }
+      visual.destroy();
+      this.monoblocAsset = candidate;
+    } catch (error) {
+      this.monoblocError = String(error);
+      console.warn("[Alpine Ski Pro] Using original racer fallback:", this.monoblocError);
+    }
     this.alpineAssets = new AlpineAssets(this.app);
     await this.alpineAssets.load();
   }
@@ -128,7 +158,7 @@ export class Renderer {
     this.sun.light!.intensity = weather === "clear" ? 1.7 : 0.8;
     this.world = new World(this.app, c, quality, this.alpineAssets);
     if (this.ammoEnabled) this.physics = new AmmoGateSensors(this.app, c);
-    this.athlete = new Athlete(this.app, this.asset, e);
+    this.athlete = new Athlete(this.app, this.monoblocAsset ?? this.asset, e);
     this.ghost = new Athlete(this.app, this.asset, e, true);
     this.ghost.root.enabled = false;
     this.effects = new SnowEffects(this.app, c, quality);
