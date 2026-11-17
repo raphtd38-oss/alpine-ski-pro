@@ -7,6 +7,8 @@ import { startDrivePhase, startDriveBlend, startPoleContact } from "../game/star
 export class Athlete {
   root = new pc.Entity("Skier");
   rig: pc.Entity;
+  /** 25-joint seamless athlete, not the legacy 18-joint render asset. */
+  monobloc = false;
   joints: Record<string, pc.GraphNode> = {};
   skis: pc.Entity[] = [];
   skiSurfaces: { mesh: pc.Mesh; base: number[] }[] = [];
@@ -35,6 +37,18 @@ export class Athlete {
       asset.resource as pc.ContainerResource
     ).instantiateRenderEntity();
     this.root.addChild(this.rig);
+    this.monobloc = !!this.rig.findByName("LeftUpLeg") &&
+      !!this.rig.findByName("RightForeArm") &&
+      !!this.rig.findByName("ONE seamless fused skinned athlete body");
+    // The supplied glTF skis point toward -Z. The original game advances +Z.
+    if (this.monobloc) this.rig.setLocalEulerAngles(0, 180, 0);
+    const boneAliases: Record<string, string> = this.monobloc ? {
+      Pelvis: "Hips", Spine: "Spine", Chest: "Chest", Neck: "Neck", Head: "Head",
+      LHip: "LeftUpLeg", LKnee: "LeftLeg", LAnkle: "LeftAnkle",
+      RHip: "RightUpLeg", RKnee: "RightLeg", RAnkle: "RightAnkle",
+      LShoulder: "LeftUpperArm", LElbow: "LeftForeArm", LWrist: "LeftHand",
+      RShoulder: "RightUpperArm", RElbow: "RightForeArm", RWrist: "RightHand",
+    } : {};
     for (const name of [
       "Pelvis",
       "Spine",
@@ -54,7 +68,7 @@ export class Athlete {
       "RElbow",
       "RWrist",
     ]) {
-      const n = this.rig.findByName(name);
+      const n = this.rig.findByName(boneAliases[name] ?? name);
       if (n) this.joints[name] = n;
     }
     this.material = material(
@@ -153,6 +167,9 @@ export class Athlete {
         mesh: surface.render!.meshInstances[0].mesh!,
         base: [...p],
       });
+      // Supplied race skis are already parented to LeftFoot / RightFoot.
+      // Preserve the procedurally simulated ski positions, but hide duplicate art.
+      if (this.monobloc) e.enabled = false;
       shape(
         e,
         "box",
@@ -227,7 +244,8 @@ export class Athlete {
     const trim = material("Helmet air vents and carbon buckles", "#122432", 0.4, 0.55);
     const highlight = material("Equipment safety highlight", "#aee5e1", 0.25, 0.6);
     this.ownedMaterials.push(visor, trim, highlight);
-    const head = this.rig.findByName("Head") as pc.Entity | null;
+    const head = !this.monobloc
+      ? this.rig.findByName("Head") as pc.Entity | null : null;
     if (head) {
       shape(head, "box", "Goggle lens highlight",
         [0, 0.031, 0.146], [0.19, 0.038, 0.015], visor);
@@ -239,7 +257,8 @@ export class Athlete {
       }
     }
     for (const side of ["L", "R"]) {
-      const ankle = this.rig.findByName(side + "Ankle") as pc.Entity | null;
+      const ankle = !this.monobloc
+        ? this.rig.findByName(side + "Ankle") as pc.Entity | null : null;
       if (!ankle) continue;
       for (const y of [-0.012, 0.052]) {
         shape(ankle, "box", "Racing boot micro buckle",
@@ -270,7 +289,8 @@ export class Athlete {
         if (
           mi.material?.name.startsWith("Race suit / alpine navy") ||
           mi.material?.name.startsWith("Race suit / alpine crimson") ||
-          mi.material?.name.startsWith("Race suit / ember")
+          mi.material?.name.startsWith("Race suit / ember") ||
+          (this.monobloc && /Original navy speed-suit Lycra|One-piece anatomically joined PBR speed suit/.test(mi.material?.name ?? ""))
         ) {
           const mat = mi.material.clone() as pc.StandardMaterial;
           this.ownedMaterials.push(mat);
@@ -351,7 +371,8 @@ export class Athlete {
     // The hips move inside the turn while the shoulders look downhill.
     // The outside leg is visibly longer and keeps the ski pressurized.
     const lean = edge * (0.19 + load * 0.065);
-    j.Pelvis?.setLocalPosition(lean + shake, 0.92 - crouch, -0.055 * f.tuck);
+    j.Pelvis?.setLocalPosition(lean + shake,
+      (this.monobloc ? 1.01 : 0.92) - crouch, -0.055 * f.tuck);
     // Professional race start: chest ahead of bindings, hips loaded,
     // alternating pole-drive phase. Airborne posture retracts legs.
     // Double-pole plant is synchronized with the fixed-step acceleration
@@ -443,8 +464,10 @@ export class Athlete {
         vertices[k + 1] -=
           (f.flex ?? 0) * 0.018 * (1 - t * t) * (1 + outside * 0.35);
       }
-      surf.mesh.setPositions(vertices);
-      surf.mesh.update();
+      if (!this.monobloc) {
+        surf.mesh.setPositions(vertices);
+        surf.mesh.update();
+      }
       this.skis[i].setLocalEulerAngles(
         outside * (f.skid ?? 0) * 3.5 + airborne * 4,
         outside * 1.5,
@@ -498,7 +521,8 @@ export class Athlete {
     const desiredFall = f.fallen > 0 ? 1 : 0;
     this.visualFall += (desiredFall - this.visualFall) *
       (1 - Math.exp(-Math.max(0, dt) * 10));
-    this.rig.setLocalEulerAngles(0, 0, this.visualFall * 76);
+    this.rig.setLocalEulerAngles(0, this.monobloc ? 180 : 0,
+      this.visualFall * 76);
     this.rig.setLocalPosition(0, this.visualFall * 0.15, 0);
   }
   destroy() {
