@@ -13,17 +13,17 @@ import {
 describe("V1.8 Super-G winding route, markers and FIS-inspired finish", () => {
   it("sweeps laterally across a real multi-sector mountainside", () => {
     expect(superGCenterX(0)).toBe(0);
-    expect(superGCenterX(1980)).toBe(0);
-    expect(superGCenterX(750)).toBeLessThan(-18);
-    expect(superGCenterX(1140)).toBeGreaterThan(17);
-    const xs = Array.from({ length: 199 }, (_, i) => superGCenterX(i * 10));
-    expect(Math.max(...xs) - Math.min(...xs)).toBeGreaterThan(45);
+    expect(superGCenterX(COURSES.SG.length)).toBe(0);
+    expect(superGCenterX(590)).toBeLessThan(-60);
+    expect(superGCenterX(970)).toBeGreaterThan(100);
+    const xs = Array.from({ length: 212 }, (_, i) => superGCenterX(i * 10));
+    expect(Math.max(...xs) - Math.min(...xs)).toBeGreaterThan(175);
     for (let i = 1; i < xs.length; i++)
-      expect(Math.abs(xs[i] - xs[i - 1])).toBeLessThan(7);
+      expect(Math.abs(xs[i] - xs[i - 1])).toBeLessThan(12);
     expect(SUPER_G_CENTRE_KNOTS.length).toBeGreaterThan(12);
-    expect(superGSector(350)).toBe("spruce");
-    expect(superGSector(700)).toBe("glacier");
-    expect(superGSector(1250)).toBe("canyon");
+    expect(superGSector(350)).toBe("glacier");
+    expect(superGSector(700)).toBe("canyon");
+    expect(superGSector(1250)).toBe("spruce");
     expect(superGSector(1800)).toBe("finish");
   });
 
@@ -48,9 +48,9 @@ describe("V1.8 Super-G winding route, markers and FIS-inspired finish", () => {
       expect(sampleSnowSurface(center, z, sg).depth).toBe(0);
       expect(sampleSnowSurface(center + sg.width / 2, z, sg).depth)
         .toBeGreaterThan(0.5);
-      const middle = terrainHeight(center, z, sg);
-      const highBank = terrainHeight(center + sg.width / 2 + 12, z, sg);
-      expect(highBank).toBeGreaterThan(middle + 3.7);
+      const slopeEdge = terrainHeight(center + sg.width / 2, z, sg);
+      const highBank = terrainHeight(center + sg.width / 2 + 24, z, sg);
+      expect(highBank).toBeGreaterThan(slopeEdge + 4);
     }
   });
 
@@ -76,16 +76,17 @@ describe("V1.8 Super-G winding route, markers and FIS-inspired finish", () => {
   });
 
   it("reaches downward and forward before the beam but not while falling", () => {
-    expect(finishReachAmount("SG", 1940, 1980, 35)).toBe(0);
-    expect(finishReachAmount("SG", 1971, 1980, 35)).toBeGreaterThan(0);
-    expect(finishReachAmount("SG", 1977, 1980, 35)).toBe(1);
-    expect(finishReachAmount("SG", 1977, 1980, 5)).toBe(0);
-    expect(finishReachAmount("GS", 1977, 1980, 35)).toBe(0);
-    expect(finishReachAmount("SG", 1977, 1980, 35, 1)).toBe(0);
+    const end = COURSES.SG.length;
+    expect(finishReachAmount("SG", end - 40, end, 35)).toBe(0);
+    expect(finishReachAmount("SG", end - 9, end, 35)).toBeGreaterThan(0);
+    expect(finishReachAmount("SG", end - 3, end, 35)).toBe(1);
+    expect(finishReachAmount("SG", end - 3, end, 5)).toBe(0);
+    expect(finishReachAmount("GS", end - 3, end, 35)).toBe(0);
+    expect(finishReachAmount("SG", end - 3, end, 35, 1)).toBe(0);
     expect(lowHandLead(1)).toBeCloseTo(0.62);
-    expect(finishBeamFraction(1979.2, 1979.35, 0.62, 0.62, 1980))
+    expect(finishBeamFraction(COURSES.SG.length - 0.8, COURSES.SG.length - 0.65, 0.62, 0.62, COURSES.SG.length))
       .toBeNull();
-    expect(finishBeamFraction(1979.3, 1979.5, 0.62, 0.62, 1980))
+    expect(finishBeamFraction(COURSES.SG.length - 0.7, COURSES.SG.length - 0.5, 0.62, 0.62, COURSES.SG.length))
       .toBeCloseTo(0.4, 4);
   });
 

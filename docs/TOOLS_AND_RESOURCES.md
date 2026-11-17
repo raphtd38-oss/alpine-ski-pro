@@ -1,6 +1,6 @@
 # 🎿 Alpine Ski Pro — inventaire des outils, plugins et ressources
 
-**Référence de développement : V1.13, Super-G uniquement · 17 novembre 2026**
+**Référence de développement : V1.14, Cortina 2026 Super-G uniquement · 17 novembre 2026**
 
 - Dépôt : https://github.com/raphtd38-oss/alpine-ski-pro
 - Jeu : https://raphtd38-oss.github.io/alpine-ski-pro/
@@ -110,11 +110,11 @@ Documents existants : `AGENTS.md`, `README.md`, `docs/STATUS.md`, `docs/ROADMAP.
 
 ## 11. Systèmes de jeu actifs et limitations
 
-**INTÉGRÉ / VÉRIFIÉ** : Super-G « Glacier Express » de **1 980 m / 34 portes**, piste 3D sinueuse, crêtes/sauts, forêts/rochers/chalets, neige PBR, skieur 25 os (avec fallback 18), skis Super-G, bâtons courbés, cabane et tige de départ, chronométrage simulé, carres, dérapage, météo, projections/traces, caméras, records locaux, entraînement, fantôme, replays, HUD et audio.
+**INTÉGRÉ / VÉRIFIÉ** : Super-G « Cortina Olympia delle Tofane » reconstitué de **2 105 m / 635 m / 34 portes jouables**, piste 3D sinueuse, crêtes/sauts, forêts/rochers/chalets, neige PBR, skieur 25 os (avec fallback 18), skis Super-G, bâtons courbés, cabane et tige de départ, chronométrage simulé, carres, dérapage, météo, projections/traces, caméras, records locaux, entraînement, fantôme, replays, HUD et audio.
 
 **À TESTER / À DÉVELOPPER** : fiabilité réelle Ammo.js dans les différents navigateurs, ragdoll, motion capture de coureurs, IK/contact ski-neige avancés, déformation physique de la neige, benchmarks PC et mobile. Aucune homologation FIS ni performance AAA n'est revendiquée.
 
-**Hors périmètre** : Slalom (SL), Géant (GS), Descente (DH) — supprimés depuis V1.12 à la demande du propriétaire.
+**Hors périmètre** : ancien tracé « Glacier Express » ainsi que Slalom (SL), Géant (GS), Descente (DH) — supprimés depuis V1.12 à la demande du propriétaire.
 
 ## 12. Commandes de développement
 

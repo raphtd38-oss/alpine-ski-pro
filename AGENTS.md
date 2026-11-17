@@ -2,11 +2,11 @@
 
 ## Périmètre actif depuis V1.12
 
-**SUPER-G UNIQUEMENT** : le propriétaire a demandé explicitement de supprimer SL, GS et DH. Ne pas restaurer les trois disciplines ni les menus associés sans nouvelle demande. Conserver la course SG 1 980 m, le chronométrage FIS-inspiré, le skieur, les records et replays SG, le moteur 120 Hz et la chaîne Studio Kit. Les anciennes descriptions de quatre disciplines dans les archives documentaires sont historiques, pas des exigences actives. Les anciens screenshots sont dans l'historique Git, pas dans l'arbre courant.
+**SUPER-G UNIQUEMENT** : le propriétaire a demandé explicitement de supprimer SL, GS et DH. Ne pas restaurer les trois disciplines ni les menus associés sans nouvelle demande. Conserver la course SG Cortina 2026 de 2 105 m / 635 m (reconstitution schématique, 34 portes jouables), le chronométrage FIS-inspiré, le skieur, les records et replays SG, le moteur 120 Hz et la chaîne Studio Kit. Les anciennes descriptions de quatre disciplines dans les archives documentaires sont historiques, pas des exigences actives. Les anciens screenshots sont dans l'historique Git, pas dans l'arbre courant.
 
 ## Inventaire de production et critères de choix des outils
 
-Lire **[docs/TOOLS_AND_RESOURCES.md](docs/TOOLS_AND_RESOURCES.md)** avant de rechercher ou brancher des moteurs, logiciels, plugins, rigs, textures ou sons. Ce document reprend l'inventaire transmis par le propriétaire et le confronte à l'état vérifié de **V1.13**.
+Lire **[docs/TOOLS_AND_RESOURCES.md](docs/TOOLS_AND_RESOURCES.md)** avant de rechercher ou brancher des moteurs, logiciels, plugins, rigs, textures ou sons. Ce document reprend l'inventaire transmis par le propriétaire et le confronte à l'état vérifié de **V1.13** ; la **V1.14** remplace Glacier Express par Cortina 2026.
 
 - **Le skieur monobloc 25 os est désormais intégré dans le jeu** (`public/assets/racer/seamless-full.glb` et `seamless-mobile.glb`). L'ancien rig 18 os reste le fallback/fantôme : ne pas écraser ce progrès avec la version archivée V1.12.
 - **Blender MCP – Alpine Ski Pro** : plugin privé personnel `plugins_6afc86ee0178819193be642c81878ee0`, version 0.2.0 confirmée ; **l'exécution d'une instance Blender locale n'est pas vérifiée**.
@@ -17,7 +17,7 @@ Lire **[docs/TOOLS_AND_RESOURCES.md](docs/TOOLS_AND_RESOURCES.md)** avant de rec
 
 ## Objectif et continuité
 
-Construire progressivement un vrai simulateur de ski navigateur, sans installation chez le joueur. Préserver PlayCanvas + TypeScript + Vite et les fonctionnalités existantes. Lire README.md, docs/STATUS.md et docs/ROADMAP.md avant de modifier le jeu. Ne pas repartir de zéro.
+Construire progressivement un vrai simulateur de ski navigateur, sans installation chez le joueur. Préserver PlayCanvas + TypeScript + Vite et les fonctionnalités existantes. Lire README.md, docs/STATUS.md, docs/CORTINA_2026.md et docs/ROADMAP.md avant de modifier le jeu. Ne pas repartir de zéro.
 
 ## Travail
 

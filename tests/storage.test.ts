@@ -39,6 +39,24 @@ it("recovers from malformed saved data without preventing a later valid save", (
   expect(p.available).toBe(true);
   expect(new Progress().data.completed).toBe(1);
 });
+it("retains Glacier Express careers without importing an incompatible Cortina ghost", () => {
+  map.set("alpine-ski-pro:v1", JSON.stringify({
+    version: 1, name: "Racer", xp: 820, completed: 4,
+    records: { SG: [result(44)] },
+    ghosts: { SG: { time: 44, frames: [] } },
+  }));
+  const first = new Progress();
+  expect(first.data.name).toBe("Racer");
+  expect(first.data.xp).toBe(820);
+  expect(first.data.completed).toBe(4);
+  expect(first.data.records.SG ?? []).toEqual([]);
+  expect(first.data.ghosts.SG).toBeUndefined();
+  first.record(result(78), []);
+  expect(new Progress().data.records.SG?.map(r => r.time)).toEqual([78]);
+  // The old course's localStorage entry is never overwritten.
+  expect(JSON.parse(map.get("alpine-ski-pro:v1")!).ghosts.SG.time).toBe(44);
+});
+
 it("rejects malformed graphics preferences and persists supported choices", () => {
   map.set(
     "alpine-ski-pro:settings:v1",
