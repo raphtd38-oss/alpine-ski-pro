@@ -705,7 +705,7 @@ export class World {
     const gate=ALPINE_START_GATE;
     const supportX=gate.postX,supportY=h(supportX,gate.z)+gate.height;
     shape(root,"cylinder","Start gate protected steel mounting post",
-      [supportX,supportY*.5,gate.z],[.068,2*supportY-.09,.068],steel);
+      [supportX,h(supportX,gate.z)+gate.height*.5,gate.z],[.068,gate.height,.068],steel);
     const hinge=new pc.Entity("FIS single start wand hinge");
     hinge.setLocalPosition(supportX,supportY,gate.z);
     root.addChild(hinge);
