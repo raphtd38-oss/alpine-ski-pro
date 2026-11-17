@@ -8,7 +8,8 @@ import { snowTexel } from "./snow-texture";
 import { graniteTexel } from "./studio-rock-texel";
 import { gatePoleCanvas, gateBannerCanvas } from "./gate-textures";
 import { gateFlagFlutter } from "../game/gates-visual";
-import { tipVibration, type PoleState } from "../game/poles";
+import type { PoleState } from "../game/poles";
+import { FlexiblePoleMesh } from "./flexible-pole";
 import { SUPER_G_ROLLERS, superGSector } from "../game/superg";
 import { ALPINE_START_GATE } from "../game/start-gate";
 import { addCortinaScenery } from "./cortina-scenery";
@@ -17,6 +18,9 @@ import { material, meshEntity, shape, beam, rng, color } from "./geometry";
 export class World {
   root = new pc.Entity("Alpine world");
   gateEntities: pc.Entity[] = [];
+  /** Order follows PoleSimulation: 2 raced shafts and 2 partners per gate. */
+  flexPoleMeshes: FlexiblePoleMesh[] = [];
+  partnerPoleMeshes: FlexiblePoleMesh[] = [];
   startArch: pc.Entity | null = null;
   startWands: pc.Entity[] = [];
   startBooth: pc.Entity | null = null;
@@ -526,25 +530,21 @@ export class World {
         const pivot = new pc.Entity("Pole hinge");
         pivot.setLocalPosition(x, h, g.z);
         parent.addChild(pivot);
-        // Two aligned sections preserve the V1.4 gate meshes while making
-        // fiberglass flex visible along the shaft, not only at the hinge.
-        const pole = shape(
-          pivot,
-          "cylinder",
-          "Flexible slalom pole",
-          [0, 0.64, 0],
-          [0.035, 1.28, 0.035],
-          m,
+        // Supplied flexible-pole pack: real 12-20 ring bending mesh.
+        // Existing collision position, gate position and 120 Hz physics stay.
+        const shaft = new FlexiblePoleMesh(
+          this.app.graphicsDevice, pivot, m, this.quality !== "low",
         );
-        pole.tags.add("pole");
+        this.flexPoleMeshes.push(shaft);
+        const boot = shape(pivot, "cylinder", "Rubber flex joint",
+          [0, 0.095, 0], [0.085, 0.19, 0.085], this.dark);
+        boot.render!.castShadows = false;
         const tip = new pc.Entity("Pole elastic upper section");
-        tip.setLocalPosition(0, 1.28, 0);
+        tip.setLocalPosition(0, 1.98, 0);
         pivot.addChild(tip);
-        const tipShaft = shape(
-          tip, "cylinder", "Fiberglass flexing pole tip",
-          [0, 0.36, 0], [0.033, 0.72, 0.033], m,
-        );
-        tipShaft.render!.castShadows = this.quality !== "low";
+        const tipCap = shape(tip, "sphere", "Fibreglass protective end cap",
+          [0, 0, 0], [0.046, 0.048, 0.046], m);
+        tipCap.render!.castShadows = false;
         // SL retains its real-world flexible bare poles. GS/SG/DH get short
         // textured fabric panels tethered to their spring hinges; the cloth
         // moves with a hit rather than remaining frozen in world space.
@@ -552,12 +552,13 @@ export class World {
           // A speed-race gate is two separate pole pairs (4 poles total).
           // Each 0.75 x 0.50 m textile panel spans its own pair, outside
           // the ski crossing corridor; FIS-style, not FIS-homologated.
-          const partner = shape(
-            pivot, "cylinder", "Second pole of flag pair",
-            [side * 0.80, 0.94, -0.08],
-            [0.034, 1.88, 0.034], m,
+          const partner = new pc.Entity("Second pole of flag pair");
+          partner.setLocalPosition(side * 0.80, 0, -0.08);
+          pivot.addChild(partner);
+          const partnerShaft = new FlexiblePoleMesh(
+            this.app.graphicsDevice, partner, m, this.quality !== "low",
           );
-          partner.render!.castShadows = this.quality !== "low";
+          this.partnerPoleMeshes.push(partnerShaft);
           // Two small straps per shaft; one flag still spans each pole pair.
           for (const offset of [0, side * 0.80])
             for (const y of [1.23, 1.68]) {
@@ -1396,23 +1397,26 @@ export class World {
       hinges.forEach((hinge, j) => {
         const p = poles[i * 2 + j];
         if (p) {
+          // Mesh deforms over its full length; the pole pair/flag assembly
+          // receives only a subtle hinge response to avoid rigid rotation.
           hinge.setLocalEulerAngles(
-            (p.angleX * 180) / Math.PI,
+            (p.angleX * 180 / Math.PI) * 0.10,
             0,
-            (p.angleZ * 180) / Math.PI,
+            (p.angleZ * 180 / Math.PI) * 0.10,
           );
-          // A faster, lighter top section recoils after the lower hinge.
-          // No per-frame mesh allocations and only one extra primitive per pole.
-          const elasticTip = hinge.children.find(
+          const elasticShaft = this.flexPoleMeshes[i * 2 + j];
+          const capPoint = elasticShaft?.bend(
+            p.angleX * 0.84, p.angleZ * 0.84, p.tipAmp, p.tipPhase,
+          );
+          this.partnerPoleMeshes[i * 2 + j]?.bend(
+            p.angleX * 0.34, p.angleZ * 0.34,
+            p.tipAmp * 0.42, p.tipPhase + 0.35,
+          );
+          const cap = hinge.children.find(
             (e) => e.name === "Pole elastic upper section",
           );
-          if (elasticTip) elasticTip.setLocalEulerAngles(
-            ((p.angleX * 0.24 + p.omegaX * 0.022 +
-              tipVibration(p) * 0.65) * 180) / Math.PI,
-            0,
-            ((p.angleZ * 0.24 + p.omegaZ * 0.022 +
-              tipVibration(p) * 0.35) * 180) / Math.PI,
-          );
+          if (cap && capPoint) cap.setLocalPosition(...capPoint);
+          // Tip is placed on the curved shaft end above.
           const cloth = hinge.children.find((e) => e.name === "Gate textile flag");
           if (cloth)
             cloth.setLocalEulerAngles(
