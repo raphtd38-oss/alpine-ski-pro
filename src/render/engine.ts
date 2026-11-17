@@ -214,7 +214,13 @@ export class Renderer {
     eye.y = Math.max(eye.y, terrainHeight(eye.x, eye.z, this.course) + 0.7);
     // Smooth both camera position and focal target. A moving target without
     // focus damping looks jittery even when the skier's position is interpolated.
-    const snap = !this.cameraReady || this.cameraMode === 2;
+    // If a replay seeks or the training runner advances thousands of
+    // deterministic physics ticks at once, the camera must cut to the racer
+    // rather than smoothing across hundreds of metres for several seconds.
+    // In normal 60Hz gameplay the position delta is only a few centimetres.
+    const current = this.cleanCameraPos ?? this.camera.getPosition();
+    const snap = !this.cameraReady || this.cameraMode === 2 ||
+      (!this.menu && current.distance(eye) > 38);
     if (snap) {
       this.camera.setPosition(eye);
       this.smoothedLook = look.clone();
