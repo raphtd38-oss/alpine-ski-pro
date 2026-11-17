@@ -4,9 +4,9 @@ import { COURSES } from "../src/game/course";
 import { initialState } from "../src/game/physics";
 import { Race } from "../src/game/race";
 it("swept impact deflects the hinge, exchanges momentum and does not invalidate a legal ski crossing", () => {
-  const course = { ...COURSES.SL, gates: [{ id: 0, x: 0, z: 10, width: 7 }] };
+  const course = { ...COURSES.SG, gates: [{ id: 0, x: 0, z: 10, width: 7 }] };
   const poles = new PoleSimulation(course),
-    race = new Race(course, "SL");
+    race = new Race(course, "SG");
   race.phase = "racing";
   const previous = { ...initialState(), x: 3.18, z: 9, vz: 18 },
     s = { ...previous, z: 11 };
@@ -23,7 +23,7 @@ it("swept impact deflects the hinge, exchanges momentum and does not invalidate 
   expect(poles.poles[1].impacts).toBe(1);
 });
 it("a skier away from a pole receives no collision impulse", () => {
-  const poles = new PoleSimulation(COURSES.SL),
+  const poles = new PoleSimulation(COURSES.SG),
     s = { ...initialState(), vz: 15 };
   poles.update(s, s, 1 / 120);
   expect(poles.lastImpacts).toBe(0);
