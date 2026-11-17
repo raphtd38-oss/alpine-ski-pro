@@ -1,4 +1,5 @@
 import * as pc from "playcanvas";
+import { loadAmmoPhysics, AmmoGateSensors } from "./ammo-physics";
 import { Athlete } from "./athlete";
 import { World, configureWeather } from "./world";
 import { AlpineAssets } from "./alpine-assets";
@@ -18,6 +19,8 @@ import { cameraShake, speedFov } from "../game/camera-rig";
 export const CAMERAS = ["Poursuite", "Rapprochée", "Subjective", "Télévision"];
 export class Renderer {
   app: pc.Application;
+  ammoEnabled = false;
+  physics: AmmoGateSensors | null = null;
   camera: pc.Entity;
   sun: pc.Entity;
   world!: World;
@@ -93,6 +96,8 @@ export class Renderer {
     await this.alpineAssets.load();
   }
   build(c: Course, e: Equipment, quality: Quality, weather: Weather, adaptive = true) {
+    this.physics?.destroy();
+    this.physics = null;
     this.world?.destroy();
     this.athlete?.destroy();
     this.ghost?.destroy();
@@ -122,6 +127,7 @@ export class Renderer {
     this.sun.light!.shadowResolution = this.baseShadowResolution;
     this.sun.light!.intensity = weather === "clear" ? 1.7 : 0.8;
     this.world = new World(this.app, c, quality, this.alpineAssets);
+    if (this.ammoEnabled) this.physics = new AmmoGateSensors(this.app, c);
     this.athlete = new Athlete(this.app, this.asset, e);
     this.ghost = new Athlete(this.app, this.asset, e, true);
     this.ghost.root.enabled = false;
@@ -154,6 +160,7 @@ export class Renderer {
     }
     dt = Math.min(0.1, dt);
     this.athlete.update(f, this.course, dt);
+    this.physics?.sync(f, this.course);
     if (this.course.id === "SG")
       this.world.updateStartWands(f.startGateAngle ?? 0, dt);
     // Keep the banner visible on the start line, hide it once accelerating
@@ -349,7 +356,10 @@ export async function createRenderer(canvas: HTMLCanvasElement) {
       alpha: false,
     });
   }
+  // Ammo must initialize before the PlayCanvas Application is constructed.
+  const ammoEnabled = await loadAmmoPhysics();
   const r = new Renderer(canvas, device);
+  r.ammoEnabled = ammoEnabled;
   await r.load();
   if (device.isWebGPU) {
     let recovering = false;
