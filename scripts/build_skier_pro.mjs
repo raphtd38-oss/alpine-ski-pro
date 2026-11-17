@@ -1,6 +1,7 @@
 // Alpine Ski Pro — deterministic professional 18-bone racer generator.
 // The GLB stays original, playable on the Web and reproducible without Blender.
 import { writeFileSync, mkdirSync } from "node:fs";
+import { originalRacerTextures } from "./racer-textures.mjs";
 function buildAthleteGlb() {
   const PI=Math.PI, TAU=2*PI;
   const nodes=[], world=[], names={};
@@ -28,16 +29,16 @@ function buildAthleteGlb() {
     joint(side+"Wrist",[.03*sgn,-.23,.14],side+"Elbow");
   }
   const M=[
-   ["Race suit / alpine crimson",[.82,.065,.055,1],.05,.45],
-   ["Race suit / graphite compression",[.025,.039,.064,1],.06,.50],
+   ["Race suit / alpine navy technical weave",[.095,.22,.53,1],.025,.59],
+   ["Race suit / deep navy stretch panels",[.018,.038,.079,1],.035,.64],
    ["Race bib / competition ivory",[.89,.93,.96,1],0,.76],
    ["Carbon racing boots",[.045,.054,.077,1],.25,.34],
    ["Aerodynamic race helmet",[.95,.967,.97,1],.25,.28],
-   ["Mirrored ski goggles / copper",[.64,.30,.09,1],.7,.16],
+   ["Mirrored ski goggles / ice blue",[.28,.68,.91,1],.68,.17],
    ["Balaclava / graphite",[.045,.055,.075,1],.01,.85],
    ["Shin guards / race ivory",[.93,.96,.98,1],.06,.46],
    ["Technical gloves / black",[.037,.046,.056,1],.05,.64],
-   ["Team trim / glacier teal",[.13,.8,.86,1],.16,.42],
+   ["Team trim / glacier turquoise",[.10,.85,.92,1],.12,.41],
    ["Race bib / edges",[.72,.77,.83,1],.03,.69],
    ["Helmet vents / carbon",[.022,.038,.047,1],.35,.40],
    ["Metallic boot buckles",[.7,.78,.80,1],.65,.24]
@@ -84,21 +85,24 @@ function buildAthleteGlb() {
     return [joints.slice(0,4),weights.slice(0,4)];
   }
   function loft(bone,offset,rings,mat,segments=24,arc=null,blended=true){
-    const base=world[names[bone]],p=[],idx=[],joints=[],weights=[];
+    const base=world[names[bone]],p=[],idx=[],joints=[],weights=[],uv=[];
     const n=segments,minY=Math.min(...rings.map(r=>r[0])),maxY=Math.max(...rings.map(r=>r[0]));
-    const full=!arc;
+    const full=!arc,columns=full?n+1:n;
     for(const [y,rx,rz,zc] of rings){
       const t=(y-minY)/Math.max(.001,maxY-minY);
       const [js,ws]=influence(bone,t,blended);
-      for(let i=0;i<n;i++){
-        const a=full?TAU*i/n:arc[0]+(arc[1]-arc[0])*i/(n-1);
+      for(let i=0;i<columns;i++){
+        const u=i/(columns-1);
+        const a=full?TAU*u:arc[0]+(arc[1]-arc[0])*u;
         p.push([base[0]+offset[0]+Math.cos(a)*rx,base[1]+offset[1]+y,base[2]+offset[2]+zc+Math.sin(a)*rz]);
+        uv.push([u,1-t]);
         joints.push(js);weights.push(ws);
       }
     }
-    const lim=full?n:n-1;
-    for(let r=0;r<rings.length-1;r++)for(let i=0;i<lim;i++){
-      const a=r*n+i,b=r*n+(i+1)%n,c=a+n,d=b+n;
+    // Duplicate the cylindrical seam so textile textures don't interpolate
+    // backwards across the final 360-degree segment.
+    for(let r=0;r<rings.length-1;r++)for(let i=0;i<columns-1;i++){
+      const a=r*columns+i,b=a+1,c=a+columns,d=c+1;
       idx.push(a,c,b,b,c,d);
     }
     const normals=Array.from({length:p.length},()=>[0,0,0]);
@@ -109,7 +113,7 @@ function buildAthleteGlb() {
       for(const k of [ia,ib,ic])for(let d=0;d<3;d++)normals[k][d]+=normal[d];
     }
     const normalUnit=normals.map(n=>{const length=Math.hypot(...n)||1;return n.map(x=>x/length)});
-    primitives.push({attributes:{POSITION:accessor(p,"VEC3",5126,"POSITION"),NORMAL:accessor(normalUnit,"VEC3",5126),JOINTS_0:accessor(joints,"VEC4",5123),WEIGHTS_0:accessor(weights,"VEC4",5126)},indices:accessor(idx,"SCALAR",5125),material:mat});
+    primitives.push({attributes:{POSITION:accessor(p,"VEC3",5126,"POSITION"),NORMAL:accessor(normalUnit,"VEC3",5126),TEXCOORD_0:accessor(uv,"VEC2",5126),JOINTS_0:accessor(joints,"VEC4",5123),WEIGHTS_0:accessor(weights,"VEC4",5126)},indices:accessor(idx,"SCALAR",5125),material:mat});
   }
   function ellipsoid(bone,offset,radii,mat,segments=24,arc=null){
     const [rx,ry,rz]=radii,rings=[];
@@ -162,13 +166,30 @@ function buildAthleteGlb() {
   // Independent mesh node with skin binding, compatible with PlayCanvas' 18-bone animation.
   const bind=world.map(p=>[1,0,0,0,0,1,0,0,0,0,1,0,-p[0],-p[1],-p[2],1]);
   const ibm=accessor(bind,"MAT4",5126);
+  // Embed original PNG images directly into the GLB buffer: a complete
+  // material remains usable offline, in PlayCanvas and in other glTF viewers.
+  const images=[];
+  for(const {kind,png} of originalRacerTextures()){
+    aligned();
+    const offset=data.length;
+    for(const byte of png)data.push(byte);
+    const view=views.length;
+    views.push({buffer:0,byteOffset:offset,byteLength:png.length});
+    images.push({name:"Original racer "+kind+" albedo",bufferView:view,mimeType:"image/png"});
+  }
+  const textures=images.map((_,i)=>({name:"Racer textile "+i,source:i,sampler:0}));
+  // Race suit 0,1; bib 2; carbon boots 3; helmet 4; visor 5; gear 6..12.
+  const materialAtlas=[0,0,2,1,1,3,1,1,1,0,0,1,1];
+  materials.forEach((m,i)=>{
+    m.pbrMetallicRoughness.baseColorTexture={index:materialAtlas[i]};
+  });
   const meshNode=nodes.length;nodes.push({name:"Pro athlete skinned surface",mesh:0,skin:0});
   const gltf={
-    asset:{version:"2.0",generator:"Alpine Ski Pro V1.3 original professional racer"},
+    asset:{version:"2.0",generator:"Alpine Ski Pro V1.9 original UV-mapped race apparel"},
     scene:0,scenes:[{nodes:[0,meshNode]}],nodes,
     skins:[{joints:world.map((_,i)=>i),inverseBindMatrices:ibm,skeleton:0}],
     meshes:[{name:"Competition skier PBR high-detail multi-weight",primitives}],
-    materials,buffers:[{byteLength:data.length}],bufferViews:views,accessors:access
+    materials,images,textures,samplers:[{magFilter:9729,minFilter:9987,wrapS:10497,wrapT:10497}],buffers:[{byteLength:data.length}],bufferViews:views,accessors:access
   };
   const json=JSON.stringify(gltf);
   const jsonBytes=[]; for(let i=0;i<json.length;i++)jsonBytes.push(json.charCodeAt(i));while(jsonBytes.length%4)jsonBytes.push(32);
