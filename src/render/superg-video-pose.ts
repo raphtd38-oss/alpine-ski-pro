@@ -64,6 +64,7 @@ export function superGRacerBank(
   const contact = 1 - clamp(airborne, 0, 1);
   const sign = Math.sign(edge);
   const magnitude = clamp(Math.abs(edge), 0, 1.1);
+  if (contact <= 0 || magnitude < 1e-6) return 0;
   return -sign * Math.min(34, 14 * magnitude +
     19 * clamp(engagement, 0, 1)) * contact;
 }
