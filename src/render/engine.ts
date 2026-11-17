@@ -58,10 +58,10 @@ export class Renderer {
     this.app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
     this.app.setCanvasResolution(pc.RESOLUTION_AUTO);
     device.maxPixelRatio = Math.min(window.devicePixelRatio, 1.5);
-    this.app.scene.ambientLight = color("#a7bccb");
-    this.app.scene.exposure = 1.1;
+    this.app.scene.ambientLight = color("#8f8fa7");
+    this.app.scene.exposure = 1.12;
     this.camera.addComponent("camera", {
-      clearColor: color("#91b5cb"),
+      clearColor: color("#dda9b7"),
       farClip: 2400,
       nearClip: 0.08,
       fov: 58,
@@ -70,7 +70,7 @@ export class Renderer {
     this.app.root.addChild(this.camera);
     this.sun.addComponent("light", {
       type: "directional",
-      color: color("#fff0db"),
+      color: color("#ffd5ad"),
       intensity: 1.7,
       castShadows: true,
       shadowDistance: 100,
@@ -79,7 +79,8 @@ export class Renderer {
       normalOffsetBias: 0.12,
       numCascades: 3,
     });
-    this.sun.setEulerAngles(48, -32, 0);
+    // Low-angle Cortina sunset: long shadows across the piste and limestone.
+    this.sun.setEulerAngles(74, -54, 0);
     this.app.root.addChild(this.sun);
     window.addEventListener("resize", () => this.app.resizeCanvas());
     this.app.resizeCanvas();
@@ -159,7 +160,8 @@ export class Renderer {
     this.baseShadowResolution =
       quality === "ultra" ? 4096 : quality === "high" ? 2048 : 1024;
     this.sun.light!.shadowResolution = this.baseShadowResolution;
-    this.sun.light!.intensity = weather === "clear" ? 1.7 : 0.8;
+    this.sun.light!.intensity = weather === "clear" ? 1.33 : 0.8;
+    this.sun.light!.color = color(weather === "clear" ? "#ffd5ad" : "#dce4f5");
     this.world = new World(this.app, c, quality, this.alpineAssets);
     if (this.ammoEnabled) this.physics = new AmmoGateSensors(this.app, c);
     this.athlete = new Athlete(this.app, this.seamlessAsset ?? this.asset, e);
@@ -194,6 +196,7 @@ export class Renderer {
     }
     dt = Math.min(0.1, dt);
     this.athlete.update(f, this.course, dt);
+    this.world.updateCortinaLights(f.z);
     this.physics?.sync(f, this.course);
     if (this.course.id === "SG")
       this.world.updateStartWands(f.startGateAngle ?? 0, dt);
