@@ -559,6 +559,7 @@ async function boot() {
           paused,
           course: race.course.id,
           fps: renderer.fps,
+          cortinaSpotlights: renderer.world.getCortinaLightDiagnostics(),
           guideActive: Boolean(renderer.world.trainingGuide?.enabled),
           startArchVisible: Boolean(renderer.world.startArch?.enabled),
           startHouse: Boolean(renderer.world.startBooth),

@@ -1,6 +1,6 @@
 # Alpine Ski Pro — Super-G
 
-**V1.14 · Cortina Olympia delle Tofane · Coureur monobloc 25 os · Super-G uniquement**
+**V1.15 Ultimate Realism Pass 1 · Cortina Olympia delle Tofane · Coureur monobloc 25 os · Super-G uniquement**
 
 🎮 **[Jouer dans le navigateur](https://raphtd38-oss.github.io/alpine-ski-pro/)**
 
@@ -75,3 +75,11 @@ Les cinq captures obsolètes de `docs/screenshots/` et l'ancien générateur `sc
 - Projecteurs LED déjà en place complétés par halos doux en lumière additive, reflets au sol conformes au relief et nuages roses dans le ciel sunset.
 - Les 34 portes Super-G, les fanions souples, les collisions, les contrôles et les règles sont inchangés par cette extension visuelle.
 - Décor entièrement procédural et original : l'image de référence est une direction artistique, **pas** une texture projetée ni une reconstruction GPS/photogrammétrique.
+
+## V1.15 — Ultimate Realism, première passe
+
+- Nouvelle biomécanique de transfert de charge : accélération latérale, flexion des genoux et bassin plus engagé, skis gauche/droit et dérive suivis indépendamment, uniquement dans le rendu 25 os.
+- **15 vrais projecteurs spot** orientés sur la piste ; 1 à 4 lumières actives selon le niveau graphique, avec une seule ombre locale au maximum.
+- Matériau calcaire PBR doté de micro-normales UV, gerbe de neige dépendante de la pression réelle sur chaque ski (correction du virage à droite).
+- Les règles des portes flexibles et le seuil de chute strict **>45%**, la physique 120 Hz et le chrono restent inchangés.
+- Voir [l'audit, les preuves et les limites de V1.15](docs/ULTIMATE_REALISM_V115.md). Aucun FPS réel ni rendu photo-identique n'est revendiqué.

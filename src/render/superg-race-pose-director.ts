@@ -71,6 +71,10 @@ export interface SGDirectorDiagnostics {
   rightHandGripErrorM: number;
   outsideSide: SkiSide | null;
   visualCarvePressure: number;
+  lateralG: number;
+  equivalentTurnRadiusM: number;
+  outsideSkiLoad: number;
+  insideSkiLoad: number;
 }
 
 const clone = (v: pc.Vec3) => v.clone();
@@ -508,6 +512,10 @@ export class SuperGRacePoseDirector {
       rightHandGripErrorM: this.lastGripError[1],
       outsideSide: p.outsideSide,
       visualCarvePressure: p.engagement,
+      lateralG: p.lateralG,
+      equivalentTurnRadiusM: p.equivalentRadiusM,
+      outsideSkiLoad: p.outsideLoadFraction,
+      insideSkiLoad: 1 - p.outsideLoadFraction,
     };
   }
 }

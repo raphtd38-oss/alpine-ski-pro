@@ -44,6 +44,10 @@ export class World {
   blueFlag: pc.StandardMaterial;
   gateVisualTime = 0;
   private cortinaLightUpdate: ((z: number) => void) | null = null;
+  private cortinaLightDiagnostics: (() => {
+    total: number; active: number; shadows: number;
+    closestDistanceM: number; spotlights: boolean;
+  }) | null = null;
   blueBorderDye = false;
   constructor(
     public app: pc.Application,
@@ -71,15 +75,18 @@ export class World {
     this.mountains();
     this.forest();
     // Three-dimensional Tofane peaks, dark conifers, realistic red A-nets and grooming.
-    this.materials.push(...addCortinaCinematicDetails(
+    const cinematic = addCortinaCinematicDetails(
       this.app, this.root, this.course, this.quality,
-    ));
+    );
+    this.materials.push(...cinematic.materials);
+    this.resources.push(...cinematic.textures);
     // Original warm sunset, 15 LED floodlight towers and nearby light pools.
     const atmosphere = createCortinaAtmosphere(
       this.app, this.root, this.course, this.quality,
     );
     this.materials.push(...atmosphere.materials);
     this.cortinaLightUpdate = atmosphere.update;
+    this.cortinaLightDiagnostics = atmosphere.getDiagnostics;
     const highlights = createCortinaLightAccents(
       this.app, this.root, this.course, this.quality,
     );
@@ -1484,8 +1491,12 @@ export class World {
   updateCortinaLights(skierZ: number) {
     this.cortinaLightUpdate?.(skierZ);
   }
+  getCortinaLightDiagnostics() {
+    return this.cortinaLightDiagnostics?.() ?? null;
+  }
   destroy() {
     this.cortinaLightUpdate = null;
+    this.cortinaLightDiagnostics = null;
     this.realGateRigs.forEach((rig) => rig.destroy());
     this.root.destroy();
     this.resources.forEach((t) => t.destroy());

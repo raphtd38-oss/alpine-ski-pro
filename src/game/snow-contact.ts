@@ -30,7 +30,9 @@ export function skiSnowMark(
   const outside = (state.edge >= 0 ? -1 : 1) === side;
   const weight = clamp(state.load, 0, 1);
   // A stronger carve loads the outside ski, lightening the inside line.
-  const load = clamp(outside ? weight : 1 - weight, 0.08, 0.96);
+  // Physics stores LEFT-ski load (0..1), not "outside" load.
+  // A right-hand carve must correctly pressurize the right ski as well.
+  const load = clamp(side === -1 ? weight : 1 - weight, 0.08, 0.96);
   const compression = clamp(load * pressure * (0.3 + edge * 0.7), 0, 1.5);
   return {
     visible: grounded,
@@ -70,9 +72,12 @@ export function snowPlumeSource(
   return {
     skiSide,
     xOffsetM: skiSide * 0.18 + (r - 0.5) * 0.1,
-    strength: 0.25 + mark.load * 0.75,
-    liftMps: 0.22 + mark.load * 0.8 + speedFactor * 0.35,
-    radiusM: 0.011 + r * 0.018 + mark.load * 0.012,
+    strength: clamp((0.14 + mark.load * 0.95) *
+      (0.55 + clamp(state.pressure, 0.35, 1.65) * 0.45) *
+      (0.68 + clamp(state.skid, 0, 1) * 0.50), 0.08, 1.4),
+    liftMps: 0.16 + mark.load * 1.20 +
+      speedFactor * (0.22 + 0.12 * clamp(state.skid, 0, 1)),
+    radiusM: 0.009 + r * 0.024 + mark.load * 0.019,
   };
 }
 
