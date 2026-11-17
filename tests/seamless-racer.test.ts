@@ -1,3 +1,4 @@
+// @ts-nocheck — Node asset verification runs in Vitest; app TS target has no @types/node.
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
