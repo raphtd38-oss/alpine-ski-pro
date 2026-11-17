@@ -7,7 +7,7 @@ import "@fontsource/barlow-condensed/latin-500.css";
 import "@fontsource/barlow-condensed/latin-600.css";
 import "@fontsource/barlow-condensed/latin-700.css";
 import "./ui/style.css";
-import { COURSES, EQUIPMENT } from "./game/course";
+import { COURSES, EQUIPMENT, terrainHeight } from "./game/course";
 import { startPushAcceleration } from "./game/superg";
 import { finishReachAmount } from "./game/finish-timing";
 import { sampleSnowSurface } from "./game/surface";
@@ -526,6 +526,11 @@ async function boot() {
             ), 0,
           ),
           athleteBones: Object.keys(renderer.athlete.joints).length,
+          raceSkiTextureCount: renderer.athlete.ownedTextures.length,
+          cameraTerrainClearance: (() => {
+            const p = renderer.camera.getPosition();
+            return p.y - terrainHeight(p.x, p.z, race.course);
+          })(),
           athleteTexturedSurfaces: renderer.athlete.rig.findComponents("render").reduce(
             (n,c) => n + (c as import("playcanvas").RenderComponent)
               .meshInstances.filter(mi =>
