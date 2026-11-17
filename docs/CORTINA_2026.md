@@ -49,3 +49,11 @@ Les obstacles et dessins 3D de ce pack sont originaux, et aucune image ou ressou
 - Les **34 portes jouables** existantes sont recentrées sur une trajectoire de Super-G à virages alternés et sorties de courbes. Leurs systèmes de piquets souples, de collision, de fanions et de marquage bleu sont préservés.
 - Les positions de projecteurs et des portes sont des choix de création **non mesurés par les organisateurs**. L'illustration demandée est une référence artistique, pas une carte exacte du site ni une preuve de rendu identique en jeu.
 - Aucune photo source, texture de marque, modèle ou audio tiers supplémentaire n'est incorporé au dépôt.
+
+## Décor visuel cinématique complémentaire
+
+Le module `src/render/cortina-cinematic-detail.ts` ajoute de grandes aiguilles rocheuses à strates, des sommets à névés, un peuplement forestier de grands sapins, des rainures de damage, des filets A rouges plus denses, des postes TV et un hameau alpin lointain. Tous ces objets sont **visuels** et ne changent pas les hauteurs physiques du parcours, les collisions, le chronométrage ou les 34 portes déjà présentes.
+
+`src/render/cortina-light-accents.ts` ajoute des halos de projecteurs et des nappes de lumière sur la neige collées au relief. Les nuages du ciel de `cortina-atmosphere.ts` sont colorés par sommet, sans texture externe. Des plafonds de détail `low / medium / high / ultra` limitent la géométrie sur téléphone ; la quantité de lumière dynamique reste celle déjà limitée par la V1.14.
+
+La photographie / illustration fournie sert uniquement de **référence de direction artistique** : le décor est original, non géoréférencé et n'est pas la topographie officielle réelle de Cortina. Les emplacements des maisons, appareils de télévision, arbres et luminaires sont reconstitués, et leurs tailles/couleurs sont des choix de conception. Les résultats GPU réels sur iPhone, Android et PC nécessitent des essais sur appareils.
