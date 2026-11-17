@@ -1,7 +1,7 @@
 import type { Course, Discipline, Equipment } from "./types";
 import {
   CORTINA_2026, superGRelief, superGCenterX,
-  superGGateZ, cortinaReferenceElevation,
+  superGGateZ, superGGateRacingOffset, cortinaReferenceElevation,
 } from "./superg";
 
 /** Cortina 2026 inspired course; waypoints are a schematic reconstruction,
@@ -24,13 +24,13 @@ export const COURSES: Record<Discipline, Course> = {
     length: CORTINA_2026.officialCourseLengthM,
     grade: CORTINA_2026.verticalDropM / CORTINA_2026.officialCourseLengthM,
     width: 62,
-    // Original playable 34-gate rule remains; the real event used 43 gates.
+    // 34 playable gate groups, realigned to wide Super-G turns.
+    // Official 43 gate coordinates are not surveyed here.
     gates: Array.from({ length: 34 }, (_, i) => {
       const z = superGGateZ(i);
       return {
         id: i,
-        x: superGCenterX(z) + Math.sin(i * 1.37 + 0.45) * 5.4 +
-          Math.sin(i * 0.41) * 1.9,
+        x: superGCenterX(z) + superGGateRacingOffset(i, z),
         z,
         width: i % 9 === 7 ? 10 : 7.6,
       };
