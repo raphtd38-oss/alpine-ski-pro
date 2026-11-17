@@ -56,12 +56,18 @@ export function snowSprayVelocity(
  * This is pure/deterministic and does not alter the 120 Hz movement solver.
  */
 export function snowPlumeIntensity(
-  state: Pick<SkierState, "edge" | "slip" | "landingShock" | "height">,
+  state: Pick<SkierState, "edge" | "slip" | "landingShock" | "height"> &
+    Partial<Pick<SkierState, "pressure" | "skid">>,
   speed: number,
 ): number {
   if (state.height >= 0.06 || !Number.isFinite(speed) || speed < 4) return 0;
   const carve = Math.max(0, Math.abs(state.edge) - 0.1) * 1.8;
   const skid = Math.max(0, state.slip) * 0.12;
   const impact = Math.max(0, state.landingShock) * 2.4;
-  return clamp(carve + skid + impact, 0, 4.5);
+  // A strongly loaded carve throws more snow, a clean tuck far less.
+  // Keep backwards-compatible inputs for older saved replay fixtures.
+  const normal = clamp(state.pressure ?? 1, 0.3, 1.7);
+  const adhesion = 1 + clamp(state.skid ?? 0, 0, 1) * 0.27;
+  return clamp((carve + skid) * (0.67 + normal * 0.33) *
+    adhesion + impact, 0, 4.5);
 }
