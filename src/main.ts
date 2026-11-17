@@ -27,6 +27,7 @@ import { Progress } from "./game/storage";
 import { SkiAudio } from "./game/audio";
 import { createRenderer } from "./render/engine";
 import { PRO_POLE } from "./render/equipment-specs";
+import { Vec3 } from "playcanvas";
 import { UI, type Settings } from "./ui/ui";
 import type { Frame, Controls } from "./game/types";
 
@@ -511,8 +512,7 @@ async function boot() {
             if (!pole || !wrist) return null;
             const offset = (PRO_POLE.shaftLength - PRO_POLE.gripLength) * 0.5;
             const grip = pole.getWorldTransform().transformPoint(
-              new (pole.getPosition().constructor as typeof import("playcanvas").Vec3)(
-                0, offset, 0));
+              new Vec3(0, offset, 0));
             return grip.distance(wrist.getPosition());
           };
           return {
