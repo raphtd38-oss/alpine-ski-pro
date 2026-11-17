@@ -1,4 +1,7 @@
-# État de reprise — 15 novembre 2026
+# État de reprise — 17 novembre 2026
+
+> **V1.13 — Nouveau coureur Super-G monobloc (17 novembre 2026).** Les fichiers du ZIP utilisateur ont été importés en tant que GLB binaires sur GitHub : `public/assets/racer/seamless-full.glb` (17,26 Mo) et `seamless-mobile.glb` (5,54 Mo), avec empreintes SHA-256 vérifiées. Corps continu d'un seul maillage fermé (25 os, 9 clips inclus). `Athlete.ts` retargete les mouvements procéduraux de slalom initial vers la nomenclature du nouveau rig, adapté aux appuis du Super-G ; skis 212 cm et chaussures GLB sont attachés aux vrais pieds, sans doublons visibles. Rotation globale de 180° pour accorder l'axe avant -Z du GLB au +Z du jeu. Départ/chrono/physique 120 Hz/arrivée/replays inchangés ; ancien rig 18 os conservé en fallback et ghost. Chargement selon qualité (mobile ou full), tests de provenance/skin et tests Chromium. Le résultat reste stylisé, non mocap, performances mobiles réelles non mesurées.
+
 
 > **État actif V1.12 (17 novembre 2026) :** seul le Super-G de 1 980 m / 34 portes demeure dans `COURSES` et `EQUIPMENT`. Modes SL, GS, DH, boutons de sélection et ancien test de drapeaux supprimés ; préférences migrées vers SG et seuls les records/fantômes SG sont chargés. Les captures obsolètes (environ 2,44 Mo) et `scripts/build_skier.py` ont été retirés du HEAD ; conservés dans l'historique Git. La physique, les replays et les assets utilisés sont préservés. Les mentions historiques d'autres courses ci-dessous décrivent les anciennes versions, pas l'état actuel.
 

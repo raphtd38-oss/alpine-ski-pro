@@ -1,6 +1,6 @@
 # Alpine Ski Pro — Super-G
 
-**V1.12 · Glacier Express · 1 980 m · 34 portes**
+**V1.13 · Coureur monobloc animé · Super-G uniquement**
 
 🎮 **[Jouer dans le navigateur](https://raphtd38-oss.github.io/alpine-ski-pro/)**
 
@@ -12,7 +12,11 @@ Alpine Ski Pro est désormais consacré **uniquement au Super-G**. Les parcours 
 - Une tige de départ de 70 cm montée à 43 cm de la neige, déclenchement simulé à 20°, chronométrage au franchissement du portillon (non homologué).
 - Trois doubles poussées liées à l'accélération physique, aux articulations et aux contacts des bâtons.
 - Tracé original de 1 980 m, 34 portes de vitesse (4 piquets et 2 drapeaux chacune), marquages bleus, reliefs, compressions et sauts naturels.
-- Skieur à 18 os et textures PBR originales, bâtons Super-G courbés, skis dynamiques, neige/roches PBR, culling/LOD.
+- **Nouveau skieur monobloc 25 os**, 9 clips intégrés, combinaison PBR avec couleur par sommet, épaules/genoux/coudes sans discontinuité topologique et retarget des animations du jeu.
+- **Skis 212 cm et chaussures directement attachés aux os des pieds**, sans doublons procéduraux visibles. Bâtons Super-G courbés et poussées déjà liées à la physique.
+- Deux GLB originaux dans `public/assets/racer/` : **mobile 5,54 Mo** (bas/moyen, écran tactile), **full 17,26 Mo** (haut/ultra sur ordinateur). Une seule variante est téléchargée par session.
+- Si le nouveau GLB échoue, repli automatique sur le skieur 18 os ; le fantôme utilise encore ce modèle léger. `?racer=classic` permet de tester l'ancien, `?racer=mobile` ou `?racer=full` force une variante.
+- Neige/roches PBR, culling/LOD, records et replays préservés.
 - Quatre caméras, météo et qualité graphique réglables, son, pause, entraînement, records locaux, fantôme et replays SG.
 
 **Aucune ressource de CarveMania n'est copiée**, aucun appareil de chronométrage n'est certifié FIS et aucun photoréalisme ni FPS GPU n'est garanti.

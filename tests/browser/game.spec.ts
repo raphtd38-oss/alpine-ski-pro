@@ -8,6 +8,10 @@ test("renders the Super-G, responds to keys, pauses, restarts and changes suit",
   await expect(page.locator("#loading")).toHaveCount(0, { timeout: 45000 });
   const athlete = await page.evaluate(() => (window as any).__ski.getState());
   expect(athlete.athleteBones).toBeGreaterThanOrEqual(17);
+  expect(athlete.athleteSeamless).toBe(true);
+  expect(athlete.athleteVariant).toBe("mobile");
+  expect(athlete.athleteHasAttachedSkis).toBe(true);
+  expect(athlete.athleteSurfaces).toBeGreaterThanOrEqual(110);
   expect(athlete.athleteSurfaces).toBeGreaterThanOrEqual(40);
   expect(athlete.flexiblePoleTips).toBe(68);
   expect(athlete.course).toBe("SG");

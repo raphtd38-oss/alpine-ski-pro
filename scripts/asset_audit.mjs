@@ -16,6 +16,17 @@ manifest.set("public/assets/skier.glb", {
   license: "original",
   max: 1_000_000,
 });
+for (const variant of [
+  { name: "seamless-full.glb", bytes: 17_259_488 },
+  { name: "seamless-mobile.glb", bytes: 5_539_148 },
+]) {
+  manifest.set("public/assets/racer/" + variant.name, {
+    source: "User-supplied Alpine_SuperG_Coureur_Monobloc_Anime_2026(2).zip, original seamless 25-bone rig",
+    license: "original, user-supplied CC0-style grant",
+    exact: variant.bytes,
+    max: variant.bytes,
+  });
+}
 for (const model of pack.models) manifest.set(
   "public/assets/alpine/" + model.key + ".glb",
   { source: pack.source + " (model " + model.id + ")", license: pack.license,

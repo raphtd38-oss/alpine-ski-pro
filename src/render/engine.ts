@@ -29,6 +29,8 @@ export class Renderer {
   ghost!: Athlete;
   effects!: SnowEffects;
   asset!: pc.Asset;
+  seamlessAsset: pc.Asset | null = null;
+  racerVariant: "classic" | "mobile" | "full" = "classic";
   course!: Course;
   cameraMode = 0;
   cameraReady = false;
@@ -82,7 +84,7 @@ export class Renderer {
     window.addEventListener("resize", () => this.app.resizeCanvas());
     this.app.resizeCanvas();
   }
-  async load() {
+  async load(quality: Quality = "high") {
     this.asset = new pc.Asset("Original competition athlete", "container", {
       url: import.meta.env.BASE_URL + "assets/skier.glb",
     });
@@ -94,6 +96,38 @@ export class Renderer {
     });
     this.alpineAssets = new AlpineAssets(this.app);
     await this.alpineAssets.load();
+    const requested = new URLSearchParams(location.search).get("racer");
+    const mobile = requested === "mobile" ||
+      (requested !== "full" && (quality === "low" || quality === "medium" ||
+        window.matchMedia("(pointer: coarse)").matches ||
+        window.innerWidth < 840));
+    if (requested !== "classic") {
+      const variant = mobile ? "mobile" : "full";
+      const racer = new pc.Asset("Original seamless Super-G racer " + variant, "container", {
+        url: import.meta.env.BASE_URL + "assets/racer/seamless-" + variant + ".glb",
+      });
+      try {
+        await new Promise<void>((resolve, reject) => {
+          racer.ready(() => resolve());
+          racer.once("error", (error: unknown) => reject(error));
+          this.app.assets.add(racer);
+          this.app.assets.load(racer);
+        });
+        const instance = (racer.resource as pc.ContainerResource).instantiateRenderEntity();
+        const needed = ["Hips", "LeftUpLeg", "RightUpLeg", "LeftHand", "RightHand",
+          "LeftFoot", "RightFoot", "ONE seamless fused skinned athlete body"];
+        const missing = needed.filter(name => !instance.findByName(name));
+        instance.destroy();
+        if (missing.length)
+          throw new Error("New skier missing rig joints: " + missing.join(", "));
+        this.seamlessAsset = racer;
+        this.racerVariant = variant;
+      } catch (error) {
+        console.warn("Alpine Ski Pro: seamless racer unavailable; original fallback active", error);
+        this.seamlessAsset = null;
+        this.racerVariant = "classic";
+      }
+    }
   }
   build(c: Course, e: Equipment, quality: Quality, weather: Weather, adaptive = true) {
     this.physics?.destroy();
@@ -128,7 +162,7 @@ export class Renderer {
     this.sun.light!.intensity = weather === "clear" ? 1.7 : 0.8;
     this.world = new World(this.app, c, quality, this.alpineAssets);
     if (this.ammoEnabled) this.physics = new AmmoGateSensors(this.app, c);
-    this.athlete = new Athlete(this.app, this.asset, e);
+    this.athlete = new Athlete(this.app, this.seamlessAsset ?? this.asset, e);
     this.ghost = new Athlete(this.app, this.asset, e, true);
     this.ghost.root.enabled = false;
     this.effects = new SnowEffects(this.app, c, quality);
@@ -331,7 +365,7 @@ async function usableWebGpu(): Promise<boolean> {
     probe?.destroy();
   }
 }
-export async function createRenderer(canvas: HTMLCanvasElement) {
+export async function createRenderer(canvas: HTMLCanvasElement, quality: Quality = "high") {
   const params = new URLSearchParams(location.search),
     antialias = params.get("quality") !== "low";
   const useWebGpu =
@@ -360,7 +394,7 @@ export async function createRenderer(canvas: HTMLCanvasElement) {
   const ammoEnabled = await loadAmmoPhysics();
   const r = new Renderer(canvas, device);
   r.ammoEnabled = ammoEnabled;
-  await r.load();
+  await r.load(quality);
   if (device.isWebGPU) {
     let recovering = false;
     const recover = () => {

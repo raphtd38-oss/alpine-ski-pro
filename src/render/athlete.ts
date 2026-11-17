@@ -8,6 +8,8 @@ export class Athlete {
   root = new pc.Entity("Skier");
   rig: pc.Entity;
   joints: Record<string, pc.GraphNode> = {};
+  /** The new 25-bone, one-piece skinned athlete, separate from legacy ghost. */
+  isSeamless = false;
   skis: pc.Entity[] = [];
   skiSurfaces: { mesh: pc.Mesh; base: number[] }[] = [];
   poles: pc.Entity[] = [];
@@ -35,6 +37,21 @@ export class Athlete {
       asset.resource as pc.ContainerResource
     ).instantiateRenderEntity();
     this.root.addChild(this.rig);
+    this.isSeamless = !!this.rig.findByName("ONE seamless fused skinned athlete body") &&
+      !!this.rig.findByName("LeftUpLeg") && !!this.rig.findByName("RightFoot");
+    if (this.isSeamless) {
+      // The donated glTF faces -Z, while the game skis forward along +Z.
+      // Rotate the complete skinned hierarchy, without altering game physics.
+      this.rig.setLocalEulerAngles(0, 180, 0);
+    }
+    const seamlessBones: Record<string, string> = {
+      Pelvis: "Hips", LHip: "LeftUpLeg", LKnee: "LeftLeg",
+      LAnkle: "LeftAnkle", LShoulder: "LeftShoulder",
+      LElbow: "LeftForeArm", LWrist: "LeftHand",
+      RHip: "RightUpLeg", RKnee: "RightLeg",
+      RAnkle: "RightAnkle", RShoulder: "RightShoulder",
+      RElbow: "RightForeArm", RWrist: "RightHand",
+    };
     for (const name of [
       "Pelvis",
       "Spine",
@@ -54,7 +71,7 @@ export class Athlete {
       "RElbow",
       "RWrist",
     ]) {
-      const n = this.rig.findByName(name);
+      const n = this.rig.findByName(this.isSeamless ? (seamlessBones[name] ?? name) : name);
       if (n) this.joints[name] = n;
     }
     this.material = material(
@@ -117,6 +134,9 @@ export class Athlete {
     for (const side of [-1, 1]) {
       const e = new pc.Entity("Independent ski");
       this.root.addChild(e);
+      // The new GLB includes 212 cm skis, boots and bindings parented to
+      // LeftFoot/RightFoot. Keep legacy ski geometry only for the old rig.
+      e.enabled = !this.isSeamless;
       this.skis.push(e);
       const p: number[] = [],
         indices: number[] = [],
@@ -223,6 +243,7 @@ export class Athlete {
     }
     // Lightweight original detail meshes make the silhouette and equipment
     // readable up close. They follow existing GLB bones, not a separate rig.
+    if (!this.isSeamless) {
     const visor = material("Goggle anti-reflective visor", "#263b4d", 0.65, 0.88);
     const trim = material("Helmet air vents and carbon buckles", "#122432", 0.4, 0.55);
     const highlight = material("Equipment safety highlight", "#aee5e1", 0.25, 0.6);
@@ -248,6 +269,7 @@ export class Athlete {
           [0.037, y, 0.182], [0.028, 0.014, 0.014], highlight);
       }
     }
+    }
     if (ghost) {
       this.rig.findComponents("render").forEach((c) => {
         const r = c as pc.RenderComponent;
@@ -270,7 +292,8 @@ export class Athlete {
         if (
           mi.material?.name.startsWith("Race suit / alpine navy") ||
           mi.material?.name.startsWith("Race suit / alpine crimson") ||
-          mi.material?.name.startsWith("Race suit / ember")
+          mi.material?.name.startsWith("Race suit / ember") ||
+          (this.isSeamless && mi.material?.name.startsWith("One-piece anatomically joined"))
         ) {
           const mat = mi.material.clone() as pc.StandardMaterial;
           this.ownedMaterials.push(mat);
@@ -351,7 +374,9 @@ export class Athlete {
     // The hips move inside the turn while the shoulders look downhill.
     // The outside leg is visibly longer and keeps the ski pressurized.
     const lean = edge * (0.19 + load * 0.065);
-    j.Pelvis?.setLocalPosition(lean + shake, 0.92 - crouch, -0.055 * f.tuck);
+    j.Pelvis?.setLocalPosition(lean + shake,
+      (this.isSeamless ? 1.01 : 0.92) - crouch,
+      (this.isSeamless ? 0.015 : 0) - 0.055 * f.tuck);
     // Professional race start: chest ahead of bindings, hips loaded,
     // alternating pole-drive phase. Airborne posture retracts legs.
     // Double-pole plant is synchronized with the fixed-step acceleration
@@ -383,8 +408,8 @@ export class Athlete {
       const hipY = 0.9 - crouch + outside * (0.048 + outsidePressure * 0.027);
       const dy = Math.min(0.81, hipY - 0.12),
         dz = 0.02 + f.tuck * 0.055,
-        L1 = 0.421,
-        L2 = 0.396;
+        L1 = this.isSeamless ? 0.416 : 0.421,
+        L2 = this.isSeamless ? 0.342 : 0.396;
       const d = Math.sqrt(dy * dy + dz * dz),
         alpha = Math.acos(
           Math.max(-1, Math.min(1, (L1 * L1 + d * d - L2 * L2) / (2 * L1 * d))),
@@ -394,9 +419,13 @@ export class Athlete {
         kneeZ = Math.sin(thigh) * L1,
         kneeY = -Math.cos(thigh) * L1;
       const calf = Math.atan2(dz - kneeZ, dy + kneeY);
-      const hipRot = (-(thigh - Math.atan2(0.13, 0.4)) * 180) / Math.PI;
+      const hipRestAngle = this.isSeamless
+        ? Math.atan2(0.191, 0.37) : Math.atan2(0.13, 0.4);
+      const calfRestAngle = this.isSeamless
+        ? Math.atan2(-0.122, 0.319) : Math.atan2(-0.11, 0.38);
+      const hipRot = (-(thigh - hipRestAngle) * 180) / Math.PI;
       const kneeRot =
-        (-(calf - Math.atan2(-0.11, 0.38)) * 180) / Math.PI - hipRot;
+        (-(calf - calfRestAngle) * 180) / Math.PI - hipRot;
       const flightHip = airborne * -12;
       const flightKnee = airborne * 23;
       j[side + "Hip"]?.setLocalEulerAngles(
@@ -498,7 +527,8 @@ export class Athlete {
     const desiredFall = f.fallen > 0 ? 1 : 0;
     this.visualFall += (desiredFall - this.visualFall) *
       (1 - Math.exp(-Math.max(0, dt) * 10));
-    this.rig.setLocalEulerAngles(0, 0, this.visualFall * 76);
+    this.rig.setLocalEulerAngles(0, this.isSeamless ? 180 : 0,
+      this.visualFall * 76);
     this.rig.setLocalPosition(0, this.visualFall * 0.15, 0);
   }
   destroy() {

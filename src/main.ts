@@ -41,7 +41,7 @@ async function boot() {
     ui = new UI(document.querySelector("#app")!, settings, progress),
     input = new Input(),
     audio = new SkiAudio();
-  const renderer = await createRenderer(document.querySelector("#game")!);
+  const renderer = await createRenderer(document.querySelector("#game")!, settings.quality);
   renderer.build(
     COURSES[settings.course],
     EQUIPMENT[settings.equipment],
@@ -549,6 +549,9 @@ async function boot() {
           ),
           visibleAlpineDetails: renderer.alpineAssets.visibleDetails,
           athleteBones: Object.keys(renderer.athlete.joints).length,
+          athleteSeamless: renderer.athlete.isSeamless,
+          athleteVariant: renderer.racerVariant,
+          athleteHasAttachedSkis: !!renderer.athlete.rig.findByName("LEFTFOOT/Top glossy curved topsheet") && !!renderer.athlete.rig.findByName("RIGHTFOOT/Top glossy curved topsheet"),
           raceSkiTextureCount: renderer.athlete.ownedTextures.length,
           cameraTerrainClearance: (() => {
             const p = renderer.camera.getPosition();
