@@ -180,3 +180,9 @@ Le but est un simulateur de ski de grande qualité, amélioré sur le même dép
 - Ajuster la bascule du bassin/torse et la hauteur des gants sur des vues de profil et 3/4 ; améliorer les pieds et l'IK latérale si la pente réelle dérive par rapport au modèle sagittal calculé.
 - Faire une capture vidéo de 5 s au départ et 10 s dans les enchaînements rapides ; confronter aux plans reçus en séparant ce qui est visible de ce qui relève d'une supposition.
 - À terme, créer de nouveaux clips de mouvement de Super-G multi-caméras sous licence/avec droits, puis retargeter les os et contrôler les transitions à 30/60/144 Hz avant de parler de rendu proche d'une véritable course FIS.
+
+## Contrôles à effectuer sur la nouvelle posture carving 3D (17 novembre 2026)
+
+- Comparer, en capture vidéo côté piste, la position en virage droit et gauche à la référence wireframe : bassin bas, hanche intérieure, flexion asymétrique, bras extérieur ouvert, skis parallèles sur la carre et spatules dans la trajectoire.
+- Tester les variantes de GLB mobile et full ; corriger au besoin les axes de repos de cheville et les poids de skinning. Suivre les diagnostics `getAthletePose().competitionPose` pour atteindre une direction ski cohérente et une bonne erreur de cheville/poignée.
+- Tester transitions de carres, deux appuis, piquets, départ, réception, arrivée, pause et anciens replays en WebGL2 sans modification de la physique à 120 Hz.
