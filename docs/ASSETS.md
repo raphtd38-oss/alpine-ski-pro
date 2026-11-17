@@ -99,3 +99,5 @@ Les scripts de la nouvelle boîte à outils **n'ajoutent pas automatiquement de 
 - **Colorant de neige FIS-inspiré** : texture Canvas originale, pulvérisation irrégulière avec alpha, couloirs bleus le long des deux courbes de piste, guides de portes et marquages transversaux avant sauts ; création locale sans fichier externe.
 - **Licences** : ces textures sont des créations du projet ; pas de reproduction d'une vidéo, pas d'utilisation des graphismes propriétaires de CarveMania, ni d'affiliation officielle FIS. Les neuf GLB CC0 et la neige CC0 de Poly Haven restent en place.
 - **Limite technique** : l'albédo UV et les facteurs de rugosité/métal PBR sont présents ; ce lot n'est pas de la mocap, une normal map textile haute résolution, ou un avatar photoréaliste.
+
+- **Skis de course** : `src/render/athlete.ts` génère une texture originale de topsheet marine, motifs carbone, accents turquoise et lettrage ALPINE SKI PRO (canvas local, UV propres). Aucune marque de fabricant copiée.
