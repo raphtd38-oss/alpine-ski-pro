@@ -26,6 +26,7 @@ import { readSettings, writeSettings } from "./game/settings";
 import { Progress } from "./game/storage";
 import { SkiAudio } from "./game/audio";
 import { createRenderer } from "./render/engine";
+import { PRO_POLE } from "./render/equipment-specs";
 import { UI, type Settings } from "./ui/ui";
 import type { Frame, Controls } from "./game/types";
 
@@ -493,6 +494,38 @@ async function boot() {
   if (import.meta.env.DEV) {
     Object.assign(window, {
       __ski: {
+        /** DEV ONLY: world-space contact diagnostics for animation regression.
+         * Production builds never expose these graph/bone references.
+         */
+        getAthletePose: () => {
+          const athlete = renderer.athlete;
+          const groundClearance = (name: string) => {
+            const bone = athlete.rig.findByName(name);
+            if (!bone) return null;
+            const p = bone.getPosition();
+            return p.y - terrainHeight(p.x, p.z, race.course);
+          };
+          const gripError = (index: number) => {
+            const pole = athlete.poles[index];
+            const wrist = athlete.joints[index === 0 ? "LWrist" : "RWrist"];
+            if (!pole || !wrist) return null;
+            const offset = (PRO_POLE.shaftLength - PRO_POLE.gripLength) * 0.5;
+            const grip = pole.getWorldTransform().transformPoint(
+              new (pole.getPosition().constructor as typeof import("playcanvas").Vec3)(
+                0, offset, 0));
+            return grip.distance(wrist.getPosition());
+          };
+          return {
+            seamless: athlete.isSeamless,
+            edge: athlete.visualEdge,
+            crouch: athlete.visualCrouch,
+            tuck: athlete.visualTuck,
+            leftBoot: groundClearance("LeftFoot"),
+            rightBoot: groundClearance("RightFoot"),
+            pelvis: groundClearance(athlete.isSeamless ? "Hips" : "Pelvis"),
+            poleGripError: [gripError(0), gripError(1)],
+          };
+        },
         getState: () => ({
           ...state,
           phase: race.phase,
