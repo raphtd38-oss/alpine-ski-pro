@@ -11,7 +11,10 @@ test("World-Cup-style Super-G start house, four-pole flags and terrain crest", a
   expect(setup.startHouse).toBe(true);
   expect(setup.blueBorderDye).toBe(true);
   expect(setup.sprayedBlueDye).toBe(true);
-  expect(setup.athleteTexturedSurfaces).toBeGreaterThanOrEqual(40);
+  expect(setup.athleteSeamless).toBe(true);
+  expect(setup.athleteVariant).toBe("mobile");
+  expect(setup.athleteHasAttachedSkis).toBe(true);
+  expect(setup.athleteTexturedSurfaces).toBeGreaterThan(10);
   expect(setup.raceSkiTextureCount).toBe(1);
   expect(setup.timingWands).toBe(1);
   expect(setup.pairedGatePoles).toBe(68);
