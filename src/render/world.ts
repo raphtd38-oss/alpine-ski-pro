@@ -492,7 +492,7 @@ export class World {
    * The gate hinge and deterministic impact handling stay unchanged. */
   fabricFlag(parent: pc.Entity, side: number, textile: pc.StandardMaterial) {
     const p: number[] = [], uv: number[] = [], idx: number[] = [];
-    const nx = 16, ny = 8, width = 0.80, height = 0.55;
+    const nx = 16, ny = 8, width = 1.03, height = 0.63;
     for (let y = 0; y <= ny; y++)
       for (let x = 0; x <= nx; x++) {
         const u = x / nx, v = y / ny;
@@ -503,7 +503,7 @@ export class World {
           Math.sin(v * Math.PI) +
           0.012 * Math.sin(u * Math.PI * 4 + v * Math.PI);
         p.push(side * width * u,
-          1.18 + height * v - sag, -0.08 + billow + centreCrease);
+          1.13 + height * v - sag, -0.08 + billow + centreCrease);
         uv.push(u, 1 - v);
       }
     for (let y = 0; y < ny; y++)
@@ -553,15 +553,15 @@ export class World {
           // Each 0.75 x 0.50 m textile panel spans its own pair, outside
           // the ski crossing corridor; FIS-style, not FIS-homologated.
           const partner = new pc.Entity("Second pole of flag pair");
-          partner.setLocalPosition(side * 0.80, 0, -0.08);
+          partner.setLocalPosition(side * 1.03, 0, -0.08);
           pivot.addChild(partner);
           const partnerShaft = new FlexiblePoleMesh(
             this.app.graphicsDevice, partner, m, this.quality !== "low",
           );
           this.partnerPoleMeshes.push(partnerShaft);
           // Two small straps per shaft; one flag still spans each pole pair.
-          for (const offset of [0, side * 0.80])
-            for (const y of [1.23, 1.68]) {
+          for (const offset of [0, side * 1.03])
+            for (const y of [1.17, 1.69]) {
               const strap = shape(pivot, "box", "Fabric pole strap",
                 [offset, y, -0.077], [0.082, 0.08, 0.076], clips);
               strap.render!.castShadows = false;
