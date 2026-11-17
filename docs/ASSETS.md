@@ -101,3 +101,9 @@ Les scripts de la nouvelle boîte à outils **n'ajoutent pas automatiquement de 
 - **Limite technique** : l'albédo UV et les facteurs de rugosité/métal PBR sont présents ; ce lot n'est pas de la mocap, une normal map textile haute résolution, ou un avatar photoréaliste.
 
 - **Skis de course** : `src/render/athlete.ts` génère une texture originale de topsheet marine, motifs carbone, accents turquoise et lettrage ALPINE SKI PRO (canvas local, UV propres). Aucune marque de fabricant copiée.
+
+
+## V1.11 — assets conservés ou remplacés
+- Cabane de départ SG : anciennes primitives assemblées supprimées **du générateur de scène**, remplacées par une maquette originale texturée dans `src/render/world.ts`. Texture originale de fibres/planches créée par Canvas sur le navigateur; toit triangulé neige PBR utilisant les cartes déjà chargées; signalétique et pistes originales. Aucune nouvelle image téléchargée.
+- Bâtons SG : tube continu courbe défini par un maillage paramétrique dans `src/render/athlete.ts`; aucun modèle commercial copié. Sons de plantation et clic mécanique : synthèse Web Audio originale dans `src/game/audio.ts`, aucune licence ajoutée.
+- Archive `Alpine_SuperG_Racer_Pro_Kit_2026.zip` autorisée par le propriétaire, examinée; rig candidat 25 os, 146 meshes sur versions full/mobile, neuf animations procédurales. **Ni ses GLB ni ses 64 textures ne sont diffusés dans cette mise à jour** : le skieur existant à 18 os reste activé par compatibilité et performances. Voir `docs/V111_START.md`.
