@@ -14,6 +14,7 @@ import { RealisticSuperGGate } from "./realistic-gates";
 import { SUPER_G_ROLLERS, superGSector } from "../game/superg";
 import { ALPINE_START_GATE } from "../game/start-gate";
 import { addCortinaScenery } from "./cortina-scenery";
+import { createCortinaAtmosphere } from "./cortina-atmosphere";
 import type { Course, Quality, Weather } from "../game/types";
 import { material, meshEntity, shape, beam, rng, color } from "./geometry";
 export class World {
@@ -40,6 +41,7 @@ export class World {
   redFlag: pc.StandardMaterial;
   blueFlag: pc.StandardMaterial;
   gateVisualTime = 0;
+  private cortinaLightUpdate: ((z: number) => void) | null = null;
   blueBorderDye = false;
   constructor(
     public app: pc.Application,
@@ -66,6 +68,12 @@ export class World {
     this.buildTrainingGuide();
     this.mountains();
     this.forest();
+    // Original warm sunset, 15 LED floodlight towers and nearby light pools.
+    const atmosphere = createCortinaAtmosphere(
+      this.app, this.root, this.course, this.quality,
+    );
+    this.materials.push(...atmosphere.materials);
+    this.cortinaLightUpdate = atmosphere.update;
     // Cortina replaces the old Glacier Express rock scenery (no duplicates).
     this.gates();
     if (this.course.id === "SG") {
@@ -1462,7 +1470,11 @@ export class World {
       if (status[i] === "passed") g.tags.add("passed");
     });
   }
+  updateCortinaLights(skierZ: number) {
+    this.cortinaLightUpdate?.(skierZ);
+  }
   destroy() {
+    this.cortinaLightUpdate = null;
     this.realGateRigs.forEach((rig) => rig.destroy());
     this.root.destroy();
     this.resources.forEach((t) => t.destroy());
@@ -1475,10 +1487,10 @@ export function configureWeather(
   weather: Weather,
 ) {
   const clear = weather === "clear";
-  const sky = clear ? "#8db5ce" : weather === "snow" ? "#bcccd6" : "#a8bbc9";
+  const sky = clear ? "#dfadbb" : weather === "snow" ? "#bcccd6" : "#a8bbc9";
   camera.camera!.clearColor = color(sky);
   app.scene.fog.type = pc.FOG_LINEAR;
   app.scene.fog.color = color(sky);
-  app.scene.fog.start = clear ? 150 : 35;
-  app.scene.fog.end = clear ? 1100 : weather === "snow" ? 260 : 600;
+  app.scene.fog.start = clear ? 290 : 35;
+  app.scene.fog.end = clear ? 1580 : weather === "snow" ? 260 : 600;
 }

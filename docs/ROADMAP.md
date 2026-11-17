@@ -1,5 +1,6 @@
 # Feuille de route persistante
 
+> **Extension crépuscule Cortina :** ciel dégradé procédural, lumière solaire basse, lampes LED et effets lumineux locaux limités selon le niveau de détail ; placement des portes plus rythmé dans les courbes. À vérifier encore : performance mobile WebGL/WebGPU, perception du relief sous le soleil bas, comportement des vraies sources omni et ergonomie des portes sur toute la descente.\n\n
 > **Priorité actuelle V1.14 : Cortina Olympia delle Tofane (2 105 m, 635 m) uniquement, avec le coureur monobloc 25 os conservé.** Les anciens chapitres parlant de SL, GS ou DH constituent une archive des versions précédentes ; ils ne sont plus au périmètre du jeu. À présent : améliorer le départ, le rig et les proportions du skieur, les poses sur les carres, la neige, l'environnement et le temps de chargement, sans recréer d'autres disciplines.
 
 Référence technique actualisée : [inventaire des outils, plugins, ressources et statuts](TOOLS_AND_RESOURCES.md). Les entrées historiques ci-dessous peuvent évoquer des versions antérieures ; ne pas les interpréter comme des fonctions actives.

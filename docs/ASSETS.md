@@ -1,3 +1,9 @@
+## Extension Cortina sunset / LED (17 novembre 2026)
+
+- `src/render/cortina-atmosphere.ts` crée un ciel synthétique, des mâts de projecteur et panneaux lumineux procéduraux. **Aucun fichier photo ou vidéo, PBR commercial, GLB externe, audio ou logo n'est téléchargé.**
+- Le comportement lumineux est écrit avec les composants natifs de PlayCanvas 2.24.1. Pas de droits supplémentaires nécessaires pour les formes procédurales originales.
+- La géographie représentée n'est pas photogrammétrique ; les éclairages sont une reconstitution artistique motivée par la référence du propriétaire, pas un plan officiel de l'éclairage de Cortina.
+
 ## V1.14 — reconstruction Cortina 2026 issue du ZIP du propriétaire
 
 - Source fournie : `Alpine_Ski_Pro_Cortina_SuperG_2026_3D_PACK (1).zip`, originaux procéduraux décrits dans `cortina_sg_pack/docs/README_FR.md` ; les courbes/cotes/points de stations sont des approximations déclarées dans ce pack, pas des coordonnées officielles des piquets.
