@@ -172,3 +172,11 @@ Le but est un simulateur de ski de grande qualité, amélioré sur le même dép
 - Mesurer l'occupation du cadre et retoucher la caméra de poursuite actuelle seulement si son rendu vérifié en navigateur reste trop éloigné, car les captures reçues peuvent représenter une autre build.
 - Filmer l'arrivée et vérifier visuellement l'extension basse de la main plutôt que supposer le geste d'après la diffusion olympique distante.
 - Produire/retargeter de véritables clips de Super-G aux droits vérifiés, une interpolation IK pelvis/cuisse/genou/cheville et des mains aux bâtons ; la calibration actuelle est artistique, pas une reconstitution 3D mesurée.
+
+## Suite après correction intégrale du mouvement 25 os (17 novembre 2026)
+
+- Inspecter les captures Playwright `sg-25bone-prestart-brace.png` et `sg-25bone-low-edge-contact.png` : confirmer que les skis attachés aux pieds touchent le relief, que les mains restent exactement sur les grips et qu'aucune collision visuelle ne survient.
+- Tester le nouveau solveur de jambes sur GPU PC et iPhone avec commandes de direction fortes, bosses, envols, réception et finish ; relever les inter-pénétrations de tissu, ski et chaussures à chaque angle.
+- Ajuster la bascule du bassin/torse et la hauteur des gants sur des vues de profil et 3/4 ; améliorer les pieds et l'IK latérale si la pente réelle dérive par rapport au modèle sagittal calculé.
+- Faire une capture vidéo de 5 s au départ et 10 s dans les enchaînements rapides ; confronter aux plans reçus en séparant ce qui est visible de ce qui relève d'une supposition.
+- À terme, créer de nouveaux clips de mouvement de Super-G multi-caméras sous licence/avec droits, puis retargeter les os et contrôler les transitions à 30/60/144 Hz avant de parler de rendu proche d'une véritable course FIS.
