@@ -37,6 +37,10 @@ describe("Super-G passable fabric gates", () => {
     const r = cross(-4, 8);
     expect(r.gateStatus).toEqual(["passed"]);
   });
+  it("does not disqualify a legal ski-edge brush of the inside pole", () => {
+    const r = cross(5.84, 5.84);
+    expect(r.gateStatus).toEqual(["passed"]);
+  });
   it("still penalizes passing entirely outside the corridor", () => {
     const r = cross(8, 8);
     expect(r.gateStatus).toEqual(["missed"]);

@@ -95,8 +95,11 @@ export class Race {
       const f = Math.max(0, Math.min(1,
         dz > 1e-9 ? (g.z - previous.z) / dz : 0));
       const crossingX = previous.x + (s.x - previous.x) * f;
-      // Ski boots have roughly 0.16m half-width; a pole brush is legal.
-      const halfCorridor = Math.max(0, g.width / 2 - 0.16);
+      // A ski edge can brush the flexible inside pole without the entire
+      // skier centre being strictly inside the gate: allow the physical ski
+      // half-width rather than imposing an arbitrary extra inward penalty.
+      // This is a forgiving gameplay crossing, not FIS homologation.
+      const halfCorridor = Math.max(0, g.width / 2 + 0.12);
       const valid = Number.isFinite(crossingX) &&
         Math.abs(crossingX - g.x) <= halfCorridor;
       this.gateStatus[this.nextGate] = valid ? "passed" : "missed";
