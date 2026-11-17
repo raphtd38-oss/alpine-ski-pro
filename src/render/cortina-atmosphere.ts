@@ -111,7 +111,14 @@ export function selectFloodlightStations(
 /** Returns registered materials and a fast position-dependent light update. */
 export function createCortinaAtmosphere(
   app: pc.Application, root: pc.Entity, course: Course, quality: Quality,
-): { materials: pc.StandardMaterial[]; update: (skierZ: number) => void } {
+): {
+  materials: pc.StandardMaterial[];
+  update: (skierZ: number) => void;
+  getDiagnostics: () => {
+    total: number; active: number; shadows: number;
+    closestDistanceM: number; spotlights: boolean;
+  };
+} {
   const sky = sunsetSky(app, root, course);
   const steel = material("Floodlight steel lattice", "#6f757c", 0.48, 0.40);
   const joint = material("Floodlight electrical box", "#4a515b", 0.14, 0.27);
@@ -219,5 +226,18 @@ export function createCortinaAtmosphere(
     });
   };
   update(0);
-  return { materials: [sky, steel, joint, white, insulation], update };
+  const getDiagnostics = () => {
+    const active = lamps.filter(item => item.light.enabled);
+    return {
+      total: lamps.length,
+      active: active.length,
+      shadows: active.filter(item => Boolean(item.light.light?.castShadows)).length,
+      closestDistanceM: active.length
+        ? Math.min(...active.map(item => Math.abs(item.z - lastSector * 8)))
+        : -1,
+      spotlights: lamps.every(item => item.light.light?.type === "spot"),
+    };
+  };
+  return { materials: [sky, steel, joint, white, insulation],
+    update, getDiagnostics };
 }
