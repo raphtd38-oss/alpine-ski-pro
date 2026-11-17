@@ -259,6 +259,23 @@ export class Renderer {
         lookAhead,
       ));
     }
+    // Dedicated side-on crash cinematography, automatically restored after
+    // the racer gets back to their skis. Works even if first-person was active.
+    const crashElapsed = f.gateCrashElapsed ?? -1;
+    const crashCam = crashElapsed >= 0 && crashElapsed < 2.75 && !this.menu;
+    if (crashCam) {
+      const side = (f.gateCrashSide ?? 1) < 0 ? -1 : 1;
+      const approach = Math.min(1, crashElapsed / 0.55);
+      const lateral = side * (3.35 + 0.9 * approach);
+      const sideVecX = Math.cos(f.heading);
+      const sideVecZ = -Math.sin(f.heading);
+      eye = new pc.Vec3(
+        f.x + sideVecX * lateral - Math.sin(f.heading) * 3.1,
+        terrainHeight(f.x, f.z, this.course) + 2.0,
+        f.z + sideVecZ * lateral - Math.cos(f.heading) * 3.1,
+      );
+      look = new pc.Vec3(f.x, y + 0.75, f.z + 0.4);
+    }
     eye.y = Math.max(eye.y, terrainHeight(eye.x, eye.z, this.course) + 0.7);
     // Smooth both camera position and focal target. A moving target without
     // focus damping looks jittery even when the skier's position is interpolated.
@@ -267,7 +284,9 @@ export class Renderer {
     // rather than smoothing across hundreds of metres for several seconds.
     // In normal 60Hz gameplay the position delta is only a few centimetres.
     const current = this.cleanCameraPos ?? this.camera.getPosition();
-    const snap = !this.cameraReady || this.cameraMode === 2 ||
+    const snap = !this.cameraReady ||
+      (crashCam && crashElapsed < 0.05) ||
+      (this.cameraMode === 2 && !crashCam) ||
       (!this.menu && current.distance(eye) > 38);
     if (snap) {
       this.camera.setPosition(eye);
@@ -285,7 +304,7 @@ export class Renderer {
     // smoothing can carry the camera THROUGH a fast rising relief, exposing
     // the blue clear background below the piste (visible in V1.8 screenshots).
     // Reapply contact clearance after smoothing, before camera shake.
-    if (this.course.id === "SG" && this.cameraMode !== 2 && !this.menu) {
+    if (this.course.id === "SG" && (this.cameraMode !== 2 || crashCam) && !this.menu) {
       const pos = this.camera.getPosition().clone();
       const floor = terrainHeight(pos.x, pos.z, this.course) + 1.9;
       if (pos.y < floor) {
@@ -301,10 +320,11 @@ export class Renderer {
       this.camera.translateLocal(jitter.x, jitter.y, jitter.z);
     }
     const targetFov = this.menu ? 62 : this.cameraMode === 2
-      ? 76 : speedFov(this.cameraMode === 0 ? 51 : 55, speed);
+      ? (crashCam ? 56 : 76) :
+      crashCam ? 54 : speedFov(this.cameraMode === 0 ? 51 : 55, speed);
     this.camera.camera!.fov += (targetFov - this.camera.camera!.fov) *
       (1 - Math.exp(-dt * 5));
-    this.athlete.root.enabled = this.menu || this.cameraMode !== 2;
+    this.athlete.root.enabled = this.menu || this.cameraMode !== 2 || crashCam;
     // Optional CC0 scenery has camera-range LOD with hysteresis; the
     // original cheap batched alpine background remains continuously visible.
     this.alpineAssets.updateVisuals(dt, this.camera.getPosition(), this.quality);

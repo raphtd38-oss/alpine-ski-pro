@@ -1,5 +1,6 @@
 import type { Course, SkierState } from "./types";
 import { clamp } from "./types";
+import { detectBannerContact } from "./banner-contact";
 
 /**
  * AlpIne Ski Pro — portes de Super-G souples (simulation 120 Hz).
@@ -36,6 +37,10 @@ export interface PoleState {
   impactHeight: number;
   /** Énergie transmise à la toile (0..1), amortie après le choc. */
   clothEnergy: number;
+  /** Animated ground sweep of the impacted inner and outer shafts, 0..1. */
+  flatten: number;
+  partnerFlatten: number;
+  flattenHold: number;
 }
 
 export type ImpactKind = "none" | "shin" | "arm";
@@ -96,11 +101,17 @@ export class PoleSimulation {
   lastReboundSide = 0;
   lastReboundStrength = 0;
   readonly length = 2;
+  lastBannerHit = false;
+  lastBannerCrash = false;
+  lastBannerSide = 0;
+  lastBannerGate = -1;
+  lastBannerPenetration = 0;
+  private readonly touchedBanners = new Set<string>();
   readonly mass = 0.38;
   readonly spring = INNER_STIFFNESS;
   readonly damping = INNER_DAMPING;
 
-  constructor(course: Course) {
+  constructor(private readonly course: Course) {
     for (const gate of course.gates) {
       for (const side of [-1, 1]) {
         this.poles.push({
@@ -125,6 +136,9 @@ export class PoleSimulation {
           recoilStrength: 0,
           impactHeight: 1.25,
           clothEnergy: 0,
+          flatten: 0,
+          partnerFlatten: 0,
+          flattenHold: 0,
         });
       }
     }
@@ -137,12 +151,68 @@ export class PoleSimulation {
     this.lastRebounds = 0;
     this.lastReboundSide = 0;
     this.lastReboundStrength = 0;
+    this.lastBannerHit = false;
+    this.lastBannerCrash = false;
+    this.lastBannerSide = 0;
+    this.lastBannerGate = -1;
+    this.lastBannerPenetration = 0;
 
     const step = clamp(dt, 0, 1 / 60);
     const travelX = current.x - previous.x;
     const travelZ = current.z - previous.z;
     const travelSq = travelX * travelX + travelZ * travelZ;
     const speed = Math.hypot(current.vx, current.vz);
+
+    // Speed-gate textile is a collision surface, not a transparent visual.
+    // Hit is evaluated at its plane with continuous (swept) crossing.
+    // A shallow impact flattens both shafts; >45% depth triggers a full fall.
+    const isAlreadyFalling = current.gateCrashElapsed >= 0;
+    if (!isAlreadyFalling && speed > 1.5) {
+      for (const gate of this.course.gates) {
+        if (gate.z < Math.min(previous.z, current.z) - 0.25 ||
+            gate.z > Math.max(previous.z, current.z) + 0.25) continue;
+        const banner = detectBannerContact(previous, current, gate);
+        if (!banner) continue;
+        const key = `${banner.gateId}:${banner.side}`;
+        if (this.touchedBanners.has(key)) continue;
+        this.touchedBanners.add(key);
+        const p = this.poles.find((pole) =>
+          pole.gate === banner.gateId && pole.side === banner.side);
+        if (!p) continue;
+        this.lastBannerHit = true;
+        this.lastBannerSide = banner.side;
+        this.lastBannerGate = banner.gateId;
+        this.lastBannerPenetration = banner.penetration;
+        p.flattenHold = Math.max(p.flattenHold, 0.57);
+        p.clothEnergy = 1;
+        p.tipAmp = Math.max(p.tipAmp, 0.17);
+        p.impactHeight = 1.34;
+        p.recoilArmed = true;
+        p.recoilStrength = Math.max(p.recoilStrength, 0.8);
+        // The inner pole flexes downhill. The cloth gives a delayed tug
+        // on its partner. Flatten animation makes the tip touch the snow.
+        p.omegaX += Math.max(2.4, Math.min(8.4, speed * 0.25));
+        p.partnerOmegaX += 0.65;
+        current.poleImpact = Math.max(current.poleImpact, 0.84);
+        current.poleImpactSide = banner.side;
+
+        if (banner.crash) {
+          this.lastBannerCrash = true;
+          current.gateCrashElapsed = 0.001;
+          current.gateCrashSide = banner.side;
+          current.gateCrashSeverity = banner.penetration;
+          current.fallen = Math.max(current.fallen, 3.05);
+          current.balance = Math.min(current.balance, 0.04);
+          current.edge = 0;
+          // Heavy cloth contact cannot be ghosted through: the skier stops
+          // on the entry side and then slides away with damped momentum.
+          current.z = Math.min(current.z, gate.z - 0.16);
+          current.vz = Math.max(0, current.vz * 0.24);
+          current.vx = current.vx * 0.25 - banner.side * 1.2;
+          break;
+        }
+      }
+    }
 
     for (const p of this.poles) {
       // Test sur le segment balayé par le skieur, pas seulement la frame finale.
@@ -288,6 +358,17 @@ export class PoleSimulation {
       p.tipPhase = (p.tipPhase + 2 * Math.PI * 16 * step) % (2 * Math.PI);
       p.clothEnergy *= Math.exp(-3.7 * step);
       if (p.clothEnergy < 0.0001) p.clothEnergy = 0;
+
+      // The flexible flag strikes snow on a brush: inner shaft folds first,
+      // outer shaft follows the cloth tension with a short physical delay.
+      p.flattenHold = Math.max(0, p.flattenHold - step);
+      const foldTarget = p.flattenHold > 0 ? 1 : 0;
+      const foldRate = foldTarget ? 28 : 3.7;
+      p.flatten += (foldTarget - p.flatten) *
+        (1 - Math.exp(-foldRate * step));
+      const partnerTarget = p.flatten * 0.94;
+      p.partnerFlatten += (partnerTarget - p.partnerFlatten) *
+        (1 - Math.exp(-(p.flattenHold > 0 ? 11 : 4.5) * step));
 
       if (
         p.recoilArmed &&

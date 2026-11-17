@@ -59,6 +59,10 @@ export interface SkierState {
   /** Damped landing compression after touchdown. */
   landingShock: number;
   fallen: number;
+  /** Fixed-step seconds since the severe (>45%) banner collision; -1 inactive. */
+  gateCrashElapsed: number;
+  gateCrashSide: number;
+  gateCrashSeverity: number;
   jumpHeld: boolean;
   distance: number;
 }
@@ -75,6 +79,9 @@ export interface Frame {
   chatter?: number;
   poleImpact?: number;
   poleImpactSide?: number;
+  gateCrashElapsed?: number;
+  gateCrashSide?: number;
+  gateCrashSeverity?: number;
   landingShock?: number;
   startPush?: number;
   /** Start launch elapsed seconds; -1 while waiting in the cabin. */

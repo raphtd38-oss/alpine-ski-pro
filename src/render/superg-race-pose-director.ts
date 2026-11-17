@@ -18,6 +18,7 @@ import * as pc from "playcanvas";
 import type { Course, Equipment, Frame } from "../game/types";
 import { gradient, terrainHeight } from "../game/course";
 import { PRO_POLE } from "./equipment-specs";
+import { gateCrashPose } from "./gate-crash-pose";
 import {
   SuperGCompetitionPose,
   type SGSourceFrame,
@@ -419,7 +420,12 @@ export class SuperGRacePoseDirector {
     root.setPosition(f.x, ground + flight + 0.015, f.z);
     root.setEulerAngles(gradePitchDeg, pose.headingDeg, pose.bankDeg);
 
-    const fallGoal = f.fallen > 0 ? 1 : 0;
+    const crash = gateCrashPose(
+      f.gateCrashElapsed ?? -1, f.gateCrashSide ?? 1,
+      f.gateCrashSeverity ?? 1,
+    );
+    // Separate dedicated banner crash from the existing generic tumble.
+    const fallGoal = f.fallen > 0 && !crash.active ? 1 : 0;
     this.visualFall += (fallGoal - this.visualFall) *
       (1 - Math.exp(-Math.max(0, Math.min(0.1, dt)) * 10));
     // The imported GLB faces local -Z. Keep bones, boots and skis in one
@@ -437,7 +443,45 @@ export class SuperGRacePoseDirector {
     this.setFoot("L", pose.leftFoot, pose, c, ground, gradePitchDeg);
     this.setFoot("R", pose.rightFoot, pose, c, ground, gradePitchDeg);
     this.setPoles(pose, dt, c);
-    this.actor.visualBank = pose.bankDeg;
+    if (crash.active) {
+      // 3-stage World-Cup-style fall with the EXISTING 25-bone racer, not a
+      // stand-in model: hands brace, hips drop, skis skid away, then recover.
+      // Resolve the normal IK first, then add only visual tumble transforms.
+      root.setPosition(
+        f.x, ground + flight + 0.015 + crash.cameraLiftM, f.z,
+      );
+      root.setEulerAngles(
+        gradePitchDeg + crash.bodyPitchDeg * 0.10,
+        pose.headingDeg + crash.bodyYawDeg * 0.24,
+        pose.bankDeg + crash.bodyRollDeg * 0.12,
+      );
+      this.actor.rig.setLocalEulerAngles(
+        crash.bodyPitchDeg * 0.34, 180 + crash.bodyYawDeg,
+        crash.bodyRollDeg,
+      );
+      this.pelvis.setLocalPosition(
+        pose.pelvisShiftM,
+        pose.pelvisHeightM - crash.pelvisDropM,
+        pose.pelvisForeAftM,
+      );
+      this.spine.setLocalEulerAngles(
+        -pose.spinePitchDeg - crash.torsoPitchDeg,
+        -pose.chestYawDeg * 0.15,
+        pose.spineRollDeg,
+      );
+      const brace = crash.armBrace;
+      const left = this.actor.joints.LShoulder;
+      const right = this.actor.joints.RShoulder;
+      if (left) left.setLocalEulerAngles(
+        -pose.leftArm.shoulderPitchDeg - 24 * brace,
+        0, pose.leftArm.shoulderRollDeg - 26 * brace,
+      );
+      if (right) right.setLocalEulerAngles(
+        -pose.rightArm.shoulderPitchDeg - 24 * brace,
+        0, pose.rightArm.shoulderRollDeg + 26 * brace,
+      );
+    }
+    this.actor.visualBank = pose.bankDeg + crash.bodyRollDeg;
     this.actor.visualEdge = pose.edge;
     this.actor.visualCrouch = 1.01 - pose.pelvisHeightM;
     this.actor.visualTuck = pose.tuck;

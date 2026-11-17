@@ -39,6 +39,9 @@ export const initialState = (): SkierState => ({
   lastTakeoffZ: -1000,
   landingShock: 0,
   fallen: 0,
+  gateCrashElapsed: -1,
+  gateCrashSide: 0,
+  gateCrashSeverity: 0,
   jumpHeld: false,
   distance: 0,
 });
@@ -78,6 +81,12 @@ export function stepPhysics(
     s.height < 0.005
       ? hardSurface * edgePressure * clamp((speed - 8) / 26, 0, 1)
       : 0, 13, dt);
+  // Timeline for the visual fall is driven by fixed-step physics, not the
+  // rendering framerate; replay/screenshot timing remains deterministic.
+  if (s.gateCrashElapsed >= 0) {
+    s.gateCrashElapsed += dt;
+    if (s.gateCrashElapsed >= 3.15) s.gateCrashElapsed = -1;
+  }
   s.poleImpact = Math.max(0, s.poleImpact - dt * 4.5);
   s.landingShock = Math.max(0, s.landingShock - dt * 3.4);
   s.flex = smooth(

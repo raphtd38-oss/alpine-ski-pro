@@ -85,6 +85,9 @@ async function boot() {
     chatter: state.chatter,
     poleImpact: state.poleImpact,
     poleImpactSide: state.poleImpactSide,
+    gateCrashElapsed: state.gateCrashElapsed,
+    gateCrashSide: state.gateCrashSide,
+    gateCrashSeverity: state.gateCrashSeverity,
     landingShock: state.landingShock,
     startPush: race.course.id === "SG" && race.phase === "countdown"
       ? 0.78 : startDriveBlend(race.course.id, race.launchTime),
@@ -303,6 +306,11 @@ async function boot() {
       }
     }
     poles.update(previous, state, dt);
+    if (poles.lastBannerCrash) {
+      race.registerBannerCrash(poles.lastBannerGate);
+      ui.toast("CHUTE ! Contact trop profond avec la banderole");
+      audio.tone(150, 0.25);
+    }
     if (poles.lastRebounds)
       audio.rebound(poles.lastReboundSide, poles.lastReboundStrength);
     if (poles.lastImpacts)
@@ -414,6 +422,9 @@ async function boot() {
             chatter: f.chatter ?? 0,
             poleImpact: f.poleImpact ?? 0,
             poleImpactSide: f.poleImpactSide ?? 0,
+            gateCrashElapsed: f.gateCrashElapsed ?? -1,
+            gateCrashSide: f.gateCrashSide ?? 0,
+            gateCrashSeverity: f.gateCrashSeverity ?? 0,
             landingShock: f.landingShock ?? 0,
             skid: f.skid ?? 0,
             pressure: f.pressure ?? 1,

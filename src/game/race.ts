@@ -51,6 +51,19 @@ export class Race {
     this.startGateImpulseTime = this.launchTime - dt * (1 - fractionIntoTick);
     this.startGateStepRemainder = Math.max(0, Math.min(1, 1 - fractionIntoTick));
   }
+  /**
+   * Banner collisions deeper than 45% are missed gates. Do not count the
+   * same collision again when the fallen athlete slides past the gate plane.
+   */
+  registerBannerCrash(gateId: number): void {
+    const at = this.course.gates.findIndex((gate) => gate.id === gateId);
+    if (this.phase !== "racing" || at < 0 || this.gateStatus[at] !== "pending")
+      return;
+    this.gateStatus[at] = "missed";
+    this.missed++;
+    if (at === this.nextGate) this.nextGate++;
+  }
+
   tickCountdown(dt: number) {
     this.countdown -= dt;
     if (this.countdown <= 0) {
@@ -121,6 +134,9 @@ export class Race {
         chatter: s.chatter,
         poleImpact: s.poleImpact,
         poleImpactSide: s.poleImpactSide,
+        gateCrashElapsed: s.gateCrashElapsed,
+        gateCrashSide: s.gateCrashSide,
+        gateCrashSeverity: s.gateCrashSeverity,
         landingShock: s.landingShock,
         finishReach: finishReachAmount(this.course.id,
           s.z, this.course.length, Math.hypot(s.vx, s.vz), s.fallen),
@@ -178,6 +194,15 @@ export function replayAt(frames: Frame[], time: number): Frame | null {
     chatter: (a.chatter ?? 0) + ((b.chatter ?? 0) - (a.chatter ?? 0)) * u,
     poleImpact: (a.poleImpact ?? 0) + ((b.poleImpact ?? 0) - (a.poleImpact ?? 0)) * u,
     poleImpactSide: b.poleImpactSide ?? a.poleImpactSide ?? 0,
+    gateCrashElapsed: (a.gateCrashElapsed ?? -1) >= 0 &&
+      (b.gateCrashElapsed ?? -1) >= 0
+      ? (a.gateCrashElapsed ?? -1) +
+        ((b.gateCrashElapsed ?? -1) - (a.gateCrashElapsed ?? -1)) * u
+      : (b.gateCrashElapsed ?? -1) >= 0
+        ? b.gateCrashElapsed
+        : a.gateCrashElapsed ?? -1,
+    gateCrashSide: b.gateCrashSide ?? a.gateCrashSide ?? 0,
+    gateCrashSeverity: b.gateCrashSeverity ?? a.gateCrashSeverity ?? 0,
     landingShock: (a.landingShock ?? 0) + ((b.landingShock ?? 0) - (a.landingShock ?? 0)) * u,
     startPush: (a.startPush ?? 0) + ((b.startPush ?? 0) - (a.startPush ?? 0)) * u,
     startPhase: a.startPhase === undefined ? b.startPhase :

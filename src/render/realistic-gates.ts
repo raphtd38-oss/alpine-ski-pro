@@ -70,6 +70,7 @@ export class DeformableGatePole {
   private lastTip = Number.NaN;
   private lastPhase = Number.NaN;
   private lastImpact = Number.NaN;
+  private lastFlatten = Number.NaN;
 
   constructor(
     device: pc.GraphicsDevice,
@@ -136,13 +137,15 @@ export class DeformableGatePole {
     tipAmp = 0,
     phase = 0,
     impactHeight = 1.25,
+    groundSweep = 0,
   ): void {
-    if (!Number.isFinite(ax + az + tipAmp + phase + impactHeight)) return;
+    if (!Number.isFinite(ax + az + tipAmp + phase + impactHeight + groundSweep)) return;
     if (
       Math.abs(ax - this.lastX) < 0.00035 &&
       Math.abs(az - this.lastZ) < 0.00035 &&
       Math.abs(tipAmp - this.lastTip) < 0.00035 &&
       Math.abs(impactHeight - this.lastImpact) < 0.001 &&
+      Math.abs(groundSweep - this.lastFlatten) < 0.002 &&
       (tipAmp < 0.00035 || Math.abs(phase - this.lastPhase) < 0.01)
     ) return;
     this.lastX = ax;
@@ -150,6 +153,7 @@ export class DeformableGatePole {
     this.lastTip = tipAmp;
     this.lastPhase = phase;
     this.lastImpact = impactHeight;
+    this.lastFlatten = groundSweep;
 
     // Les angles sont orientés autour de X et Z ; la déflexion latérale
     // correspond donc respectivement à Z+ et X- (sens d'une vraie rotation).
@@ -168,15 +172,21 @@ export class DeformableGatePole {
 
     for (let ring = 0; ring <= this.rings; ring++) {
       const t = ring / this.rings;
-      const theta = angle * Math.pow(t, hit < 0.5 ? 0.98 : 1.22) +
+      const naturalTheta = angle * Math.pow(t, hit < 0.5 ? 0.98 : 1.22) +
         clamp(tipAmp, -0.18, 0.18) *
           Math.pow(t, 2.4) * Math.sin(phase + 4 * t);
+      // A half-circle integrated centreline puts the pole tip almost ON
+      // the snow (height 0 at t=1), rather than a rigid pole that pivots.
+      const theta = naturalTheta * (1 - groundSweep) +
+        Math.PI * t * groundSweep;
       if (ring > 0) {
         const u = (ring - 0.5) / this.rings;
-        const inBetweenTheta = angle *
+        const naturalMid = angle *
             Math.pow(u, hit < 0.5 ? 0.98 : 1.22) +
           clamp(tipAmp, -0.18, 0.18) *
             Math.pow(u, 2.4) * Math.sin(phase + 4 * u);
+        const inBetweenTheta = naturalMid * (1 - groundSweep) +
+          Math.PI * u * groundSweep;
         x += step * Math.sin(inBetweenTheta) * directionX;
         y += step * Math.cos(inBetweenTheta);
         z += step * Math.sin(inBetweenTheta) * directionZ;
@@ -562,6 +572,7 @@ class FlagPair {
       state.tipAmp,
       state.tipPhase,
       state.impactHeight,
+      state.flatten,
     );
     this.outer.bend(
       state.partnerAngleX,
@@ -569,6 +580,7 @@ class FlagPair {
       state.tipAmp * 0.38,
       state.tipPhase - 0.33,
       state.impactHeight,
+      state.partnerFlatten,
     );
     const inTip = this.inner.sample(1);
     const outTip = this.outer.sample(1);
