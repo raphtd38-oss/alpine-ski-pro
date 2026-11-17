@@ -50,3 +50,18 @@ export function snowSprayVelocity(
     z: (-side * Math.sin(state.heading) * sideSpeed - Math.cos(state.heading) * behind) * scale,
   };
 }
+
+/** Race snow spray energy. A hard Super-G touchdown throws a short fan of
+ * crystals even if the skier is temporarily straight / not carving.
+ * This is pure/deterministic and does not alter the 120 Hz movement solver.
+ */
+export function snowPlumeIntensity(
+  state: Pick<SkierState, "edge" | "slip" | "landingShock" | "height">,
+  speed: number,
+): number {
+  if (state.height >= 0.06 || !Number.isFinite(speed) || speed < 4) return 0;
+  const carve = Math.max(0, Math.abs(state.edge) - 0.1) * 1.8;
+  const skid = Math.max(0, state.slip) * 0.12;
+  const impact = Math.max(0, state.landingShock) * 2.4;
+  return clamp(carve + skid + impact, 0, 4.5);
+}
