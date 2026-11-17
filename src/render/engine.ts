@@ -242,13 +242,13 @@ export class Renderer {
       const speedChase = this.course.id === "SG" && this.cameraMode === 0;
       const distance = inStartHouse ? 5.3 :
         this.cameraMode === 1 ? 4.8 :
-        speedChase ? 6.15 + speed * 0.05 : 8.6 + speed * 0.065;
+        speedChase ? 5.85 + speed * 0.032 : 8.6 + speed * 0.065;
       eye = target.clone().sub(forward.clone().mulScalar(distance));
       eye.y = y + (inStartHouse ? 2.55 :
-        speedChase ? 3.45 : this.cameraMode === 1 ? 3 : 5);
+        speedChase ? 3.15 : this.cameraMode === 1 ? 3 : 5);
       look = target.clone().add(new pc.Vec3(
         s.vx * 0.12, speedChase ? -0.2 : -0.45,
-        speedChase ? 4.3 : 6.5,
+        speedChase ? 4.0 : 6.5,
       ));
     }
     eye.y = Math.max(eye.y, terrainHeight(eye.x, eye.z, this.course) + 0.7);
@@ -293,7 +293,7 @@ export class Renderer {
       this.camera.translateLocal(jitter.x, jitter.y, jitter.z);
     }
     const targetFov = this.menu ? 62 : this.cameraMode === 2
-      ? 76 : speedFov(58, speed);
+      ? 76 : speedFov(56, speed);
     this.camera.camera!.fov += (targetFov - this.camera.camera!.fov) *
       (1 - Math.exp(-dt * 5));
     this.athlete.root.enabled = this.menu || this.cameraMode !== 2;
