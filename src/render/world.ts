@@ -681,7 +681,7 @@ export class World {
         [side*2.51,h(side*2.51,0)+2.05,0],[.055,.55,3.90],plate.m);
       signEntity.render!.castShadows=false;
     }
-    const top=this.sign("ALPINE SKI PRO   •   SUPER-G",4.75,.54,"#18364f");
+    const top=this.sign("ALPINE   /   SUPER-G",4.75,.54,"#18364f");
     shape(root,"box","Competition race front fascia",
       [0,h(0,zFront)+3.06,zFront+.11],[4.76,.57,.12],top.m);
     shape(root,"box","Protected start marshal timing equipment",
