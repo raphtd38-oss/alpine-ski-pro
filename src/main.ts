@@ -132,7 +132,9 @@ async function boot() {
     renderer.menu = false;
     renderer.cameraReady = false;
     renderer.effects.reset();
-    if (renderer.world.trainingGuide) renderer.world.trainingGuide.enabled = true;
+    // Normal races remain clean; the route is advisory in training only.
+    // During a race the player can opt in/out using the existing G toggle.
+    if (renderer.world.trainingGuide) renderer.world.trainingGuide.enabled = training;
     ui.setReplayUI(false);
     ui.setRace(true);
     ui.text("race-message", "");
