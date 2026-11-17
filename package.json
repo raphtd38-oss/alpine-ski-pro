@@ -1,12 +1,13 @@
 {
   "name": "alpine-ski-pro",
-  "version": "1.8.0",
+  "version": "1.9.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 0.0.0.0",
+    "pretest": "npm run assets",
     "test": "node scripts/check_skier.mjs && vitest run --exclude 'tests/browser/**'",
     "test:e2e": "playwright test",
     "assets": "node scripts/build_skier_pro.mjs",
