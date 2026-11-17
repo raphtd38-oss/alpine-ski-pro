@@ -300,6 +300,84 @@ function raceSafetyNets(
   backdrop.render!.castShadows = false;
 }
 
+
+/**
+ * Faraway hillside rooftops and warm chalet windows help sell the valley
+ * atmosphere of the reference image. These are not real building footprints.
+ */
+function distantCortinaVillage(
+  app: pc.Application, root: pc.Entity, course: Course, quality: Quality,
+  mats: pc.StandardMaterial[],
+) {
+  if (quality === "low") return;
+  const rand = rng(56012026);
+  const homes = group(), windows = group();
+  const count = quality === "medium" ? 24 : quality === "high" ? 43 : 64;
+  for (let i = 0; i < count; i++) {
+    const z = 1750 + rand() * 455;
+    const x = courseCenterX(z, course) + 145 + rand() * 215;
+    const ground = terrainHeight(x, z, course) + .2;
+    const w = 4.2 + rand() * 7.4, d = 3.8 + rand() * 5.2;
+    const h = 3.2 + rand() * 5.2;
+    const cx = x, cz = z;
+    const grey: [number,number,number] =
+      i % 4 === 0 ? [.57,.52,.48] : [.67,.61,.53];
+    const index = homes.p.length / 3;
+    const corners = [
+      [-w/2,0,-d/2],[w/2,0,-d/2],[w/2,0,d/2],[-w/2,0,d/2],
+      [-w/2,h,-d/2],[w/2,h,-d/2],[w/2,h,d/2],[-w/2,h,d/2],
+    ] as const;
+    for(const [dx,dy,dz] of corners) vert(homes,cx+dx,ground+dy,cz+dz,grey);
+    for(const [a,b,c] of [
+      [0,1,4],[1,5,4],[1,2,5],[2,6,5],
+      [2,3,6],[3,7,6],[3,0,7],[0,4,7],
+      [4,5,6],[4,6,7],[0,2,1],[0,3,2],
+    ]) face(homes,index+a,index+b,index+c);
+    const roofHeight = 1.6 + rand()*1.4;
+    const peakFront = vert(homes,cx,ground+h+roofHeight,cz-d*.55,
+      [.86,.88,.89]);
+    const peakRear = vert(homes,cx,ground+h+roofHeight,cz+d*.55,
+      [.86,.88,.89]);
+    const eaves = [4,5,6,7].map(j=> index+j);
+    face(homes,eaves[0],eaves[1],peakFront);
+    face(homes,eaves[3],peakRear,eaves[2]);
+    face(homes,eaves[0],peakRear,eaves[3]);
+    face(homes,eaves[0],peakFront,peakRear);
+    face(homes,eaves[1],eaves[2],peakRear);
+    face(homes,eaves[1],peakRear,peakFront);
+    for(let column = -1; column <= 1; column++) {
+      const wx = cx + column * w*.29, wy = ground+h*.57;
+      const zWindow = cz-d*.5-.055;
+      const n=windows.p.length/3;
+      const ww=.36, wh=.58;
+      for(const [xx,yy] of [
+        [wx-ww,wy-wh],[wx+ww,wy-wh],[wx-ww,wy+wh],[wx+ww,wy+wh],
+      ]) vert(windows,xx,yy,zWindow,[.99,.72,.35]);
+      face(windows,n,n+1,n+2);
+      face(windows,n+2,n+1,n+3);
+    }
+  }
+  const building = material("Original Cortina distant hillside village", "#ffffff",0,.16);
+  building.diffuseVertexColor = true;
+  building.cull = pc.CULLFACE_NONE;
+  building.update();
+  mats.push(building);
+  meshEntity(app.graphicsDevice,root,
+    "Cortina-inspired distant village buildings and snow roofs",
+    homes.p,homes.i,building,homes.colors).render!.castShadows=false;
+
+  const lit = material("Cortina warm chalet window glow", "#eec18c",0,.16);
+  lit.useLighting = false;
+  lit.emissive = new pc.Color(.97,.63,.28);
+  lit.emissiveIntensity = 1.6;
+  lit.cull = pc.CULLFACE_NONE;
+  lit.update();
+  mats.push(lit);
+  meshEntity(app.graphicsDevice,root,
+    "Warm illuminated windows in distant village",
+    windows.p,windows.i,lit).render!.castShadows=false;
+}
+
 function broadcastPlatforms(
   root: pc.Entity, course: Course, quality: Quality,
   mats: pc.StandardMaterial[],
@@ -348,5 +426,6 @@ export function addCortinaCinematicDetails(
   groomedSnow(app, root, course, quality, materials);
   raceSafetyNets(app, root, course, quality, materials);
   broadcastPlatforms(root, course, quality, materials);
+  distantCortinaVillage(app, root, course, quality, materials);
   return materials;
 }
