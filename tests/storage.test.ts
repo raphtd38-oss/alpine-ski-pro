@@ -16,8 +16,8 @@ const result = (time: number, valid = true): Result => ({
   valid,
   missed: valid ? 0 : 1,
   splits: [],
-  course: "SL",
-  equipment: "SL",
+  course: "SG",
+  equipment: "SG",
   date: "2026-11-15T21:00:00Z",
 });
 it("only records valid finite performances and keeps the best ghost across reloads", () => {
@@ -27,8 +27,8 @@ it("only records valid finite performances and keeps the best ghost across reloa
   expect(p.record(result(20, false), [])).toBe(false);
   expect(p.record(result(NaN), [])).toBe(false);
   const reload = new Progress();
-  expect(reload.data.records.SL?.map((r) => r.time)).toEqual([52, 60]);
-  expect(reload.data.ghosts.SL?.time).toBe(52);
+  expect(reload.data.records.SG?.map((r) => r.time)).toEqual([52, 60]);
+  expect(reload.data.ghosts.SG?.time).toBe(52);
   expect(reload.data.completed).toBe(2);
 });
 it("recovers from malformed saved data without preventing a later valid save", () => {
@@ -66,5 +66,5 @@ it("keeps the game usable when browser storage is blocked", () => {
   const p = new Progress();
   expect(() => p.record(result(50), [])).not.toThrow();
   expect(p.available).toBe(false);
-  expect(readSettings().course).toBe("SL");
+  expect(readSettings().course).toBe("SG");
 });
