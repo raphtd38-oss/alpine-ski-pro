@@ -6,7 +6,7 @@ import { PRO_POLE } from "./equipment-specs";
 import { startDrivePhase, startDriveBlend, startPoleContact } from "../game/start-gate";
 import {
   superGEdgePose, superGStartBrace, superGLegIK,
-  superGSkiFootLift, superGFinishGesture, superGRacerBank,
+  superGSkiFootLift, superGFinishGesture, superGVisualBank, superGRacerBank,
 } from "./superg-video-pose";
 export class Athlete {
   root = new pc.Entity("Skier");
@@ -20,6 +20,8 @@ export class Athlete {
   /** Smoother pole-tip contact release between actual SG propulsion strokes. */
   polePlantWeights: number[] = [0, 0];
   visualEdge = 0;
+  /** Smoothed full-body lean towards the active super-G edge, in degrees. */
+  visualBank = 0;
   visualBank = 0;
   visualCrouch = 0.045;
   /** Visual tuck follows controls smoothly; the 120Hz physics stays untouched. */
@@ -360,6 +362,10 @@ export class Athlete {
     const landing = Math.max(0, Math.min(1, f.landingShock ?? 0));
     const airborne = Math.max(0, Math.min(1, f.height * 1.4));
     const carvePose = superGEdgePose(edge, load, f.skid ?? 0, airborne);
+    const targetBank = superGVisualBank(edge, carvePose.engagement, airborne) *
+      (1 - 0.85 * finishPose.armReach);
+    this.visualBank += (targetBank - this.visualBank) *
+      (1 - Math.exp(-Math.max(0, dt) * 10));
     // Bank the ENTIRE connected athlete and attached skis into the turn;
     // independent hip/shoulder angulation keeps the torso from becoming a
     // rigid plank. Smooth release at jumps and on the transition edge.
@@ -408,7 +414,7 @@ export class Athlete {
       carvePose.engagement * 0.095 + startBrace * 0.050;
     this.visualCrouch += (crouchTarget - this.visualCrouch) * blend;
     // The 25-bone leg IK must not be forced below its anatomical reach.
-    const crouch = Math.min(0.475, this.visualCrouch);
+    const crouch = Math.min(0.455, this.visualCrouch);
     const j = this.joints;
     // The hips move inside the turn while the shoulders look downhill.
     // The outside leg is visibly longer and keeps the ski pressurized.
@@ -632,8 +638,13 @@ export class Athlete {
     const desiredFall = f.fallen > 0 ? 1 : 0;
     this.visualFall += (desiredFall - this.visualFall) *
       (1 - Math.exp(-Math.max(0, dt) * 10));
+    // Roll the racer from its ski-contact origin; the old implementation
+    // only twisted pelvis/chest while the full-body silhouette remained
+    // almost vertical. New banks remain render-only and never change the
+    // fixed-step ski heading or edge physics.
     this.rig.setLocalEulerAngles(0, this.isSeamless ? 180 : 0,
-      this.visualFall * 76);
+      this.visualFall * 76 -
+        (this.isSeamless ? this.visualBank : this.visualBank * 0.45));
     this.rig.setLocalPosition(0, this.visualFall * 0.15, 0);
   }
   destroy() {
