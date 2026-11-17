@@ -482,7 +482,7 @@ async function boot() {
   });
   ui.text(
     "renderer-info",
-    `${renderer.app.graphicsDevice.deviceType.toUpperCase()} / PLAYCANVAS`,
+    `${renderer.app.graphicsDevice.deviceType.toUpperCase()} / PLAYCANVAS / ${renderer.ammoEnabled ? "AMMO.JS" : "PHYSIQUE CLASSIQUE"}`,
   );
   document.querySelector("#loading")!.remove();
   renderer.app.start();
