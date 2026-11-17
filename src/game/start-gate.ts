@@ -6,7 +6,7 @@
  */
 export const ALPINE_START_GATE = Object.freeze({
   z: 4.05,
-  postX: -0.77,
+  postX: 0.77,
   height: 0.43,
   wandLength: 0.70,
   triggerAngle: 20,
