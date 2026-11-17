@@ -5,10 +5,9 @@ test("World-Cup-style Super-G start house, four-pole flags and terrain crest", a
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto("/?quality=low&renderer=webgl2");
   await expect(page.locator("#loading")).toHaveCount(0, { timeout: 45000 });
-  await page.locator('header [data-nav="courses"]').click();
-  await page.locator('[data-course="SG"]').click();
+  // Super-G is the sole selectable discipline and opens by default.
   const setup = await page.evaluate(() => (window as any).__ski.getState());
-  // Menu selections rebuild the render scene; race.course switches at start.
+  expect(setup.course).toBe("SG");
   expect(setup.startHouse).toBe(true);
   expect(setup.blueBorderDye).toBe(true);
   expect(setup.sprayedBlueDye).toBe(true);
@@ -124,5 +123,21 @@ test("World-Cup-style Super-G start house, four-pole flags and terrain crest", a
   );
   await page.screenshot({ path: "test-results/superg-finish-reach.png" });
   await expect(page.locator("#modal")).toBeVisible({ timeout: 15000 });
+  // Preserve the SG records and replay workflow after removing other courses.
+  if (finish.missed === 0) {
+    const records = await page.evaluate(() =>
+      JSON.parse(localStorage.getItem("alpine-ski-pro:v1") ?? "null")?.records?.SG ?? []);
+    expect(records.length).toBeGreaterThan(0);
+  }
+  await page.locator("#replay").click();
+  await expect(page.locator("#replay-controls")).toBeVisible();
+  await page.locator('[data-replay-speed="0.5"]').click();
+  expect(await page.evaluate(() => (window as any).__ski.getState().replaySpeed)).toBe(0.5);
+  await page.locator("#replay-seek").evaluate((el: HTMLInputElement) => {
+    el.value = "300";
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  expect(await page.evaluate(() => (window as any).__ski.getState().replayTime))
+    .toBeGreaterThan(1);
   expect(errors).toEqual([]);
 });

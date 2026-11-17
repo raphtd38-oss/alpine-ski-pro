@@ -41,7 +41,7 @@ export function shouldLaunchAtCrest(
   courseId: string, speed: number, curvature: number,
   grounded: boolean,
 ): boolean {
-  return (courseId === "SG" || courseId === "DH") &&
+  return courseId === "SG" &&
     grounded && speed > 18 && curvature < -0.017 &&
     1 + (speed * speed * curvature) / 9.81 < 0.25;
 }

@@ -2,8 +2,8 @@ import type { Settings } from "../ui/ui";
 const KEY = "alpine-ski-pro:settings:v1";
 export function readSettings(): Settings {
   const result: Settings = {
-    course: "SL",
-    equipment: "SL",
+    course: "SG",
+    equipment: "SG",
     quality: "high",
     autoPerformance: true,
     weather: "clear",
@@ -15,9 +15,9 @@ export function readSettings(): Settings {
   try {
     const v = JSON.parse(localStorage.getItem(KEY) ?? "null");
     if (!v || typeof v !== "object") return result;
-    if (["SL", "GS", "SG", "DH"].includes(v.course)) result.course = v.course;
-    if (["SL", "GS", "SG", "DH"].includes(v.equipment))
-      result.equipment = v.equipment;
+    // Migrate older settings without activating the removed SL/GS/DH modes.
+    result.course = "SG";
+    result.equipment = "SG";
     if (["low", "medium", "high", "ultra"].includes(v.quality))
       result.quality = v.quality;
     if (["clear", "overcast", "snow"].includes(v.weather))

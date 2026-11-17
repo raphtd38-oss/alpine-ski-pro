@@ -540,7 +540,7 @@ export class World {
         // SL retains its real-world flexible bare poles. GS/SG/DH get short
         // textured fabric panels tethered to their spring hinges; the cloth
         // moves with a hit rather than remaining frozen in world space.
-        if (this.course.id !== "SL") {
+        {
           // A speed-race gate is two separate pole pairs (4 poles total).
           // Each 0.75 x 0.50 m textile panel spans its own pair, outside
           // the ski crossing corridor; FIS-style, not FIS-homologated.
@@ -556,7 +556,7 @@ export class World {
       this.gateEntities.push(parent);
     }
     if (this.course.id === "SG") this.superGStartBooth();
-    else this.arch(3, "DÉPART", false);
+
     this.arch(this.course.length, "ARRIVÉE", true);
   }
 

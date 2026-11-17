@@ -1,5 +1,7 @@
 # État de reprise — 15 novembre 2026
 
+> **État actif V1.12 (17 novembre 2026) :** seul le Super-G de 1 980 m / 34 portes demeure dans `COURSES` et `EQUIPMENT`. Modes SL, GS, DH, boutons de sélection et ancien test de drapeaux supprimés ; préférences migrées vers SG et seuls les records/fantômes SG sont chargés. Les captures obsolètes (environ 2,44 Mo) et `scripts/build_skier.py` ont été retirés du HEAD ; conservés dans l'historique Git. La physique, les replays et les assets utilisés sont préservés. Les mentions historiques d'autres courses ci-dessous décrivent les anciennes versions, pas l'état actuel.
+
 ## Session 1 / version 0.1
 
 Dépôt : `raphtd38-oss/alpine-ski-pro`. Branche de travail : `feat/playable-slalom`.

@@ -45,9 +45,9 @@ describe("V1.11 FIS-style Super-G start mechanism", () => {
     expect(race.startGateOpened).toBe(true);
     expect(race.startGateImpulseTime).toBeCloseTo(0.65 - dt * 0.75, 8);
     expect(race.time).toBeCloseTo(dt * 0.75, 8);
-    const slalom = new Race(COURSES.SL, "SL");
-    slalom.start();
-    expect(slalom.startGateOpened).toBe(true);
+    const nextRun = new Race(COURSES.SG, "SG");
+    nextRun.start();
+    expect(nextRun.startGateOpened).toBe(false);
   });
   it("synchronizes the acceleration with three actual snow contacts", () => {
     for (const t of [0.10, 0.53, 0.98]) {

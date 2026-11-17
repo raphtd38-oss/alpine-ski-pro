@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-test("renders a real 3D scene, responds to keys, pauses, restarts and changes equipment", async ({
+test("renders the Super-G, responds to keys, pauses, restarts and changes suit", async ({
   page,
 }) => {
   const errors: string[] = [];
@@ -9,7 +9,9 @@ test("renders a real 3D scene, responds to keys, pauses, restarts and changes eq
   const athlete = await page.evaluate(() => (window as any).__ski.getState());
   expect(athlete.athleteBones).toBeGreaterThanOrEqual(17);
   expect(athlete.athleteSurfaces).toBeGreaterThanOrEqual(40);
-  expect(athlete.flexiblePoleTips).toBe(44);
+  expect(athlete.flexiblePoleTips).toBe(68);
+  expect(athlete.course).toBe("SG");
+  await expect(page.locator('[data-nav="courses"]')).toHaveCount(0);
   expect(athlete.pressure).toBe(1);
   expect(athlete.skid).toBe(0);
   await expect(page.locator("h1")).toContainText("VOTRE");
@@ -55,63 +57,11 @@ test("renders a real 3D scene, responds to keys, pauses, restarts and changes eq
   await page.keyboard.press("Escape");
   await page.locator("#home").click();
   await page.locator('[data-nav="gear"]').click();
-  await page.locator('[data-gear="GS"]').click();
+  await page.locator('[data-color="#eb552d"]').click();
   await page.locator("#play").click();
   await page.waitForTimeout(600);
   expect(errors).toEqual([]);
 });
-test("completes a valid slalom, persists the result and plays a replay", async ({
-  page,
-}) => {
-  const errors: string[] = [];
-  page.on("pageerror", (e) => errors.push(e.message));
-  await page.goto("/?quality=low");
-  await expect(page.locator("#loading")).toHaveCount(0, { timeout: 45000 });
-  await page.locator("#play").click();
-  const result = await page.evaluate(() => {
-    const api = (window as any).__ski,
-      neutral = { steer: 0, tuck: false, brake: false, jump: false };
-    api.step(361, neutral);
-    for (let i = 0; i < 18000; i++) {
-      const s = api.getState();
-      if (s.phase === "finished") return s;
-      const c = api.getCourse(),
-        g = c.gates[s.gate] || { x: 0, z: c.length + 10 };
-      const desired = Math.atan2(g.x - s.x, Math.max(6, g.z - s.z));
-      api.step(1, {
-        ...neutral,
-        steer: Math.max(-0.9, Math.min(0.9, (desired - s.heading) * 3)),
-        brake: s.vz > 12,
-      });
-    }
-    return api.getState();
-  });
-  expect(result.phase).toBe("finished");
-  expect(result.missed).toBe(0);
-  await expect(page.locator(".result-badge")).toContainText("RECORD");
-  await page.screenshot({ path: "test-results/results.png" });
-  expect(
-    await page.evaluate(
-      () => JSON.parse(localStorage.getItem("alpine-ski-pro:v1")!).completed,
-    ),
-  ).toBe(1);
-  await page.locator("#replay").click();
-  await expect(page.locator("#modal")).toBeHidden();
-  await page.waitForTimeout(500);
-  await expect(page.locator("#race-status")).toHaveText("REPLAY");
-  await expect(page.locator("#replay-controls")).toBeVisible();
-  await page.locator('[data-replay-speed="0.5"]').click();
-  expect(await page.evaluate(() => (window as any).__ski.getState().replaySpeed)).toBe(0.5);
-  await page.locator('[data-replay-speed="2"]').click();
-  expect(await page.evaluate(() => (window as any).__ski.getState().replaySpeed)).toBe(2);
-  await page.locator("#replay-seek").evaluate((el: HTMLInputElement) => {
-    el.value = "400";
-    el.dispatchEvent(new Event("input", { bubbles: true }));
-  });
-  expect(await page.evaluate(() => (window as any).__ski.getState().replayTime)).toBeGreaterThan(1);
-  expect(errors).toEqual([]);
-});
-
 test("training mode reveals advisory guide but regular racing does not", async ({ page }) => {
   await page.goto("/?quality=low");
   await expect(page.locator("#loading")).toHaveCount(0, { timeout: 45000 });

@@ -36,11 +36,11 @@ export class UI {
     public settings: Settings,
     public progress: Progress,
   ) {
-    el.innerHTML = `<div class="vignette"></div><header id="header"><a class="brand" href="#" aria-label="Accueil Alpine Ski Pro"><svg viewBox="0 0 48 40"><path d="m2 33 17-27 10 16 6-9 11 20H2Z" fill="none" stroke="currentColor" stroke-width="3"/><path d="m13 16 6 4 5-5" fill="none" stroke="#fa6846" stroke-width="3"/></svg><span>ALPINE <b>SKI PRO</b><small>THE MOUNTAIN IS YOURS</small></span></a><nav><button data-nav="play" class="active">Jouer</button><button data-nav="courses">Courses</button><button data-nav="career">Carrière</button><button data-nav="gear">Équipement</button></nav><button class="icon-button" data-nav="settings" aria-label="Paramètres"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3" fill="#142e3f"/><circle cx="16" cy="17" r="3" fill="#142e3f"/></svg></button></header>
+    el.innerHTML = `<div class="vignette"></div><header id="header"><a class="brand" href="#" aria-label="Accueil Alpine Ski Pro"><svg viewBox="0 0 48 40"><path d="m2 33 17-27 10 16 6-9 11 20H2Z" fill="none" stroke="currentColor" stroke-width="3"/><path d="m13 16 6 4 5-5" fill="none" stroke="#fa6846" stroke-width="3"/></svg><span>ALPINE <b>SKI PRO</b><small>THE MOUNTAIN IS YOURS</small></span></a><nav><button data-nav="play" class="active">Jouer</button><button data-nav="career">Carrière</button><button data-nav="gear">Skieur</button></nav><button class="icon-button" data-nav="settings" aria-label="Paramètres"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3" fill="#142e3f"/><circle cx="16" cy="17" r="3" fill="#142e3f"/></svg></button></header>
   <main id="menu"><section class="hero"><div class="eyebrow"><i></i> SAISON 01 · LES ALPES</div><h1>LA MONTAGNE.<br>VOTRE <em>LIGNE.</em></h1><p>Le silence au départ. La morsure des carres.<br>Trouvez votre rythme, laissez votre trace. En entraînement, une ligne de conduite aide à passer les portes.</p><div class="hero-actions"><button class="primary" id="play">PRENDRE LE DÉPART <span>${launchIcon}</span></button><button class="secondary" id="train">S’entraîner</button></div><div class="hint"><span class="key">A</span><span class="key">D</span> pour carver <span class="separator">/</span> <span class="key">W</span> pour la vitesse</div></section>
-  <aside class="course-preview"><div class="preview-top"><span>VOTRE PROCHAINE DESCENTE</span><span class="live-dot">●</span></div><div class="course-title"><div><small id="discipline-label">SLALOM / SL</small><h2 id="course-name">Les Aiguilles</h2></div><svg class="route-art" viewBox="0 0 70 105"><path d="M45 5C-5 22 75 30 27 47S70 70 22 90" stroke="#f96c48" fill="none" stroke-width="2" stroke-dasharray="4 3"/><circle cx="45" cy="5" r="4" fill="white"/><circle cx="22" cy="90" r="4" fill="#f96c48"/></svg></div><div class="course-stats"><div><strong id="course-gates">22</strong><small>PORTES</small></div><div><strong id="course-length">570 <small>m</small></strong><small>DISTANCE</small></div><div><strong id="course-drop">140 <small>m</small></strong><small>DÉNIVELÉ</small></div></div><button class="course-link" data-nav="courses">Choisir une autre piste <span>→</span></button></aside>
-  <footer><span><i class="status-dot"></i> ALPINE SKI PRO V1.8 · SUPER-G TRACÉ ALPIN <b>·</b> 100 % NAVIGATEUR</span><button data-nav="leaderboard">VOS RECORDS <span>${launchIcon}</span></button><span id="renderer-info">PLAYCANVAS ENGINE</span></footer></main>
-  <section id="hud" hidden><div class="race-top"><div class="race-brand">ALPINE <b>SKI PRO</b><small id="hud-course">LES AIGUILLES · SL</small></div><div class="timing"><small>TEMPS DE COURSE</small><strong id="time">00:00.00</strong><span id="split">À vous de tracer la ligne</span></div><button id="pause" class="icon-button" aria-label="Pause"><span class="pause-bars"></span></button></div><div id="countdown" aria-live="polite"></div><div id="race-message"></div><div class="race-bottom"><div class="speed"><strong id="speed">0</strong><span>KM/H</span><div class="speed-bar"><i id="speed-bar"></i></div></div><div class="race-instruments"><div class="gate-info"><span>PORTES <strong id="gates">0 / 22</strong></span><span id="race-status">EN PISTE</span></div><div class="course-progress"><i id="progress"></i></div><div class="edge-info"><span id="equipment-label">PRECISION 165</span><span id="edge-label">CARRES 0°</span><span id="surface-label">NEIGE DAMÉE</span><span id="next-gate">PORTE 01 · 40 m</span></div><div class="race-keys"><span id="fps-meter" aria-label="Images par seconde">FPS —</span><span> A / D &nbsp; DIRECTION <b>·</b> W &nbsp; VITESSE <b>·</b> S &nbsp; FREIN <b>·</b> ESPACE &nbsp; IMPULSION <b>·</b> C &nbsp; CAMÉRA <b>·</b> R &nbsp; RECOMMENCER</span></div></div><div class="altitude"><small>RESTANT</small><strong id="remaining">570</strong><span>MÈTRES</span></div></div><div id="touch-controls"><button data-touch="left" aria-label="Tourner à gauche"><svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="m6 12 12-8v16Z"/></svg></button><button data-touch="brake">FREIN</button><button data-touch="right" aria-label="Tourner à droite"><svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="m18 12-12-8v16Z"/></svg></button></div></section>
+  <aside class="course-preview"><div class="preview-top"><span>VOTRE PROCHAINE DESCENTE</span><span class="live-dot">●</span></div><div class="course-title"><div><small id="discipline-label">SUPER-G / SG</small><h2 id="course-name">Glacier Express</h2></div><svg class="route-art" viewBox="0 0 70 105"><path d="M45 5C-5 22 75 30 27 47S70 70 22 90" stroke="#f96c48" fill="none" stroke-width="2" stroke-dasharray="4 3"/><circle cx="45" cy="5" r="4" fill="white"/><circle cx="22" cy="90" r="4" fill="#f96c48"/></svg></div><div class="course-stats"><div><strong id="course-gates">34</strong><small>PORTES</small></div><div><strong id="course-length">1 980 <small>m</small></strong><small>DISTANCE</small></div><div><strong id="course-drop">546 <small>m</small></strong><small>DÉNIVELÉ</small></div></div><div class="course-link">UN SEUL OBJECTIF : LE SUPER-G</div></aside>
+  <footer><span><i class="status-dot"></i> ALPINE SKI PRO · SUPER-G ONLY <b>·</b> 100 % NAVIGATEUR</span><button data-nav="leaderboard">VOS RECORDS <span>${launchIcon}</span></button><span id="renderer-info">PLAYCANVAS ENGINE</span></footer></main>
+  <section id="hud" hidden><div class="race-top"><div class="race-brand">ALPINE <b>SKI PRO</b><small id="hud-course">GLACIER EXPRESS · SG</small></div><div class="timing"><small>TEMPS DE COURSE</small><strong id="time">00:00.00</strong><span id="split">À vous de tracer la ligne</span></div><button id="pause" class="icon-button" aria-label="Pause"><span class="pause-bars"></span></button></div><div id="countdown" aria-live="polite"></div><div id="race-message"></div><div class="race-bottom"><div class="speed"><strong id="speed">0</strong><span>KM/H</span><div class="speed-bar"><i id="speed-bar"></i></div></div><div class="race-instruments"><div class="gate-info"><span>PORTES <strong id="gates">0 / 34</strong></span><span id="race-status">EN PISTE</span></div><div class="course-progress"><i id="progress"></i></div><div class="edge-info"><span id="equipment-label">VELOCITY 205</span><span id="edge-label">CARRES 0°</span><span id="surface-label">NEIGE DAMÉE</span><span id="next-gate">PORTE 01 · 55 m</span></div><div class="race-keys"><span id="fps-meter" aria-label="Images par seconde">FPS —</span><span> A / D &nbsp; DIRECTION <b>·</b> W &nbsp; VITESSE <b>·</b> S &nbsp; FREIN <b>·</b> ESPACE &nbsp; IMPULSION <b>·</b> C &nbsp; CAMÉRA <b>·</b> R &nbsp; RECOMMENCER</span></div></div><div class="altitude"><small>RESTANT</small><strong id="remaining">1980</strong><span>MÈTRES</span></div></div><div id="touch-controls"><button data-touch="left" aria-label="Tourner à gauche"><svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="m6 12 12-8v16Z"/></svg></button><button data-touch="brake">FREIN</button><button data-touch="right" aria-label="Tourner à droite"><svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="m18 12-12-8v16Z"/></svg></button></div></section>
   <div id="replay-controls" hidden aria-label="Commandes du replay"><span class="replay-title">REPLAY · ANALYSEZ VOTRE TRAJECTOIRE</span><div class="replay-toolbar"><span id="replay-timecode">00:00.00 / 00:00.00</span><input id="replay-seek" aria-label="Position de la vidéo" type="range" min="0" max="1000" value="0"><div class="replay-speeds" aria-label="Vitesse de lecture"><button type="button" data-replay-speed="0.5">0,5×</button><button type="button" data-replay-speed="1" class="active">1×</button><button type="button" data-replay-speed="2">2×</button></div><span>CAMÉRA : C</span></div></div>
   <div id="modal" class="modal-backdrop" hidden></div><div id="toast" role="status"></div>`;
     this.menu = el.querySelector("#menu")!;
@@ -99,12 +99,7 @@ export class UI {
   updateCourse() {
     const c = COURSES[this.settings.course];
     this.text("course-name", c.name);
-    this.text(
-      "discipline-label",
-      { SL: "SLALOM", GS: "GÉANT", SG: "SUPER-G", DH: "DESCENTE" }[c.id] +
-        " / " +
-        c.id,
-    );
+    this.text("discipline-label", "SUPER-G / SG");
     this.text("course-gates", String(c.gates.length));
     this.text("course-length", c.length + " m");
     this.text("course-drop", Math.round(c.length * c.grade) + " m");
@@ -141,31 +136,7 @@ export class UI {
       this.close();
       return;
     }
-    if (view === "courses") {
-      this.panel(
-        "Choisissez votre ligne",
-        `<p class="panel-intro">Quatre tracés, quatre rythmes. Le slalom est le parcours de référence de cette version.</p><div class="course-grid">${Object.values(
-          COURSES,
-        )
-          .map(
-            (c, i) =>
-              `<button class="course-card ${this.settings.course === c.id ? "selected" : ""}" data-course="${c.id}"><span class="course-number">0${i + 1}</span><span class="badge">${c.id}</span><h3>${c.name}</h3><p>${c.subtitle}</p><div>${c.length} m <b>·</b> ${c.gates.length} portes <b>·</b> ${Math.round(c.length * c.grade)} m D−</div></button>`,
-          )
-          .join(
-            "",
-          )}</div><p class="footnote">Tracés originaux générés. Aucun classement mondial dans cette version.</p>`,
-      );
-      this.modal.querySelectorAll<HTMLElement>("[data-course]").forEach(
-        (b) =>
-          (b.onclick = () => {
-            this.settings.course = b.dataset.course as Discipline;
-            this.settings.equipment = this.settings.course;
-            this.updateCourse();
-            this.settingsChanged();
-            this.close();
-          }),
-      );
-    } else if (view === "settings") {
+    if (view === "settings") {
       this.panel(
         "À votre mesure",
         `<div class="settings-grid"><label>Qualité graphique<select id="quality">${(["low", "medium", "high", "ultra"] as Quality[]).map((q, i) => `<option value="${q}" ${q === this.settings.quality ? "selected" : ""}>${["Faible", "Moyen", "Élevé", "Ultra"][i]}</option>`).join("")}</select></label><label>Conditions<select id="weather">${(["clear", "overcast", "snow"] as Weather[]).map((q, i) => `<option value="${q}" ${q === this.settings.weather ? "selected" : ""}>${["Grand beau", "Ciel couvert", "Brume neigeuse"][i]}</option>`).join("")}</select></label></div><div class="toggles">${[
@@ -198,24 +169,15 @@ export class UI {
       });
     } else if (view === "gear") {
       this.panel(
-        "L’outil de votre trajectoire",
+        "Votre skieur de Super-G",
         `<div class="gear-grid">${Object.values(EQUIPMENT)
           .map(
             (e) =>
-              `<button class="gear-card ${e.id === this.settings.equipment ? "selected" : ""}" data-gear="${e.id}"><div class="ski-illustration"><i></i><i></i></div><small>${e.id} / RACE SERIES</small><h3>${e.name}</h3><p>${Math.round(e.length * 100)} cm <b>·</b> Rayon ${e.radius} m</p><label>Accroche <meter min="0" max="1.2" value="${e.grip}"></meter></label><label>Réactivité <meter min="0" max="7" value="${e.response}"></meter></label><label>Stabilité <meter min="0" max="1" value="${e.stability}"></meter></label></button>`,
+              `<div class="gear-card selected"><div class="ski-illustration"><i></i><i></i></div><small>${e.id} / RACE SERIES</small><h3>${e.name}</h3><p>${Math.round(e.length * 100)} cm <b>·</b> Rayon ${e.radius} m</p><label>Accroche <meter min="0" max="1.2" value="${e.grip}"></meter></label><label>Réactivité <meter min="0" max="7" value="${e.response}"></meter></label><label>Stabilité <meter min="0" max="1" value="${e.stability}"></meter></label></div>`,
           )
           .join(
             "",
-          )}</div><div class="suit-options">Combinaison ${["#eb552d", "#1688b0", "#e2c95e", "#e9f0ec"].map((hex) => `<button class="swatch" data-color="${hex}" style="background:${hex}" aria-label="Combinaison ${hex}"></button>`).join("")}</div><p class="footnote">Longueur, rayon, rigidité, accroche et réactivité influencent réellement la conduite. Casque, chaussures et bâtons : modèle unique pour cette version.</p>`,
-      );
-      this.modal.querySelectorAll<HTMLElement>("[data-gear]").forEach(
-        (b) =>
-          (b.onclick = () => {
-            this.settings.equipment = b.dataset.gear as Discipline;
-            this.updateCourse();
-            this.settingsChanged();
-            this.close();
-          }),
+          )}</div><div class="suit-options">Combinaison ${["#eb552d", "#1688b0", "#e2c95e", "#e9f0ec"].map((hex) => `<button class="swatch" data-color="${hex}" style="background:${hex}" aria-label="Combinaison ${hex}"></button>`).join("")}</div><p class="footnote">Longueur, rayon, rigidité, accroche et réactivité influencent réellement la conduite. Le Super-G est la seule discipline active. Vous pouvez encore personnaliser la combinaison.</p>`,
       );
       this.modal.querySelectorAll<HTMLElement>("[data-color]").forEach(
         (b) =>
@@ -229,7 +191,7 @@ export class UI {
       const rows = this.progress.data.records[this.settings.course] ?? [];
       this.panel(
         "Vos records",
-        `<p class="panel-intro">${COURSES[this.settings.course].name} · Classement local sur ce navigateur, toutes conditions et tous skis.</p><div class="leaderboard">${rows.length ? rows.map((r, i) => `<div><span class="rank">${String(i + 1).padStart(2, "0")}</span><span>${r.equipment}<small>${new Date(r.date).toLocaleDateString("fr-FR")}</small></span><strong>${formatTime(r.time)}</strong></div>`).join("") : '<div class="empty-state">Votre première ligne reste à tracer.<br><small>Terminez une course sans manquer de porte pour inscrire votre temps.</small></div>'}</div><p class="footnote">Les performances locales ne sont pas vérifiées par un serveur.</p>`,
+        `<p class="panel-intro">${COURSES[this.settings.course].name} · Classement local sur ce navigateur, toutes conditions météo.</p><div class="leaderboard">${rows.length ? rows.map((r, i) => `<div><span class="rank">${String(i + 1).padStart(2, "0")}</span><span>${r.equipment}<small>${new Date(r.date).toLocaleDateString("fr-FR")}</small></span><strong>${formatTime(r.time)}</strong></div>`).join("") : '<div class="empty-state">Votre première ligne reste à tracer.<br><small>Terminez une course sans manquer de porte pour inscrire votre temps.</small></div>'}</div><p class="footnote">Les performances locales ne sont pas vérifiées par un serveur.</p>`,
       );
     } else if (view === "career") {
       this.panel(

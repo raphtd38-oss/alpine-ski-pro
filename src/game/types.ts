@@ -1,4 +1,4 @@
-export type Discipline = "SL" | "GS" | "SG" | "DH";
+export type Discipline = "SG";
 export type Quality = "low" | "medium" | "high" | "ultra";
 export type Weather = "clear" | "overcast" | "snow";
 export interface Gate {
