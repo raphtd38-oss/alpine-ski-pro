@@ -10,7 +10,8 @@ Archive utilisateur examinée le 17 novembre 2026 : `Alpine_Ski_Pro_Studio_Kit_2
 
 1. **LOD des modèles CC0 déjà présents** : adaptation de `03_PLAYCANVAS_EXAMPLES/lod-controller.ts` et du budget `04_TEMPLATES/BUDGETS_PERFORMANCE.json` dans `src/render/scenery-lod.ts` et `src/render/alpine-assets.ts`. Distances selon qualité, hysteresis de 12 m, cadence ~0,22 s, sans modification de la course 120 Hz. Les montagnes et forêts procédurales groupées restent présentes au loin.
 2. **Matériaux PBR de l'athlète** : principes de `02_SCRIPTS/python/generate_pbr.py`, matériau `race_fabric`. `scripts/racer-textures.mjs` génère de nouvelles normales OpenGL et textures ORM à côté des quatre albédo préexistants. Tous sont embarqués dans le même GLB d'athlète 18 articulations. Pas besoin d'installer Python, Blender ou les 42 images dans le navigateur.
-3. **Dynamique de poudreuse** : adaptation des conseils de compétition du guide `01_GUIDES/06_RACE_DESIGN.md` : la réception crée un panache distinct des gerbes de carving ; intensité testable depuis `src/game/snow.ts`, rendu par les particules déjà groupées à 30 Hz de `src/render/effects.ts`.
+3. **Granite et ardoise PBR au bord du Super-G** : le générateur original `granite_alpine` / `slate_ridge` du kit a inspiré `src/render/studio-rock-texel.ts`. Les rochers procéduraux du monde SG possèdent désormais leurs UV, leurs tangentes et trois cartes partagées (couleur, normale, rugosité) ; une seule géométrie groupée demeure pour préserver les performances.
+4. **Dynamique de poudreuse** : adaptation des conseils de compétition du guide `01_GUIDES/06_RACE_DESIGN.md` : la réception crée un panache distinct des gerbes de carving ; intensité testable depuis `src/game/snow.ts`, rendu par les particules déjà groupées à 30 Hz de `src/render/effects.ts`.
 
 ## Éléments conservés pour évaluation ultérieure, pas copiés dans la production
 
