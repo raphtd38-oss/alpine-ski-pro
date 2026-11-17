@@ -1,0 +1,272 @@
+{
+  "schemaVersion": 1,
+  "notes": "Reference catalog only; installation and licenses must be checked independently.",
+  "tools": [
+    {
+      "name": "Blender",
+      "role": "modeling rig animation GLB",
+      "url": "https://www.blender.org/",
+      "license": "free-open-source",
+      "mode": "local"
+    },
+    {
+      "name": "Blender MCP",
+      "role": "AI desktop editing in Blender",
+      "url": "https://github.com/ahujasid/mcp-for-blender",
+      "license": "free-open-source",
+      "mode": "local-mcp"
+    },
+    {
+      "name": "Houdini",
+      "role": "procedural environments snow effects",
+      "url": "https://www.sidefx.com/products/houdini/",
+      "license": "licensed",
+      "mode": "offline-export"
+    },
+    {
+      "name": "Unreal Engine",
+      "role": "advanced lighting and world reference",
+      "url": "https://www.unrealengine.com/",
+      "license": "license-conditional",
+      "mode": "reference-or-export"
+    },
+    {
+      "name": "Unity",
+      "role": "prototype and alternative engine",
+      "url": "https://unity.com/",
+      "license": "license-conditional",
+      "mode": "reference-or-export"
+    },
+    {
+      "name": "Godot",
+      "role": "open-source alternate game engine",
+      "url": "https://godotengine.org/",
+      "license": "free-open-source",
+      "mode": "reference-or-export"
+    },
+    {
+      "name": "PlayCanvas",
+      "role": "game runtime - retain as main engine",
+      "url": "https://playcanvas.com/",
+      "license": "open-source-engine",
+      "mode": "runtime"
+    },
+    {
+      "name": "Three.js",
+      "role": "web scene prototyping",
+      "url": "https://threejs.org/",
+      "license": "free-open-source",
+      "mode": "reference"
+    },
+    {
+      "name": "Babylon.js",
+      "role": "web scene prototyping",
+      "url": "https://www.babylonjs.com/",
+      "license": "free-open-source",
+      "mode": "reference"
+    },
+    {
+      "name": "Autodesk Maya",
+      "role": "character animation and rigging",
+      "url": "https://www.autodesk.com/products/maya/overview",
+      "license": "licensed",
+      "mode": "offline-export"
+    },
+    {
+      "name": "ZBrush",
+      "role": "high resolution sculpting",
+      "url": "https://www.maxon.net/en/zbrush",
+      "license": "licensed",
+      "mode": "offline-export"
+    },
+    {
+      "name": "Substance 3D Painter",
+      "role": "PBR texture painting",
+      "url": "https://www.adobe.com/products/substance3d-painter.html",
+      "license": "licensed",
+      "mode": "texture-export"
+    },
+    {
+      "name": "Substance 3D Designer",
+      "role": "procedural PBR materials",
+      "url": "https://www.adobe.com/products/substance3d-designer.html",
+      "license": "licensed",
+      "mode": "texture-export"
+    },
+    {
+      "name": "Mari",
+      "role": "film-quality texture painting",
+      "url": "https://www.foundry.com/products/mari",
+      "license": "licensed",
+      "mode": "texture-export"
+    },
+    {
+      "name": "Marvelous Designer",
+      "role": "ski suit cloth modeling",
+      "url": "https://www.marvelousdesigner.com/",
+      "license": "licensed",
+      "mode": "offline-export"
+    },
+    {
+      "name": "Cascadeur",
+      "role": "physics-assisted character animation",
+      "url": "https://cascadeur.com/",
+      "license": "license-conditional",
+      "mode": "animation-export"
+    },
+    {
+      "name": "Rokoko",
+      "role": "motion capture and retargeting",
+      "url": "https://www.rokoko.com/",
+      "license": "hardware-or-paid-options",
+      "mode": "animation-export"
+    },
+    {
+      "name": "Mixamo",
+      "role": "basic motion library, check rights",
+      "url": "https://www.mixamo.com/",
+      "license": "license-conditional",
+      "mode": "animation-export"
+    },
+    {
+      "name": "Character Creator",
+      "role": "character pipeline",
+      "url": "https://www.reallusion.com/character-creator/",
+      "license": "licensed",
+      "mode": "offline-export"
+    },
+    {
+      "name": "iClone",
+      "role": "character animation pipeline",
+      "url": "https://www.reallusion.com/iclone/",
+      "license": "licensed",
+      "mode": "animation-export"
+    },
+    {
+      "name": "Gaea",
+      "role": "terrain and mountain heightmaps",
+      "url": "https://quadspinner.com/",
+      "license": "license-conditional",
+      "mode": "heightmap-export"
+    },
+    {
+      "name": "World Machine",
+      "role": "procedural alpine terrain",
+      "url": "https://www.world-machine.com/",
+      "license": "license-conditional",
+      "mode": "heightmap-export"
+    },
+    {
+      "name": "Material Maker",
+      "role": "open-source procedural materials",
+      "url": "https://www.materialmaker.org/",
+      "license": "free-open-source",
+      "mode": "texture-export"
+    },
+    {
+      "name": "ArmorPaint",
+      "role": "PBR texture painting",
+      "url": "https://armorpaint.org/",
+      "license": "license-conditional",
+      "mode": "texture-export"
+    },
+    {
+      "name": "Krita",
+      "role": "2D texture and concept painting",
+      "url": "https://krita.org/",
+      "license": "free-open-source",
+      "mode": "texture-export"
+    },
+    {
+      "name": "GIMP",
+      "role": "2D texture editing",
+      "url": "https://www.gimp.org/",
+      "license": "free-open-source",
+      "mode": "texture-export"
+    },
+    {
+      "name": "MeshLab",
+      "role": "mesh inspection and cleanup",
+      "url": "https://www.meshlab.net/",
+      "license": "free-open-source",
+      "mode": "offline-export"
+    },
+    {
+      "name": "Instant Meshes",
+      "role": "auto retopology",
+      "url": "https://github.com/wjakob/instant-meshes",
+      "license": "free-open-source",
+      "mode": "offline-export"
+    },
+    {
+      "name": "OpenUSD",
+      "role": "complex scene interchange",
+      "url": "https://openusd.org/",
+      "license": "free-open-source",
+      "mode": "offline-export"
+    },
+    {
+      "name": "glTF Transform",
+      "role": "GLB optimization and inspection",
+      "url": "https://gltf-transform.dev/",
+      "license": "free-open-source",
+      "mode": "asset-build"
+    },
+    {
+      "name": "glTF Validator",
+      "role": "Khronos GLB standard validation",
+      "url": "https://github.khronos.org/glTF-Validator/",
+      "license": "free-open-source",
+      "mode": "asset-qa"
+    },
+    {
+      "name": "meshoptimizer",
+      "role": "mesh compression and optimization",
+      "url": "https://github.com/zeux/meshoptimizer",
+      "license": "free-open-source",
+      "mode": "asset-build"
+    },
+    {
+      "name": "KTX-Software",
+      "role": "texture KTX2 encoding",
+      "url": "https://github.com/KhronosGroup/KTX-Software",
+      "license": "free-open-source",
+      "mode": "asset-build"
+    },
+    {
+      "name": "Basis Universal",
+      "role": "supercompressed GPU textures",
+      "url": "https://github.com/BinomialLLC/basis_universal",
+      "license": "free-open-source",
+      "mode": "asset-build"
+    },
+    {
+      "name": "Poly Haven",
+      "role": "CC0 PBR assets and HDRIs",
+      "url": "https://polyhaven.com/",
+      "license": "cc0-assets",
+      "mode": "asset-source"
+    },
+    {
+      "name": "ambientCG",
+      "role": "CC0 materials",
+      "url": "https://ambientcg.com/",
+      "license": "cc0-assets",
+      "mode": "asset-source"
+    },
+    {
+      "name": "Kenney",
+      "role": "game art asset packs",
+      "url": "https://kenney.nl/assets",
+      "license": "license-per-asset",
+      "mode": "asset-source"
+    },
+    {
+      "name": "PureRef",
+      "role": "reference image board",
+      "url": "https://www.pureref.com/",
+      "license": "license-conditional",
+      "mode": "reference"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+  "mcpServers": {
+    "blender": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": [
+        "mcp-for-blender"
+      ],
+      "env": {
+        "BLENDER_HOST": "localhost",
+        "BLENDER_PORT": "9876",
+        "BLENDER_MCP_SAFE_MODE": "1"
+      }
+    }
+  }
+}
