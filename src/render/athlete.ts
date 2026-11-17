@@ -488,41 +488,62 @@ export class Athlete {
       // Both arms plant together for the first strokes; the shoulders and
       // elbows follow through as the hips and legs extend against the snow.
       const pushStroke = startPush * (-39 + pushCycle * 49 - launchContact * 8);
+      const reachingHand = i === 1 ? finishPose.armReach : 0;
+      const outsideArm = outside > 0;
+      // The 25-bone GLB has a distinct collarbone and upper arm. Animate
+      // BOTH, while keeping the clavicles close and elbows tucked in high
+      // speed. The old rig/ghost simply skips the extra upper-arm joint.
       j[side + "Shoulder"]?.setLocalEulerAngles(
-        -tuck * 15 + Math.sin(f.t * 3 + i) * Math.abs(edge) * 4 -
-          activePlant * 23 + shoulderWrap +
-          pushStroke - (i === 1 ? 51 : 8) * finishReach,
+        pitchSign * (-tuck * 15 +
+          Math.sin(f.t * 2.3 + i) * Math.abs(edge) * 2 -
+          activePlant * 8 + shoulderWrap + pushStroke -
+          (i === 1 ? 35 : 6) * finishPose.armReach),
+        -edge * 3,
+        (i === 0 ? -1 : 1) *
+          (6 + Math.abs(edge) * 8 + (f.skid ?? 0) * 5 - tuck * 2 +
+            (i === 0 ? 10 : 0) * finishPose.armReach),
+      );
+      j[side + "UpperArm"]?.setLocalEulerAngles(
+        pitchSign * (-tuck * 20 -
+          carvePose.engagement * (outsideArm ? 3 : 8) +
+          reachingHand * 40),
+        (i === 0 ? 1 : -1) * (tuck * 5 + carvePose.engagement * 3),
         0,
-        (i === 0 ? -1 : 1) * (8 + Math.abs(edge) * 12 +
-          (f.skid ?? 0) * 13),
       );
       j[side + "Elbow"]?.setLocalEulerAngles(
-        -tuck * 36 - activePlant * 15 +
-          startPush * (21 + pushCycle * 26) + (i === 1 ? 26 : 0) * finishReach,
-        0, 0);
-      j[side + "Wrist"]?.setLocalEulerAngles(
-        -startPush * (7 + pushCycle * 8) + (i === 1 ? 9 : 0) * finishReach,
+        pitchSign * (-tuck * 36 - activePlant * 7 +
+          startPush * (21 + pushCycle * 26) + reachingHand * 56),
         0, 0,
       );
-      const surf = this.skiSurfaces[i];
-      const vertices = [...surf.base];
-      for (let k = 0; k < vertices.length; k += 3) {
-        const t = (vertices[k + 2] / this.equipment.length) * 2;
-        vertices[k + 1] -=
-          (f.flex ?? 0) * 0.018 * (1 - t * t) * (1 + outside * 0.35);
+      j[side + "Wrist"]?.setLocalEulerAngles(
+        pitchSign * (-startPush * (7 + pushCycle * 8) +
+          reachingHand * 9),
+        0, 0,
+      );
+      // The new monobloc GLB carries its own long Super-G skis, boots and
+      // race bindings parented to the corrected foot bones. Avoid updating
+      // invisible legacy meshes/vertex buffers on every animation frame.
+      if (!this.isSeamless) {
+        const surf = this.skiSurfaces[i];
+        const vertices = [...surf.base];
+        for (let k = 0; k < vertices.length; k += 3) {
+          const t = (vertices[k + 2] / this.equipment.length) * 2;
+          vertices[k + 1] -=
+            (f.flex ?? 0) * 0.018 * (1 - t * t) * (1 + outside * 0.35);
+        }
+        surf.mesh.setPositions(vertices);
+        surf.mesh.update();
+        this.skis[i].setLocalEulerAngles(
+          outside * (f.skid ?? 0) * 3.5 + airborne * 4,
+          outside * 1.5,
+          -edge * (45 + outsidePressure * 6) * (1 - airborne * 0.52) + shake * 90,
+        );
+        this.skis[i].setLocalPosition(
+          (i === 0 ? -1 : 1) * (0.16 + Math.abs(edge) * 0.035),
+          Math.max(0, -outside) * 0.029 + Math.abs(outside) * 0.008,
+          0.02,
+        );
       }
-      surf.mesh.setPositions(vertices);
-      surf.mesh.update();
-      this.skis[i].setLocalEulerAngles(
-        outside * (f.skid ?? 0) * 3.5 + airborne * 4,
-        outside * 1.5,
-        -edge * (45 + outsidePressure * 6) * (1 - airborne * 0.52) + shake * 90,
-      );
-      this.skis[i].setLocalPosition(
-        (i === 0 ? -1 : 1) * (0.16 + Math.abs(edge) * 0.035),
-        Math.max(0, -outside) * 0.029 + Math.abs(outside) * 0.008,
-        0.02,
-      );
       const wrist = j[side + "Wrist"];
       if (wrist) {
         const wristWorld = wrist.getPosition();
