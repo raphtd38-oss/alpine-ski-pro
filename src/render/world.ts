@@ -11,6 +11,7 @@ import { gateFlagFlutter } from "../game/gates-visual";
 import { tipVibration, type PoleState } from "../game/poles";
 import { SUPER_G_ROLLERS, superGSector } from "../game/superg";
 import { ALPINE_START_GATE } from "../game/start-gate";
+import { addCortinaScenery } from "./cortina-scenery";
 import type { Course, Quality, Weather } from "../game/types";
 import { material, meshEntity, shape, beam, rng, color } from "./geometry";
 export class World {
@@ -53,10 +54,13 @@ export class World {
     this.blueFlag = this.gateMaterial("blue", true);
     if (!this.alpineAssets?.applySnowMaterial(this.snow)) this.snowTexture();
     this.terrain();
+    // The active Super-G is Cortina Olympia delle Tofane, not Glacier Express.
+    // Snow, blue-dye and pole collision meshes keep their own unchanged code.
+    this.materials.push(...addCortinaScenery(this.app, this.root, this.course, this.quality));
     this.buildTrainingGuide();
     this.mountains();
     this.forest();
-    if (this.course.id === "SG") this.superGScenery();
+    // Cortina replaces the old Glacier Express rock scenery (no duplicates).
     this.gates();
     if (this.course.id === "SG") {
       this.superGMarkers();
@@ -65,7 +69,7 @@ export class World {
     this.fences();
     this.buildings();
     this.finishArena();
-    this.lift();
+    // The Cortina Duca d\'Aosta lift is generated outside the piste by addCortinaScenery().
     this.alpineAssets?.populate(this.root, this.course, this.quality);
   }
   mat(name: string, hex: string, metal = 0, gloss = 0.25) {
@@ -143,13 +147,13 @@ export class World {
       ind: number[] = [],
       col: number[] = [],
       uv: number[] = [];
-    const nx = 80,
+    const nx = 104,
       nz = Math.ceil((this.course.length + 240) / 5),
-      width = 260;
+      width = 440;
     for (let j = 0; j <= nz; j++) {
       const z = -100 + (j * (this.course.length + 240)) / nz;
       for (let i = 0; i <= nx; i++) {
-        const x = (i / nx - 0.5) * width;
+        const x = courseCenterX(z, this.course) + (i / nx - 0.5) * width;
         const h = terrainHeight(x, z, this.course);
         p.push(x, h, z);
         uv.push(x / 2, z / 3);
@@ -461,10 +465,10 @@ export class World {
       "Terrain sector granite and moraine", vertices, indices, granite, colors, uv);
     mesh.render!.castShadows = this.quality !== "low";
     const signs: { z: number; text: string; tone: string }[] = [
-      { z: 400, text: "FORET DES AIGUILLES", tone: "#245b49" },
-      { z: 850, text: "GLACIER / 110 KM H", tone: "#477a99" },
-      { z: 1260, text: "COMBE DU ROC", tone: "#465968" },
-      { z: 1725, text: "SPRINT FINAL", tone: "#b52937" },
+      { z: 400, text: "DUCA D AOSTA", tone: "#245b49" },
+      { z: 850, text: "GRAN CURVONE", tone: "#477a99" },
+      { z: 1260, text: "SCARPADON", tone: "#465968" },
+      { z: 1725, text: "PALE DI RUMERLO", tone: "#b52937" },
     ];
     for (const signInfo of signs) {
       const z = signInfo.z;
@@ -1055,7 +1059,7 @@ export class World {
       "#ee5c3a",
     );
     for (const z of [50, 160, 300, this.course.length - 30]) {
-      const x = this.course.width / 2 + 1.5,
+      const x = courseCenterX(z, this.course) + this.course.width / 2 + 1.5,
         h = terrainHeight(x, z, this.course);
       const e = shape(
         this.root,
