@@ -275,3 +275,11 @@ Cette livraison travaille sur le **coureur monobloc 25 os déjà intégré**, sa
 - **Tests** : nouveaux tests géométriques du contact des semelles et nouvel essai navigateur avec relevé des deux pieds et de la distance main–poignée (API de diagnostic seulement en développement). La compilation et les suites complètes doivent être jugées sur la CI finale, pas présumées à partir des seuls tests isolés.
 
 Les coefficients sont des choix d'animation guidés par des séquences filmées, **pas** une motion capture ou une biomécanique officiellement mesurée. Les modèles restent des prototypes numériques détaillés, pas une reproduction photographique de l'athlète réel. La physique à 120 Hz, les portes, la sauvegarde, le tracé Cortina et les horloges ne sont pas modifiés.
+
+## 17 novembre 2026 — posture de carving inspirée de la référence wireframe (branche feat/sg-photo-carve-pose-20261117)
+
+- Deux nouveaux contrôleurs visuels pour le skieur monobloc 25 os : `src/render/superg-carve-kinematics.ts` et `src/render/superg-race-pose-director.ts`. Ils reprennent le modèle mathématique fourni par le propriétaire, avec une posture de carving plus basse (hauteur mini de bassin 0,55 m), un inclinaison du corps limitée à 46°, une carre ski limitée à 68° et un bras extérieur plus ouvert. Ce sont des limites artistiques, **pas** des mesures extraites de l'image.
+- Résolution analytique des deux jambes en 3D, cible de contact avec la neige pour chaque pied, direction et carre de chaque ski indépendantes du buste, maintien des poignées de bâtons aux poignets. Les anciens mouvements ne sont plus appliqués par-dessus la nouvelle IK.
+- Activé exclusivement pour le coureur monobloc SG ; le modèle de secours 18 os et le fantôme conservent leur animation précédente. Aucune modification du tracé Cortina, des portes, du chronomètre, des collisions ni de la physique à 120 Hz.
+- Replays anciens compatibles avec l'absence de vitesse; nouveaux échantillons peuvent porter `vx/vz` pour le dérapage visuel. Diagnostic dev `getAthletePose().competitionPose`.
+- Tests unitaires ajoutés pour les poses gauche/droite, l'absorption, l'envol et les anciens replays. **Compilation, navigateur, fidélité visuelle à l'image et performances matérielles à confirmer par CI et captures** avant de déclarer le rendu validé.

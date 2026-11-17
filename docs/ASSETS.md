@@ -131,3 +131,8 @@ Les scripts de la nouvelle boîte à outils **n'ajoutent pas automatiquement de 
 - Cabane de départ SG : anciennes primitives assemblées supprimées **du générateur de scène**, remplacées par une maquette originale texturée dans `src/render/world.ts`. Texture originale de fibres/planches créée par Canvas sur le navigateur; toit triangulé neige PBR utilisant les cartes déjà chargées; signalétique et pistes originales. Aucune nouvelle image téléchargée.
 - Bâtons SG : tube continu courbe défini par un maillage paramétrique dans `src/render/athlete.ts`; aucun modèle commercial copié. Sons de plantation et clic mécanique : synthèse Web Audio originale dans `src/game/audio.ts`, aucune licence ajoutée.
 - Archive `Alpine_SuperG_Racer_Pro_Kit_2026.zip` autorisée par le propriétaire, examinée; rig candidat 25 os, 146 meshes sur versions full/mobile, neuf animations procédurales. **Ni ses GLB ni ses 64 textures ne sont diffusés dans cette mise à jour** : le skieur existant à 18 os reste activé par compatibilité et performances. Voir `docs/V111_START.md`.
+
+## 17 novembre 2026 — animation des poses de carving
+
+- Référence visuelle : capture wireframe fournie par le propriétaire ; **aucune image externe, motion capture, texture ou modèle supplémentaire intégré au runtime**.
+- Nouveaux modules TypeScript du modèle mathématique et de l'IK 3D dérivés des sources originales transmises par le propriétaire `superg-carve-kinematics.ts` et `superg-race-pose-director.ts`. Les deux modèles de skieur GLB conservent leur provenance V1.13 ; aucune ressource CarveMania utilisée.

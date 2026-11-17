@@ -76,6 +76,8 @@ async function boot() {
     x: state.x,
     z: state.z,
     heading: state.heading,
+    vx: state.vx,
+    vz: state.vz,
     edge: state.edge,
     flex: state.flex,
     load: state.load,
@@ -534,6 +536,7 @@ async function boot() {
             rightBoot: groundClearance("RightFoot"),
             pelvis: groundClearance(athlete.isSeamless ? "Hips" : "Pelvis"),
             poleGripError: [gripError(0), gripError(1)],
+            competitionPose: athlete.getCompetitionDiagnostics(),
           };
         },
         getState: () => ({
