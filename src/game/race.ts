@@ -87,10 +87,18 @@ export class Race {
       s.z >= this.course.gates[this.nextGate].z
     ) {
       const g = this.course.gates[this.nextGate];
-      const f = (g.z - previous.z) / Math.max(1e-9, s.z - previous.z);
+      // The gate is an OPEN corridor between its two inner poles.
+      // Evaluate the skier's crossing at the gate plane, not at the end
+      // of the physics frame. Airborne skis still pass between the flags:
+      // the previous height cutoff incorrectly disqualified clean jumps.
+      const dz = s.z - previous.z;
+      const f = Math.max(0, Math.min(1,
+        dz > 1e-9 ? (g.z - previous.z) / dz : 0));
       const crossingX = previous.x + (s.x - previous.x) * f;
-      const valid =
-        Math.abs(crossingX - g.x) <= g.width / 2 - 0.28 && s.height < 1.5;
+      // Ski boots have roughly 0.16m half-width; a pole brush is legal.
+      const halfCorridor = Math.max(0, g.width / 2 - 0.16);
+      const valid = Number.isFinite(crossingX) &&
+        Math.abs(crossingX - g.x) <= halfCorridor;
       this.gateStatus[this.nextGate] = valid ? "passed" : "missed";
       if (!valid) this.missed++;
       if ((this.nextGate + 1) % 5 === 0) this.splits.push(startTime + dt * f);
