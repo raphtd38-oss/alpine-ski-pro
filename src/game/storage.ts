@@ -16,7 +16,7 @@ const defaults = (): Save => ({
   records: {},
   ghosts: {},
 });
-const disciplines = ["SL", "GS", "SG", "DH"];
+const disciplines: Discipline[] = ["SG"];
 const validResult = (r: Result) =>
   r &&
   r.valid === true &&
@@ -41,7 +41,7 @@ export class Progress {
           this.data.completed = Number.isFinite(d.completed)
             ? Math.max(0, d.completed)
             : 0;
-          for (const id of disciplines as Discipline[]) {
+          for (const id of disciplines) {
             this.data.records[id] = Array.isArray(d.records?.[id])
               ? d.records[id].filter(validResult).slice(0, 10)
               : [];
