@@ -334,10 +334,12 @@ export class Athlete {
     const side = edge > 0.17 ? 1 : edge < -0.17 ? -1 : 0;
     if (side !== 0 && this.lastTurnSide !== 0 && side !== this.lastTurnSide) {
       this.plantingSide = side;
-      this.plantEnergy = 1;
+      // Super-G racers carry the poles; they do not make full SL-style plants
+      // at every large, high-speed turn transition.
+      this.plantEnergy = this.equipment.id === "SG" ? 0.24 : 1;
     }
     if (side !== 0) this.lastTurnSide = side;
-    this.plantEnergy *= Math.exp(-Math.max(0, dt) * 7);
+    this.plantEnergy *= Math.exp(-Math.max(0, dt) * 8);
     const load = Math.max(0, Math.min(1.4, f.flex ?? 0));
     const startPhase = f.startPhase ?? -2;
     const startBrace = superGStartBrace(startPhase);
@@ -408,8 +410,8 @@ export class Athlete {
     // pulses. The hips extend with the shoulder drive, not independently.
     const pushCycle = launchExtension * (1 - Math.min(1, Math.abs(edge)));
     j.Spine?.setLocalEulerAngles(
-      10 + tuck * 27 + startPush * 23 + startBrace * 11 - airborne * 7 +
-        finishReach * 23,
+      pitchSign * (10 + tuck * 27 + startPush * 23 + startBrace * 11 -
+        airborne * 7 + finishReach * 23),
       edge * -4 + this.visualImpact * 6,
       -edge * (18 + outsidePressure * 8) -
         Math.sign(edge) * carvePose.pelvicAngle * 0.40,
@@ -417,13 +419,14 @@ export class Athlete {
     // Stabilize the professional racer's upper body toward the fall line while
     // hips and loaded outside leg continue carving below.
     j.Chest?.setLocalEulerAngles(
-      5 + tuck * 12 + this.visualImpact * 5 + finishReach * 10,
+      pitchSign * (5 + tuck * 12 + this.visualImpact * 5 +
+        finishReach * 10),
       this.visualUpperBody, edge * (12 - load * 2) +
         Math.sign(edge) * carvePose.pelvicAngle * 0.18 + shake * 90,
     );
     j.Head?.setLocalEulerAngles(
-      -12 - tuck * 23 + this.visualImpact * 3 -
-        startPush * 12 + finishReach * 9,
+      pitchSign * (-12 - tuck * 23 + this.visualImpact * 3 -
+        startPush * 12 + finishReach * 9),
       edge * 7 - this.visualImpact * 3,
       edge * 3 - Math.sign(edge) * carvePose.headCounterAngle - shake * 80,
     );
@@ -435,28 +438,32 @@ export class Athlete {
       const outside = (i === 0 ? 1 : -1) * edge;
       // The outside leg extends under pressure, the unloaded inside leg
       // retracts slightly. Both ankles remain animated by the existing IK.
-      const hipY = 0.9 - crouch + outside * (0.048 + outsidePressure * 0.027) +
-        (outside >= 0 ? carvePose.outsideLegLength : -carvePose.insideLegShortening);
-      const dy = Math.min(0.81, hipY - 0.12),
-        dz = 0.02 + tuck * 0.055,
-        L1 = this.isSeamless ? 0.416 : 0.421,
-        L2 = this.isSeamless ? 0.342 : 0.396;
-      const d = Math.sqrt(dy * dy + dz * dz),
-        alpha = Math.acos(
-          Math.max(-1, Math.min(1, (L1 * L1 + d * d - L2 * L2) / (2 * L1 * d))),
-        );
-      const dir = Math.atan2(dz, dy),
-        thigh = dir + alpha,
-        kneeZ = Math.sin(thigh) * L1,
-        kneeY = -Math.cos(thigh) * L1;
-      const calf = Math.atan2(dz - kneeZ, dy + kneeY);
-      const hipRestAngle = this.isSeamless
-        ? Math.atan2(0.191, 0.37) : Math.atan2(0.13, 0.4);
-      const calfRestAngle = this.isSeamless
-        ? Math.atan2(-0.122, 0.319) : Math.atan2(-0.11, 0.38);
-      const hipRot = (-(thigh - hipRestAngle) * 180) / Math.PI;
-      const kneeRot =
-        (-(calf - calfRestAngle) * 180) / Math.PI - hipRot;
+      let hipRot: number, kneeRot: number;
+      if (this.isSeamless) {
+        // The 25-bone model is NOT shaped like the old 18-bone avatar.
+        // Solve against its measured GLB femur/shin vectors: the ski soles
+        // stay on snow when the pelvis compresses, instead of sinking through.
+        const lift = superGSkiFootLift(outside, carvePose.engagement);
+        const leg = superGLegIK(1.01 - crouch, lift);
+        hipRot = leg.hipPitch;
+        kneeRot = leg.kneePitch;
+      } else {
+        // Preserve the original athlete/ghost's proven older rest pose.
+        const hipY = 0.9 - crouch + outside * (0.048 + outsidePressure * 0.027);
+        const dy = Math.min(0.81, hipY - 0.12);
+        const dz = 0.02 + tuck * 0.055;
+        const L1 = 0.421, L2 = 0.396;
+        const d = Math.sqrt(dy * dy + dz * dz);
+        const alpha = Math.acos(Math.max(-1, Math.min(1,
+          (L1 * L1 + d * d - L2 * L2) / (2 * L1 * d))));
+        const thigh = Math.atan2(dz, dy) + alpha;
+        const calf = Math.atan2(dz - Math.sin(thigh) * L1,
+          dy - Math.cos(thigh) * L1);
+        const hipRestAngle = Math.atan2(0.13, 0.4);
+        const calfRestAngle = Math.atan2(-0.11, 0.38);
+        hipRot = (-(thigh - hipRestAngle) * 180) / Math.PI;
+        kneeRot = (-(calf - calfRestAngle) * 180) / Math.PI - hipRot;
+      }
       const flightHip = airborne * -12;
       const flightKnee = airborne * 23;
       j[side + "Hip"]?.setLocalEulerAngles(
@@ -469,7 +476,8 @@ export class Athlete {
       );
       j[side + "Ankle"]?.setLocalEulerAngles(
         -hipRot - kneeRot, 0,
-        -edge * (10 + outsidePressure * 6) + shake * 150,
+        -edge * (this.isSeamless ? 28 + outsidePressure * 6 :
+          10 + outsidePressure * 6) + shake * 150,
       );
       const activePlant = ((i === 0 ? 1 : -1) === this.plantingSide)
         ? this.plantEnergy : 0;
