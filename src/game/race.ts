@@ -7,10 +7,17 @@ import type {
   SkierState,
 } from "./types";
 import { angleDiff } from "./types";
+import { startGateAngle } from "./start-gate";
 import { finishReachAmount, lowHandLead, finishBeamFraction } from "./finish-timing";
 export class Race {
   phase: RacePhase = "ready";
   time = 0;
+  /** GO begins movement; the race timer starts only at the wand impulse. */
+  launchTime = 0;
+  startGateOpened = true;
+  startGateImpulseTime: number | null = null;
+  startGateDegrees = 0;
+  private startGateStepRemainder = 1;
   countdown = 3;
   nextGate = 0;
   missed = 0;
@@ -31,6 +38,18 @@ export class Race {
   }
   start() {
     this.phase = "countdown";
+    this.startGateOpened = this.course.id !== "SG";
+    this.launchTime = 0;
+    this.startGateImpulseTime = null;
+    this.startGateDegrees = 0;
+    this.startGateStepRemainder = 1;
+  }
+  /** Called once by the fixed-step contact detector (never on GO). */
+  openStartGate(fractionIntoTick: number) {
+    if (this.course.id !== "SG" || this.startGateOpened) return;
+    this.startGateOpened = true;
+    this.startGateImpulseTime = this.launchTime;
+    this.startGateStepRemainder = Math.max(0, Math.min(1, 1 - fractionIntoTick));
   }
   tickCountdown(dt: number) {
     this.countdown -= dt;
@@ -41,8 +60,11 @@ export class Race {
   }
   update(previous: SkierState, s: SkierState, dt: number, tuck: boolean) {
     if (this.phase !== "racing") return;
+    if (!this.startGateOpened) return;
+    const timedDt = dt * this.startGateStepRemainder;
+    this.startGateStepRemainder = 1;
     const startTime = this.time;
-    this.time += dt;
+    this.time += timedDt;
     // SG reaches forward and DOWN into the low photocell beam near the line.
     // The timing signal can precede the ski-boot reference by a small
     // geometric distance, but results are only validated after full crossing.
@@ -56,7 +78,7 @@ export class Race {
       const b = lowHandLead(currentReach);
       const f = finishBeamFraction(previous.z, s.z, a, b, this.course.length);
       if (f !== null) {
-        this.finishBeamTime = startTime + dt * f;
+        this.finishBeamTime = startTime + timedDt * f;
         this.finishBeamTriggeredBy = b > 0.05 ? "hand" : "body";
       }
     }
@@ -74,7 +96,7 @@ export class Race {
       if ((this.nextGate + 1) % 5 === 0) this.splits.push(startTime + dt * f);
       this.nextGate++;
     }
-    this.recordTimer += dt;
+    this.recordTimer += timedDt;
     if (this.recordTimer >= 1 / 30 || this.frames.length === 0) {
       this.frames.push({
         t: this.time,
@@ -91,7 +113,9 @@ export class Race {
         landingShock: s.landingShock,
         finishReach: finishReachAmount(this.course.id,
           s.z, this.course.length, Math.hypot(s.vx, s.vz), s.fallen),
-        startPush: this.course.id === "SG" ? Math.max(0, 1 - this.time / 1.5) : 0,
+        startPush: this.course.id === "SG" ? Math.max(0, 1 - this.launchTime / 1.55) : 0,
+        startPhase: this.course.id === "SG" ? this.launchTime : undefined,
+        startGateAngle: startGateAngle(this.course.id, s.z, s.x),
         skid: s.skid,
         pressure: s.pressure,
         height: s.height,
@@ -103,7 +127,7 @@ export class Race {
     if (s.z >= this.course.length) {
       this.time = this.finishBeamTime ?? (
         startTime +
-        (dt * (this.course.length - previous.z)) /
+        (timedDt * (this.course.length - previous.z)) /
           Math.max(1e-9, s.z - previous.z)
       );
       this.phase = "finished";
@@ -145,6 +169,11 @@ export function replayAt(frames: Frame[], time: number): Frame | null {
     poleImpactSide: b.poleImpactSide ?? a.poleImpactSide ?? 0,
     landingShock: (a.landingShock ?? 0) + ((b.landingShock ?? 0) - (a.landingShock ?? 0)) * u,
     startPush: (a.startPush ?? 0) + ((b.startPush ?? 0) - (a.startPush ?? 0)) * u,
+    startPhase: a.startPhase === undefined ? b.startPhase :
+      b.startPhase === undefined ? a.startPhase :
+      a.startPhase + (b.startPhase - a.startPhase) * u,
+    startGateAngle: (a.startGateAngle ?? 0) +
+      ((b.startGateAngle ?? 0) - (a.startGateAngle ?? 0)) * u,
     finishGesture: (a.finishGesture ?? 0) + ((b.finishGesture ?? 0) - (a.finishGesture ?? 0)) * u,
     finishReach: (a.finishReach ?? 0) + ((b.finishReach ?? 0) - (a.finishReach ?? 0)) * u,
     skid: (a.skid ?? 0) + ((b.skid ?? 0) - (a.skid ?? 0)) * u,
