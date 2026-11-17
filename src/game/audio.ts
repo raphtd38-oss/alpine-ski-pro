@@ -286,6 +286,45 @@ export class SkiAudio {
     }
   }
 
+  /** A short, quiet carbide/pole-basket bite into compacted snow. */
+  polePlant() {
+    if (!this.ctx || !this.master || !this.enabled) return;
+    const now = this.ctx.currentTime;
+    const noise = this.impactNoise;
+    if (!noise) return;
+    const source = this.ctx.createBufferSource();
+    const filter = this.ctx.createBiquadFilter();
+    const gain = this.ctx.createGain();
+    filter.type = "lowpass";
+    filter.frequency.value = 850;
+    source.buffer = noise;
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.055, now + 0.007);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.075);
+    source.connect(filter).connect(gain).connect(this.master);
+    source.start(now, 0.02);
+    source.stop(now + 0.08);
+    source.onended = () => {
+      source.disconnect(); filter.disconnect(); gain.disconnect();
+    };
+  }
+
+  /** Restrained mechanical timing-gate microswitch, not a start whistle. */
+  startGateClick() {
+    if (!this.ctx || !this.master || !this.enabled) return;
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(1350, now);
+    osc.frequency.exponentialRampToValueAtTime(630, now + 0.035);
+    gain.gain.setValueAtTime(0.038, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.05);
+    osc.connect(gain).connect(this.master);
+    osc.start(now); osc.stop(now + 0.05);
+    osc.onended = () => { osc.disconnect(); gain.disconnect(); };
+  }
+
   tone(freq: number, duration = 0.12) {
     if (!this.ctx || !this.master) return;
     const osc = this.ctx.createOscillator(),
