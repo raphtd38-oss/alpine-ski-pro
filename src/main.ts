@@ -572,6 +572,8 @@ async function boot() {
         step: (n: number, control: Controls) => {
           for (let i = 0; i < n; i++) fixed(FIXED_DT, control);
         },
+        // DEV only: frame-perfect photographic inspection without advancing wall-clock physics.
+        freezeSimulation: (frozen: boolean) => { paused = frozen; clock.reset(); },
         getCourse: () => race.course,
         getResult: () => lastResult,
       },
