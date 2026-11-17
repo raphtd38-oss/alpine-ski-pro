@@ -1,6 +1,7 @@
 ## 1.10.0 — 17 novembre 2026 — Studio Kit 3D / PBR / LOD
 
 - Analyse de l'archive utilisateur Studio Kit 2026 (11 GLB, 42 cartes PBR, scripts et rapports). Réutilisation **sélective** ; aucun remplacement aveugle de modèles au rendu inférieur ou du terrain physique.
+- PBR original inspiré des recettes du kit `granite_alpine` / `slate_ridge` : albédo, normales et rugosité sur les faces rocheuses groupées des quatre secteurs de Super-G, UV et tangentes inclus.
 - Distance de visibilité des modèles CC0 de décor, par qualité graphique, avec hystérésis et fond alpin groupé toujours présent.
 - Athlète GLB à 18 joints maintenant équipé de cartes OpenGL de micro-normales de tissage/carbone, roughness/metallic et ambient occlusion embarquées avec ses textures UV, selon les principes du générateur PBR du kit.
 - Gerbes de neige à la réception des sauts, séparées des gerbes du carving et bornées selon la qualité (y compris léger retour visuel en qualité basse).
