@@ -20,12 +20,23 @@ test("World-Cup-style Super-G start house, four-pole flags and terrain crest", a
   await page.screenshot({ path: "test-results/superg-start-house.png" });
 
   await page.locator("#play").click();
+  await page.evaluate(() => (window as any).__ski.freezeSimulation(true));
   await page.screenshot({ path: "test-results/superg-in-start-house.png" });
-  const state = await page.evaluate(() => {
+  const firstPush = await page.evaluate(() => {
     const api = (window as any).__ski;
     const neutral = { steer: 0, tuck: false, brake: false, jump: false };
     api.step(361, neutral);
-    api.step(230, neutral);
+    api.step(15, neutral);
+    return api.getState();
+  });
+  expect(firstPush.startLaunchTime).toBeGreaterThan(0);
+  expect(firstPush.startLaunchTime).toBeLessThan(0.40);
+  await page.waitForTimeout(180);
+  await page.screenshot({ path: "test-results/superg-FIRST-pole-push.png" });
+  const state = await page.evaluate(() => {
+    const api = (window as any).__ski;
+    const neutral = { steer: 0, tuck: false, brake: false, jump: false };
+    api.step(215, neutral);
     return api.getState();
   });
   expect(state.course).toBe("SG");
@@ -38,6 +49,7 @@ test("World-Cup-style Super-G start house, four-pole flags and terrain crest", a
   expect((await page.evaluate(() => (window as any).__ski.getState())).timingWandAngle)
     .toBeGreaterThan(10);
   await page.screenshot({ path: "test-results/superg-start-push.png" });
+  await page.evaluate(() => (window as any).__ski.freezeSimulation(false));
 
   const crest = await page.evaluate(() => {
     const api = (window as any).__ski;
