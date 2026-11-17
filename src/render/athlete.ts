@@ -163,14 +163,36 @@ export class Athlete {
       );
       shape(e, "box", "Binding toe", [0, 0.1, 0.15], [0.09, 0.07, 0.1], base);
       e.setLocalPosition(side * 0.16, 0, 0.02);
-      const pole = shape(
-        this.root,
-        "cylinder",
-        "Carbon ski pole",
-        [side * 0.38, 0.5, 0.05],
-        [PRO_POLE.shaftDiameter, PRO_POLE.shaftLength, PRO_POLE.shaftDiameter],
-        base,
-      );
+      const pole = equipment.id === "SG"
+        ? new pc.Entity("Super-G curved carbon pole")
+        : shape(
+          this.root, "cylinder", "Carbon ski pole",
+          [side * 0.38, 0.5, 0.05],
+          [PRO_POLE.shaftDiameter, PRO_POLE.shaftLength, PRO_POLE.shaftDiameter], base,
+        );
+      if (equipment.id === "SG") {
+        this.root.addChild(pole);
+        // Original continuous swept tube, not disjoint rigid cylinders.
+        // A modest aerodynamic bow is specific to the speed disciplines.
+        const v:number[] = [], t:number[] = [], uv:number[] = [];
+        const rings=13, radial=8;
+        for(let j=0;j<=rings;j++) {
+          const r=j/rings, y=(r-.5)*PRO_POLE.shaftLength;
+          const bow=.10*Math.sin(Math.PI*r)**2;
+          for(let k=0;k<=radial;k++) {
+            const angle=k*2*Math.PI/radial;
+            v.push(Math.cos(angle)*PRO_POLE.shaftDiameter*.5,
+              y, bow+Math.sin(angle)*PRO_POLE.shaftDiameter*.5);
+            uv.push(k/radial,r);
+            if(j && k) {
+              const a=(j-1)*(radial+1)+k-1,b=j*(radial+1)+k-1;
+              t.push(a,b,a+1,a+1,b,b+1);
+            }
+          }
+        }
+        meshEntity(app.graphicsDevice,pole,"Continuous SG bowed pole shaft",
+          v,t,base,undefined,uv);
+      }
       this.poles.push(pole);
       // Competition SL poles: a narrow basket near the tip, an ergonomic
       // handgrip and a small protective guard. No metre-wide geometry.
