@@ -1,6 +1,6 @@
 # Feuille de route persistante
 
-> **Priorité actuelle V1.13 : Super-G uniquement, avec le coureur monobloc 25 os effectivement intégré.** Les anciens chapitres parlant de SL, GS ou DH constituent une archive des versions précédentes ; ils ne sont plus au périmètre du jeu. À présent : améliorer le départ, le rig et les proportions du skieur, les poses sur les carres, la neige, l'environnement et le temps de chargement, sans recréer d'autres disciplines.
+> **Priorité actuelle V1.14 : Cortina Olympia delle Tofane (2 105 m, 635 m) uniquement, avec le coureur monobloc 25 os conservé.** Les anciens chapitres parlant de SL, GS ou DH constituent une archive des versions précédentes ; ils ne sont plus au périmètre du jeu. À présent : améliorer le départ, le rig et les proportions du skieur, les poses sur les carres, la neige, l'environnement et le temps de chargement, sans recréer d'autres disciplines.
 
 Référence technique actualisée : [inventaire des outils, plugins, ressources et statuts](TOOLS_AND_RESOURCES.md). Les entrées historiques ci-dessous peuvent évoquer des versions antérieures ; ne pas les interpréter comme des fonctions actives.
 
@@ -8,7 +8,7 @@ Le but est un simulateur de ski de grande qualité, amélioré sur le même dép
 
 ## Priorité 1 — sensations et règles
 
-- Faire essayer le **Super-G** au joueur et recueillir ses sensations sur les prises d'angle, la vitesse, les transitions, les sauts et le freinage.
+- Faire essayer le **Super-G de Cortina 2026** au joueur et recueillir ses sensations sur les prises d'angle, la vitesse, les transitions, les sauts et le freinage.
 - Définir un mode accessible et un mode course exigeant ; conserver les tests de parcours valides.
 - Raffiner contacts séparés des skis et charges intérieures/extérieures, flexion dynamique plus détaillée (déformation visuelle déjà présente), conservation d'énergie et décollage sur relief.
 - Calibrer les piquets sur des valeurs documentées ; distinguer contacts skis / tibias / mains / corps, plier le fût en plus de l'articulation.
