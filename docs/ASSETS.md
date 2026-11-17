@@ -1,3 +1,10 @@
+
+## V1.15 — micro-relief calcaire et éclairage d'origine procédurale
+
+- Un normal map tangent-space procédural est désormais fabriqué via Canvas selon la qualité (128/256/384 pixels) dans src/render/cortina-cinematic-detail.ts ; aucune photographie ni nouveau modèle GLB ajouté et aucune licence tierce consommée.
+- Les 15 vrais spots utilisent PlayCanvas 2.24.1, pas de nouveau service d'éclairage ni shader importé. La texture procédurale est ajoutée aux ressources de World pour éviter toute fuite GPU lors de reconstruction.
+- Les modèles et textures Snow 02, CC0 Poly Haven, ainsi que les GLB du skieur monobloc, demeurent exactement ceux du jeu, sans copie d'assets CarveMania.
+
 ## Extension originale Cortina cinematic (17 novembre 2026)
 
 - `src/render/cortina-cinematic-detail.ts` : roches dolomitiques stratifiées, pics enneigés, forêts (épicéa/mélèze), piste damée, filets A rouges, postes caméra, hameau et fenêtres. Matériaux et géométries **entièrement procéduraux**, sans GLB/PBR externe.
