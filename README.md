@@ -1,17 +1,17 @@
 # Alpine Ski Pro — Super-G
 
-**V1.13 · Coureur monobloc animé · Super-G uniquement**
+**V1.14 · Cortina Olympia delle Tofane · Coureur monobloc 25 os · Super-G uniquement**
 
 🎮 **[Jouer dans le navigateur](https://raphtd38-oss.github.io/alpine-ski-pro/)**
 
-Alpine Ski Pro est désormais consacré **uniquement au Super-G**. Les parcours et les choix de matériel SL, GS et DH ont été retirés du code actif et des menus à la demande du propriétaire. Le jeu reste un simulateur navigateur original basé sur PlayCanvas 2.24.1, TypeScript, Vite, un skieur GLB et une simulation de carving à 120 Hz.
+Alpine Ski Pro est désormais consacré **uniquement au Super-G olympique de Cortina 2026**, dans une reconstruction originale et schématique de l’Olympia delle Tofane. Les parcours et les choix de matériel SL, GS et DH ont été retirés du code actif et des menus à la demande du propriétaire. Le jeu reste un simulateur navigateur original basé sur PlayCanvas 2.24.1, TypeScript, Vite, un skieur GLB et une simulation de carving à 120 Hz.
 
 ## Départ et parcours
 
 - Cabane de compétition avec côtés et arrière fermés, toiture à pans, habillage bois original et protections.
 - Une tige de départ de 70 cm montée à 43 cm de la neige, déclenchement simulé à 20°, chronométrage au franchissement du portillon (non homologué).
 - Trois doubles poussées liées à l'accélération physique, aux articulations et aux contacts des bâtons.
-- Tracé original de 1 980 m, 34 portes de vitesse (4 piquets et 2 drapeaux chacune), marquages bleus, reliefs, compressions et sauts naturels.
+- Tracé Cortina 2026 reconstitué de 2 105 m et 635 m de dénivelé, avec 34 portes jouables de vitesse (4 piquets et 2 drapeaux chacune), marquages bleus, reliefs, compressions et sauts naturels.
 - **Nouveau skieur monobloc 25 os**, 9 clips intégrés, combinaison PBR avec couleur par sommet, épaules/genoux/coudes sans discontinuité topologique et retarget des animations du jeu.
 - **Skis 212 cm et chaussures directement attachés aux os des pieds**, sans doublons procéduraux visibles. Bâtons Super-G courbés et poussées déjà liées à la physique.
 - Deux GLB originaux dans `public/assets/racer/` : **mobile 5,54 Mo** (bas/moyen, écran tactile), **full 17,26 Mo** (haut/ultra sur ordinateur). Une seule variante est téléchargée par session.
@@ -54,6 +54,7 @@ Le workflow [GitHub Actions](.github/workflows/ci.yml) vérifie le code, les ass
 
 - [État du développement](docs/STATUS.md)
 - [Feuille de route](docs/ROADMAP.md)
+- [Cortina 2026 : reconstruction du parcours, provenance et limites](docs/CORTINA_2026.md)
 - [Départ FIS-inspiré V1.11](docs/V111_START.md)
 - [Studio Kit 2026](docs/STUDIO_KIT_2026.md)
 - [Licence et provenance des assets](docs/ASSETS.md)
