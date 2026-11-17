@@ -205,32 +205,34 @@ export class World {
     // Fine piste strips follow the exact ground surface and make corduroy readable at close range.
   }
   buildTrainingGuide() {
-    // An original narrow glowing line is visible in training only.
-    // A single batched mesh keeps its draw cost constant along the slope.
+    // Optional dotted racing-line preview: like the supplied CarveMania
+    // comparison video, this indicates the OPEN path BETWEEN flag pairs.
+    // Never feeds into steering, physics, or scoring (visual aid only).
     const positions: number[] = [];
     const indices: number[] = [];
-    const step = 1.5;
-    for (let z = 3, n = 0; z <= this.course.length; z += step, n++) {
-      const zz = Math.min(this.course.length, z);
-      const x = trainingLineX(this.course, zz);
-      const y = terrainHeight(x, zz, this.course) + 0.032;
-      const width = 0.07;
-      positions.push(x - width, y, zz, x + width, y, zz);
-      if (n > 0) {
-        const a = 2 * (n - 1);
-        indices.push(a, a + 2, a + 1, a + 1, a + 2, a + 3);
-      }
+    for (let z = 3; z < this.course.length; z += 3.5) {
+      const z1 = Math.min(this.course.length, z + 1.70);
+      const x0 = trainingLineX(this.course, z);
+      const x1 = trainingLineX(this.course, z1);
+      const y0 = terrainHeight(x0, z, this.course) + 0.036;
+      const y1 = terrainHeight(x1, z1, this.course) + 0.036;
+      const width = 0.11;
+      const n = positions.length / 3;
+      positions.push(
+        x0 - width, y0, z, x0 + width, y0, z,
+        x1 - width, y1, z1, x1 + width, y1, z1,
+      );
+      indices.push(n, n + 2, n + 1, n + 1, n + 2, n + 3);
     }
-    const mat = this.mat("Training advisory racing line", "#60dce0", 0.05, 0.6);
-    mat.emissive.set(0.07, 0.25, 0.27);
-    mat.opacity = 0.50;
+    const mat = this.mat("Optional dotted race trajectory", "#4595d8", 0.03, 0.28);
+    mat.opacity = 0.48;
     mat.blendType = pc.BLEND_NORMAL;
     mat.depthWrite = false;
     mat.cull = pc.CULLFACE_NONE;
     mat.update();
     this.trainingGuide = meshEntity(
       this.app.graphicsDevice, this.root,
-      "Training centreline, not competition assistance",
+      "Optional race line: passes between open red and blue flag pairs",
       positions, indices, mat,
     );
     this.trainingGuide.render!.castShadows = false;
