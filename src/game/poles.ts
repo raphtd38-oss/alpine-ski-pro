@@ -1,5 +1,16 @@
 import type { Course, SkierState } from "./types";
 import { clamp } from "./types";
+
+/**
+ * AlpIne Ski Pro — portes de Super-G souples (simulation 120 Hz).
+ *
+ * Chaque porte possède deux panneaux indépendants. Chaque panneau est tenu
+ * par un piquet intérieur (celui qui peut être frappé) ET un piquet extérieur.
+ * Ces deux piquets sont couplés par la toile, mais jamais soudés ensemble.
+ *
+ * Un passage correct est jugé dans Race et NON par cette simulation.
+ * Les contacts ne sont donc jamais des murs invisibles.
+ */
 export interface PoleState {
   x: number;
   z: number;
@@ -9,22 +20,73 @@ export interface PoleState {
   angleZ: number;
   omegaX: number;
   omegaZ: number;
+  /** Flexion transmise au deuxième piquet à travers le fanion. */
+  partnerAngleX: number;
+  partnerAngleZ: number;
+  partnerOmegaX: number;
+  partnerOmegaZ: number;
   contact: boolean;
+  partnerContact: boolean;
   impacts: number;
-  /** High-frequency fiberglass tip ringing after impacts. */
   tipAmp: number;
   tipPhase: number;
   recoilArmed: boolean;
   recoilStrength: number;
+  /** Hauteur approximative du contact pour moduler la courbure (m). */
+  impactHeight: number;
+  /** Énergie transmise à la toile (0..1), amortie après le choc. */
+  clothEnergy: number;
 }
+
 export type ImpactKind = "none" | "shin" | "arm";
+
 export const tipVibration = (p: Pick<PoleState, "tipAmp" | "tipPhase">) =>
   p.tipAmp * Math.sin(p.tipPhase);
-/** Slalom breakaway pole: rigid rod on a damped 2-axis torsional hinge.
- * Parameters are gameplay approximations, not measured or certified FIS equipment.
- * Base contact is checked continuously along the skier's swept upper-body footprint.
- * This collision never determines gate validity; Race uses the skis' crossing instead.
- */
+
+const MAX_BEND = 1.40;
+const SKIER_MASS = 82;
+const INNER_INERTIA = 0.42;
+const OUTER_INERTIA = 0.48;
+const INNER_STIFFNESS = 19;
+const INNER_DAMPING = 3.25;
+const OUTER_STIFFNESS = 24;
+const OUTER_DAMPING = 4.15;
+const CLOTH_COUPLING = 7.0;
+const CLOTH_RELATIVE_DAMPING = 0.70;
+
+function integrateAxis(
+  angle: number,
+  omega: number,
+  partnerAngle: number,
+  partnerOmega: number,
+  dt: number,
+): [number, number, number, number] {
+  // Deux ressorts/amortisseurs couplés (semi-implicit Euler stable à 120 Hz).
+  // La toile transmet progressivement l'impulsion au piquet extérieur.
+  const difference = angle - partnerAngle;
+  const relativeVelocity = omega - partnerOmega;
+  const coupling = CLOTH_COUPLING * difference +
+    CLOTH_RELATIVE_DAMPING * relativeVelocity;
+  const innerAccel =
+    (-INNER_STIFFNESS * angle - INNER_DAMPING * omega - coupling) /
+    INNER_INERTIA;
+  const outerAccel =
+    (-OUTER_STIFFNESS * partnerAngle - OUTER_DAMPING * partnerOmega +
+      coupling) /
+    OUTER_INERTIA;
+
+  omega += innerAccel * dt;
+  partnerOmega += outerAccel * dt;
+  angle += omega * dt;
+  partnerAngle += partnerOmega * dt;
+
+  angle = clamp(angle, -MAX_BEND, MAX_BEND);
+  partnerAngle = clamp(partnerAngle, -MAX_BEND * 0.65, MAX_BEND * 0.65);
+  if (Math.abs(angle) >= MAX_BEND) omega *= 0.23;
+  if (Math.abs(partnerAngle) >= MAX_BEND * 0.65) partnerOmega *= 0.35;
+  return [angle, omega, partnerAngle, partnerOmega];
+}
+
 export class PoleSimulation {
   poles: PoleState[] = [];
   lastImpacts = 0;
@@ -35,11 +97,12 @@ export class PoleSimulation {
   lastReboundStrength = 0;
   readonly length = 2;
   readonly mass = 0.38;
-  readonly spring = 13;
-  readonly damping = 2.6;
-  constructor(c: Course) {
-    for (const gate of c.gates)
-      for (const side of [-1, 1])
+  readonly spring = INNER_STIFFNESS;
+  readonly damping = INNER_DAMPING;
+
+  constructor(course: Course) {
+    for (const gate of course.gates) {
+      for (const side of [-1, 1]) {
         this.poles.push({
           x: gate.x + (side * gate.width) / 2,
           z: gate.z,
@@ -49,107 +112,190 @@ export class PoleSimulation {
           angleZ: 0,
           omegaX: 0,
           omegaZ: 0,
+          partnerAngleX: 0,
+          partnerAngleZ: 0,
+          partnerOmegaX: 0,
+          partnerOmegaZ: 0,
           contact: false,
+          partnerContact: false,
           impacts: 0,
           tipAmp: 0,
           tipPhase: 0,
           recoilArmed: false,
           recoilStrength: 0,
+          impactHeight: 1.25,
+          clothEnergy: 0,
         });
+      }
+    }
   }
-  update(previous: SkierState, s: SkierState, dt: number) {
+
+  update(previous: SkierState, current: SkierState, dt: number): void {
     this.lastImpacts = 0;
     this.lastImpactKind = "none";
     this.lastImpactStrength = 0;
     this.lastRebounds = 0;
     this.lastReboundSide = 0;
     this.lastReboundStrength = 0;
-    const inertia = (this.mass * this.length * this.length) / 3;
+
+    const step = clamp(dt, 0, 1 / 60);
+    const travelX = current.x - previous.x;
+    const travelZ = current.z - previous.z;
+    const travelSq = travelX * travelX + travelZ * travelZ;
+    const speed = Math.hypot(current.vx, current.vz);
+
     for (const p of this.poles) {
-      const dx = s.x - previous.x,
-        dz = s.z - previous.z;
-      const distanceSquared = dx * dx + dz * dz;
-      const u = clamp(
-        ((p.x - previous.x) * dx + (p.z - previous.z) * dz) /
-          Math.max(distanceSquared, 1e-10),
-        0,
-        1,
-      );
-      const closestX = previous.x + dx * u,
-        closestZ = previous.z + dz * u;
-      const offset = Math.hypot(p.x - closestX, p.z - closestZ);
-      const inside = offset < 0.46 && s.height < 1.25;
-      const speed = Math.hypot(s.vx, s.vz);
+      // Test sur le segment balayé par le skieur, pas seulement la frame finale.
+      // Cela évite de manquer les impacts à grande vitesse.
+      const fraction = travelSq < 1e-10
+        ? 0
+        : clamp(
+            ((p.x - previous.x) * travelX +
+              (p.z - previous.z) * travelZ) / travelSq,
+            0,
+            1,
+          );
+      const nearestX = previous.x + fraction * travelX;
+      const nearestZ = previous.z + fraction * travelZ;
+      const distance = Math.hypot(p.x - nearestX, p.z - nearestZ);
+      const height = previous.height +
+        fraction * (current.height - previous.height);
+      const contact = distance < 0.50 && height < 1.85;
+
       if (
-        inside &&
-        !p.contact &&
-        speed > 0.8 &&
-        Math.hypot(p.angleX, p.angleZ) < 1.05
+        contact && !p.contact && speed > 1.5 &&
+        Math.hypot(p.angleX, p.angleZ) < 1.15
       ) {
-        // Close hits are modeled as shin-guard contact; brushes are lighter
-        // arm-protection contact. Gameplay approximation, not bodypart IK.
-        const kind: ImpactKind = offset < 0.2 ? "shin" : "arm";
-        const scale = kind === "shin" ? 1 : 0.55;
-        const impulse = clamp(speed * 0.16, 0, 3.6) * scale,
-          nx = s.vx / speed,
-          nz = s.vz / speed;
-        p.omegaX += (nz * impulse * 1.15) / inertia;
-        p.omegaZ -= (nx * impulse * 1.15) / inertia;
-        const skierMass = 82;
-        const slow = kind === "shin" ? 2.5 : 1.25;
-        const away = Math.sign(s.x - p.x) || (p.side > 0 ? -1 : 1);
-        s.vx -= (nx * impulse * slow) / skierMass;
-        s.vx += (away * impulse * 0.75) / skierMass;
-        s.vz = Math.max(0, s.vz - (nz * impulse * slow) / skierMass);
-        s.balance = clamp(s.balance -
-          impulse * (kind === "shin" ? 0.008 : 0.004), 0, 1);
-        const strength = clamp(impulse / 3.6, 0, 1);
-        s.poleImpact = Math.max(s.poleImpact, strength);
-        s.poleImpactSide = p.side;
-        p.tipAmp = Math.max(p.tipAmp, strength * 0.15);
+        const kind: ImpactKind = distance < 0.23 ? "shin" : "arm";
+        const grazing = clamp(1 - distance / 0.60, 0.14, 1);
+        const strikeScale = kind === "shin" ? 1 : 0.68;
+        const impulse = clamp(speed * 0.19 * grazing * strikeScale, 0, 3.8);
+        const vx = current.vx / speed;
+        const vz = current.vz / speed;
+
+        // Les angles sont des degrés de liberté du piquet, PAS une rotation
+        // rigide du fanion. Le mesh calcule une courbe le long de la tige.
+        p.omegaX += (vz * impulse * 1.08) / INNER_INERTIA;
+        p.omegaZ -= (vx * impulse * 1.08) / INNER_INERTIA;
+        p.impactHeight = kind === "shin" ? 0.63 : 1.34;
+        const strength = clamp(impulse / 3.8, 0, 1);
+        p.clothEnergy = Math.max(p.clothEnergy, strength);
+        p.tipAmp = Math.max(p.tipAmp, strength * 0.14);
         p.recoilArmed = true;
         p.recoilStrength = strength;
+        p.impacts++;
+        this.lastImpacts++;
+
+        // Légère réaction du skieur, sans le bloquer ni annuler la porte.
+        const braking = impulse * (kind === "shin" ? 2.4 : 1.15);
+        current.vx -= (vx * braking) / SKIER_MASS;
+        current.vz = Math.max(0, current.vz - (vz * braking) / SKIER_MASS);
+        current.balance = clamp(
+          current.balance - strength * (kind === "shin" ? 0.018 : 0.008),
+          0, 1,
+        );
+        current.poleImpact = Math.max(current.poleImpact, strength);
+        current.poleImpactSide = p.side;
         if (strength >= this.lastImpactStrength) {
           this.lastImpactKind = kind;
           this.lastImpactStrength = strength;
         }
-        p.impacts++;
-        this.lastImpacts++;
       }
-      p.contact = inside;
-      // Fibreglass bends more strongly near the limit and settles without
-      // infinite ringing. The dynamics remain deterministic at 120 Hz.
-      const bend = Math.hypot(p.angleX, p.angleZ);
-      const restoring = this.spring * (1 + bend * bend * 0.24);
-      const damping = this.damping * (1 + bend * 0.18);
-      p.omegaX +=
-        ((-restoring * p.angleX - damping * p.omegaX) / inertia) * dt;
-      p.omegaZ +=
-        ((-restoring * p.angleZ - damping * p.omegaZ) / inertia) * dt;
-      p.tipAmp *= Math.exp(-6.5 * dt);
-      if (p.tipAmp < 1e-5) p.tipAmp = 0;
-      p.tipPhase = (p.tipPhase + 2 * Math.PI * 17 * dt) % (2 * Math.PI);
-      p.angleX += p.omegaX * dt;
-      p.angleZ += p.omegaZ * dt;
-      const tilt = Math.hypot(p.angleX, p.angleZ),
-        limit = 1.48;
-      // Return click when a bent fiberglass pole recoils through vertical.
-      if (p.recoilArmed && tilt < 0.10 &&
-          p.angleX * p.omegaX + p.angleZ * p.omegaZ < 0) {
+      p.contact = contact;
+
+      // Le piquet extérieur peut lui aussi être directement touché, par
+      // exemple si le joueur skie hors du corridor. On ne le rend pas rigide.
+      const outerX = p.x + p.side * 1.03;
+      const outerZ = p.z - 0.08;
+      const outerFraction = travelSq < 1e-10
+        ? 0
+        : clamp(
+            ((outerX - previous.x) * travelX +
+              (outerZ - previous.z) * travelZ) / travelSq,
+            0,
+            1,
+          );
+      const outerNearestX = previous.x + outerFraction * travelX;
+      const outerNearestZ = previous.z + outerFraction * travelZ;
+      const outerDistance = Math.hypot(
+        outerX - outerNearestX, outerZ - outerNearestZ,
+      );
+      const outerHeight = previous.height +
+        outerFraction * (current.height - previous.height);
+      const outerContact = outerDistance < 0.48 && outerHeight < 1.85;
+      if (
+        outerContact && !p.partnerContact && speed > 1.5 &&
+        Math.hypot(p.partnerAngleX, p.partnerAngleZ) < 0.95
+      ) {
+        const impulse = clamp(speed * 0.11 *
+          clamp(1 - outerDistance / 0.52, 0.16, 1), 0, 2.8);
+        const vx = current.vx / speed;
+        const vz = current.vz / speed;
+        p.partnerOmegaX += vz * impulse / OUTER_INERTIA;
+        p.partnerOmegaZ -= vx * impulse / OUTER_INERTIA;
+        p.impactHeight = 1.22;
+        const strength = clamp(impulse / 3.8, 0, 1);
+        p.clothEnergy = Math.max(p.clothEnergy, strength);
+        p.tipAmp = Math.max(p.tipAmp, 0.07 * strength);
+        p.recoilArmed = true;
+        p.recoilStrength = Math.max(p.recoilStrength, strength);
+        current.poleImpact = Math.max(current.poleImpact, strength);
+        current.poleImpactSide = p.side;
+        current.vx -= vx * impulse / SKIER_MASS;
+        current.vz = Math.max(0, current.vz - vz * impulse / SKIER_MASS);
+        this.lastImpacts++;
+        p.impacts++;
+        if (strength >= this.lastImpactStrength) {
+          this.lastImpactKind = "arm";
+          this.lastImpactStrength = strength;
+        }
+      }
+      p.partnerContact = outerContact;
+
+      const innerX = integrateAxis(
+        p.angleX, p.omegaX, p.partnerAngleX, p.partnerOmegaX, step,
+      );
+      p.angleX = innerX[0];
+      p.omegaX = innerX[1];
+      p.partnerAngleX = innerX[2];
+      p.partnerOmegaX = innerX[3];
+
+      const innerZ = integrateAxis(
+        p.angleZ, p.omegaZ, p.partnerAngleZ, p.partnerOmegaZ, step,
+      );
+      p.angleZ = innerZ[0];
+      p.omegaZ = innerZ[1];
+      p.partnerAngleZ = innerZ[2];
+      p.partnerOmegaZ = innerZ[3];
+
+      // Plafond vectoriel pour éviter une tige physiquement impossible.
+      const tilt = Math.hypot(p.angleX, p.angleZ);
+      if (tilt > MAX_BEND) {
+        p.angleX *= MAX_BEND / tilt;
+        p.angleZ *= MAX_BEND / tilt;
+        p.omegaX *= 0.35;
+        p.omegaZ *= 0.35;
+      }
+
+      p.tipAmp *= Math.exp(-6.8 * step);
+      if (p.tipAmp < 0.00001) p.tipAmp = 0;
+      p.tipPhase = (p.tipPhase + 2 * Math.PI * 16 * step) % (2 * Math.PI);
+      p.clothEnergy *= Math.exp(-3.7 * step);
+      if (p.clothEnergy < 0.0001) p.clothEnergy = 0;
+
+      if (
+        p.recoilArmed &&
+        tilt < 0.095 &&
+        p.angleX * p.omegaX + p.angleZ * p.omegaZ < 0
+      ) {
         p.recoilArmed = false;
-        if (p.recoilStrength > 0.15) {
+        if (p.recoilStrength > 0.13) {
           this.lastRebounds++;
           if (p.recoilStrength >= this.lastReboundStrength) {
             this.lastReboundSide = p.side;
             this.lastReboundStrength = p.recoilStrength;
           }
         }
-      }
-      if (tilt > limit) {
-        p.angleX *= limit / tilt;
-        p.angleZ *= limit / tilt;
-        p.omegaX *= 0.35;
-        p.omegaZ *= 0.35;
       }
     }
   }

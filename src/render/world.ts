@@ -10,6 +10,7 @@ import { gatePoleCanvas, gateBannerCanvas } from "./gate-textures";
 import { gateFlagFlutter } from "../game/gates-visual";
 import type { PoleState } from "../game/poles";
 import { FlexiblePoleMesh } from "./flexible-pole";
+import { RealisticSuperGGate } from "./realistic-gates";
 import { SUPER_G_ROLLERS, superGSector } from "../game/superg";
 import { ALPINE_START_GATE } from "../game/start-gate";
 import { addCortinaScenery } from "./cortina-scenery";
@@ -18,6 +19,7 @@ import { material, meshEntity, shape, beam, rng, color } from "./geometry";
 export class World {
   root = new pc.Entity("Alpine world");
   gateEntities: pc.Entity[] = [];
+  realGateRigs: RealisticSuperGGate[] = [];
   /** Order follows PoleSimulation: 2 raced shafts and 2 partners per gate. */
   flexPoleMeshes: FlexiblePoleMesh[] = [];
   partnerPoleMeshes: FlexiblePoleMesh[] = [];
@@ -519,7 +521,25 @@ export class World {
     return flag;
   }
 
+  /** The V2 physically deformable gate rig, while preserving legacyGates() for rollback. */
   gates() {
+    for (const gate of this.course.gates) {
+      const red = gate.id % 2 === 0;
+      const rig = new RealisticSuperGGate(
+        this.app.graphicsDevice, this.root, this.course, gate,
+        red ? this.redPole : this.bluePole,
+        red ? this.redFlag : this.blueFlag,
+        this.dark, this.quality,
+      );
+      this.realGateRigs.push(rig);
+      this.gateEntities.push(rig.entity);
+    }
+    if (this.course.id === "SG") this.superGStartBooth();
+    this.arch(this.course.length, "ARRIVÉE", true);
+  }
+
+  /** Kept unchanged for fallback/testing; not called in the new version. */
+  legacyGates() {
     const clips = this.mat("Speed gate metal fasteners", "#9aaab5", 0.55, 0.48);
     for (const g of this.course.gates) {
       const parent = new pc.Entity(`Gate ${g.id + 1}`);
@@ -1392,7 +1412,17 @@ export class World {
     texture.upload();
   }
 
-  updateGates(status: string[], poles: PoleState[], dt = 1 / 60) {
+  /** Animate only nearby V2 flags, while gate scoring remains in Race. */
+  updateGates(status: string[], poles: PoleState[], dt = 1 / 60, focusZ?: number) {
+    this.gateVisualTime += Math.min(0.05, Math.max(0, dt));
+    this.realGateRigs.forEach((rig, i) => {
+      rig.update(poles[i * 2], poles[i * 2 + 1], dt, this.gateVisualTime, focusZ);
+      if (status[i] === "passed") this.gateEntities[i]?.tags.add("passed");
+    });
+  }
+
+  /** Original renderer retained as inactive fallback. */
+  legacyUpdateGates(status: string[], poles: PoleState[], dt = 1 / 60) {
     this.gateVisualTime += Math.min(0.05, Math.max(0, dt));
     this.gateEntities.forEach((g, i) => {
       const hinges = g.children.filter((p) => p.name === "Pole hinge");
@@ -1433,6 +1463,7 @@ export class World {
     });
   }
   destroy() {
+    this.realGateRigs.forEach((rig) => rig.destroy());
     this.root.destroy();
     this.resources.forEach((t) => t.destroy());
     this.materials.forEach((m) => m.destroy());
