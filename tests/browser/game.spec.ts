@@ -15,6 +15,9 @@ test("renders the Super-G, responds to keys, pauses, restarts and changes suit",
   expect(athlete.athleteSurfaces).toBeGreaterThanOrEqual(40);
   expect(athlete.flexiblePoleTips).toBe(68);
   expect(athlete.course).toBe("SG");
+  await expect(page.locator("#course-name")).toContainText("Cortina");
+  await expect(page.locator("#course-length")).toContainText("2105");
+  await expect(page.locator("#course-drop")).toContainText("635");
   await expect(page.locator('[data-nav="courses"]')).toHaveCount(0);
   expect(athlete.pressure).toBe(1);
   expect(athlete.skid).toBe(0);
