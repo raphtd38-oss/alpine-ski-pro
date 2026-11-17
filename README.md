@@ -57,6 +57,7 @@ Le workflow [GitHub Actions](.github/workflows/ci.yml) vérifie le code, les ass
 - [Départ FIS-inspiré V1.11](docs/V111_START.md)
 - [Studio Kit 2026](docs/STUDIO_KIT_2026.md)
 - [Licence et provenance des assets](docs/ASSETS.md)
+- [Inventaire des moteurs, plugins et outils de développement](docs/TOOLS_AND_RESOURCES.md)
 - [Outils 3D vérifiés](docs/RESOURCE_CATALOG.md)
 - [Historique technique](docs/CHANGELOG.md)
 
