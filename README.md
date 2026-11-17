@@ -1,5 +1,9 @@
 # Alpine Ski Pro
 
+## V1.11 — départ FIS-inspiré du Super-G (en validation)
+
+La cabane est reconstruite en structure fermée avec bois original texturé, toiture à deux pentes, protection du sas, marquages des skis et boîtiers de chrono. Une tige mécanique unique de 70 cm à 43 cm du sol remplace les deux énormes barres. Le départ du chrono SG est déclenché au franchissement du portillon, pas au signal GO. Le skieur effectue trois doubles poussées synchronisées à l'accélération, aux jambes et aux contacts de bâtons sur la neige ; ses bâtons SG ont un profil carbone courbé. Voir [Dossier technique V1.11](docs/V111_START.md). Le rig candidat à 25 os du nouveau kit a été étudié mais n'a pas remplacé sans vérification le skieur à 18 os.
+
 ## V1.10 — Studio Kit 2026, tissus PBR, LOD et neige de réception
 
 Le Studio Kit transmis par le joueur a été inspecté et intégré **sélectivement**. Les rochers procéduraux des différents secteurs Super-G utilisent également des UV et des cartes PBR originales de granite/ardoise inspirées du Studio Kit. Les détails importés (sapins, pierres, chalets) utilisent maintenant une distance maximale de rendu adaptée à la qualité avec hystérésis pour éviter le clignotement ; la forêt groupée de fond reste visible. Le skieur UV à 18 os conserve son animation, et ses matériaux reçoivent en plus des albédo des cartes PBR originales de **normales, rugosité et occlusion** inspirées du matériau technique `race_fabric` du kit. Les réceptions de Super-G créent désormais un petit panache de poudreuse distinct du carving, en conservant les effets légers pour les appareils modestes.

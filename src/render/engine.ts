@@ -155,8 +155,7 @@ export class Renderer {
     dt = Math.min(0.1, dt);
     this.athlete.update(f, this.course, dt);
     if (this.course.id === "SG")
-      this.world.updateStartWands(f.startPush ?? 0, f.z,
-        !this.menu && (active || f.z > 3.15), dt);
+      this.world.updateStartWands(f.startGateAngle ?? 0, dt);
     // Keep the banner visible on the start line, hide it once accelerating
     // so it cannot obstruct the chase view; restore it for the next start.
     if (this.world.startArch)

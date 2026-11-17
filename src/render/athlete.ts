@@ -3,6 +3,7 @@ import type { Course, Equipment, Frame } from "../game/types";
 import { terrainHeight, gradient } from "../game/course";
 import { shape, material, meshEntity } from "./geometry";
 import { PRO_POLE, PRO_GEAR } from "./equipment-specs";
+import { startDrivePhase, startDriveBlend, startPoleContact } from "../game/start-gate";
 export class Athlete {
   root = new pc.Entity("Skier");
   rig: pc.Entity;
@@ -162,14 +163,36 @@ export class Athlete {
       );
       shape(e, "box", "Binding toe", [0, 0.1, 0.15], [0.09, 0.07, 0.1], base);
       e.setLocalPosition(side * 0.16, 0, 0.02);
-      const pole = shape(
-        this.root,
-        "cylinder",
-        "Carbon ski pole",
-        [side * 0.38, 0.5, 0.05],
-        [PRO_POLE.shaftDiameter, PRO_POLE.shaftLength, PRO_POLE.shaftDiameter],
-        base,
-      );
+      const pole = equipment.id === "SG"
+        ? new pc.Entity("Super-G curved carbon pole")
+        : shape(
+          this.root, "cylinder", "Carbon ski pole",
+          [side * 0.38, 0.5, 0.05],
+          [PRO_POLE.shaftDiameter, PRO_POLE.shaftLength, PRO_POLE.shaftDiameter], base,
+        );
+      if (equipment.id === "SG") {
+        this.root.addChild(pole);
+        // Original continuous swept tube, not disjoint rigid cylinders.
+        // A modest aerodynamic bow is specific to the speed disciplines.
+        const v:number[] = [], t:number[] = [], uv:number[] = [];
+        const rings=13, radial=8;
+        for(let j=0;j<=rings;j++) {
+          const r=j/rings, y=(r-.5)*PRO_POLE.shaftLength;
+          const bow=.10*Math.sin(Math.PI*r)**2;
+          for(let k=0;k<=radial;k++) {
+            const angle=k*2*Math.PI/radial;
+            v.push(Math.cos(angle)*PRO_POLE.shaftDiameter*.5,
+              y, bow+Math.sin(angle)*PRO_POLE.shaftDiameter*.5);
+            uv.push(k/radial,r);
+            if(j && k) {
+              const a=(j-1)*(radial+1)+k-1,b=j*(radial+1)+k-1;
+              t.push(a,b,a+1,a+1,b,b+1);
+            }
+          }
+        }
+        meshEntity(app.graphicsDevice,pole,"Continuous SG bowed pole shaft",
+          v,t,base,undefined,uv);
+      }
       this.poles.push(pole);
       // Competition SL poles: a narrow basket near the tip, an ergonomic
       // handgrip and a small protective guard. No metre-wide geometry.
@@ -283,7 +306,13 @@ export class Athlete {
     if (side !== 0) this.lastTurnSide = side;
     this.plantEnergy *= Math.exp(-Math.max(0, dt) * 7);
     const load = Math.max(0, Math.min(1.4, f.flex ?? 0));
-    const startPush = Math.max(0, Math.min(1, f.startPush ?? 0));
+    const startPhase = f.startPhase ?? -2;
+    const startPush = f.startPhase === undefined
+      ? Math.max(0, Math.min(1, f.startPush ?? 0))
+      : startDriveBlend(c.id, startPhase);
+    const launchContact = startPoleContact(c.id, startPhase);
+    const launchDrive = startDrivePhase(c.id, startPhase);
+    const launchExtension = startPhase >= 0 ? Math.sin(Math.PI * Math.min(1,launchDrive)) : 0;
     // New reach is before the finish, toward a LOW photoelectric beam.
     // Legacy finishGesture is retained as a fallback for old replays.
     const finishReach = Math.max(0, Math.min(1,
@@ -314,7 +343,7 @@ export class Athlete {
     const crouchTarget = 0.055 + f.tuck * 0.18 +
       Math.abs(edge) * 0.085 + load * 0.045 +
       pressureAbsorption + skidStance +
-      startPush * 0.11 + landing * 0.075 + airborne * 0.095 +
+      startPush * (0.11 - launchExtension * 0.055) + landing * 0.075 + airborne * 0.095 +
       finishReach * 0.065;
     this.visualCrouch += (crouchTarget - this.visualCrouch) * blend;
     const crouch = this.visualCrouch;
@@ -325,7 +354,9 @@ export class Athlete {
     j.Pelvis?.setLocalPosition(lean + shake, 0.92 - crouch, -0.055 * f.tuck);
     // Professional race start: chest ahead of bindings, hips loaded,
     // alternating pole-drive phase. Airborne posture retracts legs.
-    const pushCycle = Math.sin((1 - startPush) * 2 * Math.PI * 1.65);
+    // Double-pole plant is synchronized with the fixed-step acceleration
+    // pulses. The hips extend with the shoulder drive, not independently.
+    const pushCycle = launchExtension * (1 - Math.min(1, Math.abs(edge)));
     j.Spine?.setLocalEulerAngles(
       10 + f.tuck * 27 + startPush * 23 - airborne * 7 +
         finishReach * 23,
@@ -369,11 +400,11 @@ export class Athlete {
       const flightHip = airborne * -12;
       const flightKnee = airborne * 23;
       j[side + "Hip"]?.setLocalEulerAngles(
-        hipRot + flightHip + landing * 7,
+        hipRot + flightHip + landing * 7 - startPush * pushCycle * 12,
         -outside * 6, edge * (12 + outsidePressure * 5),
       );
       j[side + "Knee"]?.setLocalEulerAngles(
-        kneeRot + flightKnee + landing * 9,
+        kneeRot + flightKnee + landing * 9 + startPush * pushCycle * 15,
         0, outside * (3 + outsidePressure * 3),
       );
       j[side + "Ankle"]?.setLocalEulerAngles(
@@ -386,7 +417,9 @@ export class Athlete {
       // Gate-side shoulder wraps the pole. The finish hand extends
       // FORWARD and DOWN towards the beam, never raised above the head.
       const shoulderWrap = this.visualImpact * (nearGate ? 38 : -9);
-      const pushStroke = startPush * (-36 + pushCycle * (i === 0 ? 20 : -20));
+      // Both arms plant together for the first strokes; the shoulders and
+      // elbows follow through as the hips and legs extend against the snow.
+      const pushStroke = startPush * (-39 + pushCycle * 49 - launchContact * 8);
       j[side + "Shoulder"]?.setLocalEulerAngles(
         -f.tuck * 15 + Math.sin(f.t * 3 + i) * Math.abs(edge) * 4 -
           activePlant * 23 + shoulderWrap +
@@ -397,10 +430,10 @@ export class Athlete {
       );
       j[side + "Elbow"]?.setLocalEulerAngles(
         -f.tuck * 36 - activePlant * 15 +
-          startPush * 31 + (i === 1 ? 26 : 0) * finishReach,
+          startPush * (21 + pushCycle * 26) + (i === 1 ? 26 : 0) * finishReach,
         0, 0);
       j[side + "Wrist"]?.setLocalEulerAngles(
-        -startPush * 9 + (i === 1 ? 9 : 0) * finishReach,
+        -startPush * (7 + pushCycle * 8) + (i === 1 ? 9 : 0) * finishReach,
         0, 0,
       );
       const surf = this.skiSurfaces[i];
@@ -424,20 +457,41 @@ export class Athlete {
       );
       const wrist = j[side + "Wrist"];
       if (wrist) {
-        const point = this.root
-          .getWorldTransform()
-          .clone()
-          .invert()
-          .transformPoint(wrist.getPosition());
-        this.poles[i].setLocalPosition(point.x, point.y - 0.45, point.z - 0.24);
-        const activePlant = ((i === 0 ? 1 : -1) === this.plantingSide)
-          ? this.plantEnergy : 0;
-        this.poles[i].setLocalEulerAngles(
-          27 - f.tuck * 12 - activePlant * 28 +
-            (i === 1 ? 36 : 0) * finishReach,
-          0,
-          (i === 0 ? -1 : 1) * (9 + activePlant * 7),
-        );
+        const wristWorld = wrist.getPosition();
+        const inverse = this.root.getWorldTransform().clone().invert();
+        const point = inverse.transformPoint(wristWorld);
+        const launchPlant = c.id === "SG" && launchContact > 0.13 &&
+          startPhase >= 0 && startPhase < 1.45;
+        if (launchPlant) {
+          // Foot-to-snow solution for the pole tip. Work in world space to
+          // take real piste gradient into account, then transform to rig.
+          const basketX = wristWorld.x + (i === 0 ? -0.045 : 0.045);
+          const ground = terrainHeight(basketX, wristWorld.z - 0.33, c) + 0.025;
+          const vertical = Math.max(0.10, Math.min(PRO_POLE.shaftLength * .96,
+            wristWorld.y - ground));
+          const behind = Math.sqrt(Math.max(.04,
+            PRO_POLE.shaftLength ** 2 - vertical ** 2));
+          const tip = inverse.transformPoint(new pc.Vec3(
+            basketX, ground, wristWorld.z - behind,
+          ));
+          const gripToTip = point.clone().sub(tip).normalize();
+          // Local Y axis is the pole shaft from snow basket to grip.
+          this.poles[i].setLocalRotation(
+            new pc.Quat().setFromDirections(pc.Vec3.UP, gripToTip));
+          this.poles[i].setLocalPosition(point.clone().sub(
+            gripToTip.clone().mulScalar(PRO_POLE.shaftLength * .5)
+          ));
+        } else {
+          this.poles[i].setLocalPosition(point.x, point.y - 0.45, point.z - 0.24);
+          const activePlant = ((i === 0 ? 1 : -1) === this.plantingSide)
+            ? this.plantEnergy : 0;
+          this.poles[i].setLocalEulerAngles(
+            27 - f.tuck * 12 - activePlant * 28 +
+              (i === 1 ? 36 : 0) * finishReach,
+            0,
+            (i === 0 ? -1 : 1) * (9 + activePlant * 7),
+          );
+        }
       }
     }
     // Blend falls and recovery rather than snapping the entire body.

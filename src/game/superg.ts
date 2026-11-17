@@ -1,3 +1,4 @@
+export { startPushAcceleration } from "./start-gate";
 /**
  * Original Super-G mountain profile, inspired by the layout principles of
  * Alpine World Cup speed courses (NOT a real/homologated course survey).
@@ -45,13 +46,6 @@ export function shouldLaunchAtCrest(
     1 + (speed * speed * curvature) / 9.81 < 0.25;
 }
 
-/** A short, damped double-pole push, only at the race start. */
-export function startPushAcceleration(courseId: string, time: number): number {
-  if (courseId !== "SG" || time < 0 || time >= 1.5) return 0;
-  const impulse = 4.6 * Math.exp(-time * 2.0);
-  const second = 3.1 * Math.exp(-Math.pow((time - 0.58) / 0.19, 2));
-  return impulse + second;
-}
 
 /** Course-centre world coordinates, sampled from broad changes of direction.
  * The line deliberately crosses from wooded traverse to exposed glacier

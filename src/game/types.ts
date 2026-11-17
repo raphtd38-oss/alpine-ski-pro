@@ -72,6 +72,10 @@ export interface Frame {
   poleImpactSide?: number;
   landingShock?: number;
   startPush?: number;
+  /** Start launch elapsed seconds; -1 while waiting in the cabin. */
+  startPhase?: number;
+  /** One-wand mechanical start angle, preserved in replays. */
+  startGateAngle?: number;
   finishGesture?: number; // V1.7 legacy replay field
   /** Low, forward-reaching hand crossing the timing beam, 0..1. */
   finishReach?: number;
