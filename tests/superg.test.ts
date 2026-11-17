@@ -82,13 +82,13 @@ describe("World-Cup-inspired Super-G course", () => {
     expect(startPushAcceleration("SL", 0.5)).toBe(0);
   });
 
-  it("does not change slalom physics or timing", () => {
+  it("keeps Super-G physics and replay interpolation finite", () => {
     const state = initialState();
-    const race = new Race(COURSES.SL, "SL");
+    const race = new Race(COURSES.SG, "SG");
     race.phase = "racing";
     for (let i = 0; i < 180; i++) {
       const prev = { ...state };
-      stepPhysics(state, neutral, EQUIPMENT.SL, COURSES.SL, FIXED_DT);
+      stepPhysics(state, neutral, EQUIPMENT.SG, COURSES.SG, FIXED_DT);
       race.update(prev, state, FIXED_DT, false);
     }
     expect(state.height).toBe(0);
