@@ -139,7 +139,7 @@ async function boot() {
         ? "Entraînement · sans classement"
         : race.course.id === "SG"
           ? "Super-G · 4 piquets et 2 fanions par porte"
-          : "Passez entre les deux piquets de chaque porte",
+          : "Passez entre les portes du Super-G",
     );
     void audio
       .start()
@@ -293,7 +293,7 @@ async function boot() {
     if (poles.lastImpacts)
       audio.impact(
         Math.hypot(state.vx, state.vz), state.edge,
-        race.course.id !== "SL",
+        true,
         poles.lastImpactKind === "arm" ? "arm" : "shin",
       );
     const oldGate = race.nextGate;
