@@ -154,3 +154,11 @@ Le but est un simulateur de ski de grande qualité, amélioré sur le même dép
 - Produire une version candidate originale Super-G dans un .blend distinct, avec continuité des articulations, textures PBR, skis, fixations et clips d'animation à valider.
 - Passer `npm run studio:verify -- <candidat.glb> --rig --animations`, Khronos glTF Validator, tests PlayCanvas WebGL2/WebGPU et revue visuelle.
 - N'intégrer le candidat au jeu qu'après mesures GPU PC + iPhone, vérification des droits, des 120 Hz de la physique et des tests de course.
+
+## Après intégration Ammo.js — collision Super-G (PR #24)
+
+- Vérifier **en navigateur réel** que le HUD montre AMMO.JS et que les 68 triggers Ammo détectent les contacts piquets (ils sont aujourd'hui des capteurs non autoritaires).
+- Comparer les contacts enregistrés à la simulation déterministe `PoleSimulation` à fréquence d'affichage variable avant de modifier les réponses physiques de collision.
+- Héberger localement `ammo.wasm.js`, `ammo.wasm.wasm` et `ammo.js` pour éviter la dépendance aux assets distants PlayCanvas, avec attribution/licence.
+- Mesurer le chargement, la mémoire, la fluidité et la consommation sur mobile ; optimiser les triggers si nécessaire.
+- Développer ensuite une vraie réponse physique du corps aux obstacles et un ragdoll, sans laisser Bullet écraser la dynamique de carving réglée à 120 Hz.
