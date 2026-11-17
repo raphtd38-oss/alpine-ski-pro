@@ -4,7 +4,10 @@ import { terrainHeight, gradient } from "../game/course";
 import { shape, material, meshEntity } from "./geometry";
 import { PRO_POLE, PRO_GEAR } from "./equipment-specs";
 import { startDrivePhase, startDriveBlend, startPoleContact } from "../game/start-gate";
-import { superGEdgePose, superGStartBrace } from "./superg-video-pose";
+import {
+  superGEdgePose, superGStartBrace, superGLegIK,
+  superGSkiFootLift, superGFinishGesture,
+} from "./superg-video-pose";
 export class Athlete {
   root = new pc.Entity("Skier");
   rig: pc.Entity;
@@ -16,6 +19,8 @@ export class Athlete {
   poles: pc.Entity[] = [];
   visualEdge = 0;
   visualCrouch = 0.045;
+  /** Visual tuck follows controls smoothly; the 120Hz physics stays untouched. */
+  visualTuck = 0;
   lastTurnSide = 0;
   plantingSide = 0;
   plantEnergy = 0;
@@ -48,9 +53,11 @@ export class Athlete {
     const seamlessBones: Record<string, string> = {
       Pelvis: "Hips", LHip: "LeftUpLeg", LKnee: "LeftLeg",
       LAnkle: "LeftAnkle", LShoulder: "LeftShoulder",
+      LUpperArm: "LeftUpperArm",
       LElbow: "LeftForeArm", LWrist: "LeftHand",
       RHip: "RightUpLeg", RKnee: "RightLeg",
       RAnkle: "RightAnkle", RShoulder: "RightShoulder",
+      RUpperArm: "RightUpperArm",
       RElbow: "RightForeArm", RWrist: "RightHand",
     };
     for (const name of [
@@ -66,9 +73,11 @@ export class Athlete {
       "RKnee",
       "RAnkle",
       "LShoulder",
+      "LUpperArm",
       "LElbow",
       "LWrist",
       "RShoulder",
+      "RUpperArm",
       "RElbow",
       "RWrist",
     ]) {
@@ -130,7 +139,7 @@ export class Athlete {
     const base = material("Ski graphite", "#102736", 0.45, 0.6);
     const poleGrip = material("Professional pole grips", "#202b34", 0.04, 0.5);
     const poleFerrule = material("Steel carbide pole tip", "#cad4d8", 0.65, 0.75);
-    const handGuard = material("Slalom hand protection", "#f0f5f5", 0.18, 0.53);
+    const handGuard = material("Compact Super-G grip guard", "#2c333b", 0.08, 0.49);
     this.ownedMaterials.push(this.material, base, poleGrip, poleFerrule, handGuard);
     for (const side of [-1, 1]) {
       const e = new pc.Entity("Independent ski");
@@ -215,8 +224,8 @@ export class Athlete {
           v,t,base,undefined,uv);
       }
       this.poles.push(pole);
-      // Competition SL poles: a narrow basket near the tip, an ergonomic
-      // handgrip and a small protective guard. No metre-wide geometry.
+      // Speed-discipline poles: small basket, ergonomic grip, compact guard.
+      // Large slalom hand shields would be wrong for a Super-G racer.
       shape(
         pole, "cylinder", "Real-scale pole basket",
         [0, -PRO_POLE.shaftLength / 2 + 0.06, 0],
@@ -236,9 +245,9 @@ export class Athlete {
         poleGrip,
       );
       shape(
-        pole, "box", "Slalom race hand protector",
-        [side * 0.055, PRO_POLE.shaftLength / 2 - 0.07, 0.015],
-        [PRO_GEAR.gloveGuardWidth, PRO_GEAR.gloveGuardHeight, 0.025],
+        pole, "box", "Compact aerodynamic speed grip guard",
+        [side * 0.022, PRO_POLE.shaftLength / 2 - 0.07, 0.015],
+        [0.045, 0.062, 0.018],
         handGuard,
       );
     }
