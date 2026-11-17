@@ -17,6 +17,8 @@ export class Athlete {
   skis: pc.Entity[] = [];
   skiSurfaces: { mesh: pc.Mesh; base: number[] }[] = [];
   poles: pc.Entity[] = [];
+  /** Smoother pole-tip contact release between actual SG propulsion strokes. */
+  polePlantWeights: number[] = [0, 0];
   visualEdge = 0;
   visualCrouch = 0.045;
   /** Visual tuck follows controls smoothly; the 120Hz physics stays untouched. */
@@ -345,7 +347,9 @@ export class Athlete {
     const startBrace = superGStartBrace(startPhase);
     const startPush = f.startPhase === undefined
       ? Math.max(0, Math.min(1, f.startPush ?? 0))
-      : startPhase < 0 ? 0.78 * startBrace : startDriveBlend(c.id, startPhase);
+      : startPhase < 0
+        ? startBrace * (0.24 + 0.76 * startBrace)
+        : startDriveBlend(c.id, startPhase);
     const launchContact = startPoleContact(c.id, startPhase);
     const launchDrive = startDrivePhase(c.id, startPhase);
     const launchExtension = startPhase >= 0 ? Math.sin(Math.PI * Math.min(1,launchDrive)) : 0;
@@ -388,7 +392,7 @@ export class Athlete {
     const crouchTarget = 0.055 + tuck * 0.18 +
       Math.abs(edge) * 0.085 + load * 0.045 +
       pressureAbsorption + skidStance +
-      startPush * (0.11 - launchExtension * 0.055) + landing * 0.075 + airborne * 0.095 +
+      startPush * (0.11 - launchExtension * 0.078) + landing * 0.075 + airborne * 0.095 +
       finishPose.drop + carvePose.hipDrop + startBrace * 0.050;
     this.visualCrouch += (crouchTarget - this.visualCrouch) * blend;
     // The 25-bone leg IK must not be forced below its anatomical reach.
