@@ -501,6 +501,9 @@ async function boot() {
           finishReach: finishReachAmount(race.course.id, state.z,
             race.course.length, Math.hypot(state.vx, state.vz), state.fallen),
           blueBorderDye: Boolean(renderer.world.blueBorderDye),
+          sprayedBlueDye: renderer.world.resources.some(
+            (tex) => tex.name === "Original powder sprayed FIS-style blue dye",
+          ),
           gateFlagCount: renderer.world.gateEntities.reduce(
             (count, gate) => count + gate.children.reduce(
               (flags, pivot) => flags + pivot.children.filter(
@@ -523,6 +526,12 @@ async function boot() {
             ), 0,
           ),
           athleteBones: Object.keys(renderer.athlete.joints).length,
+          athleteTexturedSurfaces: renderer.athlete.rig.findComponents("render").reduce(
+            (n,c) => n + (c as import("playcanvas").RenderComponent)
+              .meshInstances.filter(mi =>
+                Boolean((mi.material as import("playcanvas").StandardMaterial).diffuseMap),
+              ).length, 0,
+          ),
           athleteSurfaces: renderer.athlete.rig.findComponents("render").reduce(
             (n, c) => n + (c as import("playcanvas").RenderComponent).meshInstances.length, 0,
           ),
