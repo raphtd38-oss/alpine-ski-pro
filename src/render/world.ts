@@ -15,6 +15,7 @@ import { SUPER_G_ROLLERS, superGSector } from "../game/superg";
 import { ALPINE_START_GATE } from "../game/start-gate";
 import { addCortinaScenery } from "./cortina-scenery";
 import { createCortinaAtmosphere } from "./cortina-atmosphere";
+import { addCortinaCinematicDetails } from "./cortina-cinematic-detail";
 import type { Course, Quality, Weather } from "../game/types";
 import { material, meshEntity, shape, beam, rng, color } from "./geometry";
 export class World {
@@ -68,6 +69,10 @@ export class World {
     this.buildTrainingGuide();
     this.mountains();
     this.forest();
+    // Three-dimensional Tofane peaks, dark conifers, realistic red A-nets and grooming.
+    this.materials.push(...addCortinaCinematicDetails(
+      this.app, this.root, this.course, this.quality,
+    ));
     // Original warm sunset, 15 LED floodlight towers and nearby light pools.
     const atmosphere = createCortinaAtmosphere(
       this.app, this.root, this.course, this.quality,
