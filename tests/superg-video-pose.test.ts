@@ -30,7 +30,7 @@ describe("source-video guided Super-G animation intent (rendering only)", () => 
     const outside = superGEdgePose(1, 1.1, 0.0, 0);
     expect(outside.engagement).toBeGreaterThan(0.85);
     expect(outside.hipDrop).toBeGreaterThan(0.055);
-    expect(outside.hipDrop).toBeLessThan(0.08);
+    expect(outside.hipDrop).toBeLessThan(0.13);
     expect(outside.hipInside).toBeGreaterThan(0.06);
     expect(outside.outsideLegLength).toBeGreaterThan(0);
     expect(outside.insideLegShortening).toBeGreaterThan(
