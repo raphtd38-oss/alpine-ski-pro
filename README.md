@@ -1,6 +1,6 @@
 # Alpine Ski Pro — Super-G
 
-**V1.14 · Cortina Olympia delle Tofane · Coureur monobloc 25 os · Super-G uniquement**
+**V1.15 Ultimate Realism Pass 1 · Cortina Olympia delle Tofane · Coureur monobloc 25 os · Super-G uniquement**
 
 🎮 **[Jouer dans le navigateur](https://raphtd38-oss.github.io/alpine-ski-pro/)**
 
