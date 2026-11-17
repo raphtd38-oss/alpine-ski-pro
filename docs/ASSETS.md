@@ -1,3 +1,9 @@
+## V1.12 — nettoyage Super-G (17 novembre 2026)
+
+- Fichiers supprimés de l'arbre courant : cinq anciennes captures `docs/screenshots/*.png` (2 437 344 octets) et ancien prototype `scripts/build_skier.py` (6 141 octets). Ces fichiers restent récupérables dans l'historique Git ; ils n'étaient pas embarqués dans le site publié.
+- Les modèles CC0 Alpine Snow Village et les textures photo-PBR Poly Haven **utilisés en jeu** sont conservés. Conserver la chaîne `scripts/build_skier_pro.mjs` et le GLB actuel ; suppression d'un modèle réellement chargé interdite sans remplaçant testé.
+- Disparition des autres disciplines des sources actives : cela réduit le code et les choix d'interface, pas massivement le poids des textures/GLB chargés.
+
 # Ressources, provenance et droits
 
 Aucun code, texture, son ni modèle de CarveMania n'est utilisé.
