@@ -56,9 +56,17 @@ function sunsetSky(app: pc.Application, root: pc.Entity, course: Course) {
       // Subtle horizontal bands evoke the warm violet Dolomite afterglow.
       const gold = Math.pow(Math.max(0, Math.sin(theta + 0.75)), 6) *
         Math.max(0, 1 - Math.abs(v - 0.10) * 2.5) * 0.085;
-      colors.push(Math.min(1, rgb[0] + gold),
-        Math.min(1, rgb[1] + gold * 0.28),
-        rgb[2], 1);
+      // Sunset cirrus streaks fade toward the zenith and horizon; this is
+      // still a single static sky mesh, not particles or a video texture.
+      const lowClouds = Math.exp(-Math.pow((v - 0.16) / 0.31, 2));
+      const filament =
+        Math.pow(Math.max(0,
+          0.64 * Math.sin(theta * 11.5 + v * 33.1) +
+          0.36 * Math.cos(theta * 21.7 - v * 17.2)
+        ), 5) * lowClouds * 0.18;
+      colors.push(Math.min(1, rgb[0] + gold + filament),
+        Math.min(1, rgb[1] + gold * 0.28 + filament * 0.37),
+        Math.min(1, rgb[2] + filament * 0.16), 1);
     }
   }
   for (let j = 0; j < latitude; j++)
