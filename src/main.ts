@@ -9,6 +9,7 @@ import "@fontsource/barlow-condensed/latin-700.css";
 import "./ui/style.css";
 import { COURSES, EQUIPMENT, terrainHeight } from "./game/course";
 import { startPushAcceleration } from "./game/superg";
+import { startGateImpulseFraction, startGateAngle, SUPER_G_START_STROKES, startDriveBlend } from "./game/start-gate";
 import { finishReachAmount } from "./game/finish-timing";
 import { sampleSnowSurface } from "./game/surface";
 import { snowLabel } from "./game/snow-model";
@@ -82,8 +83,10 @@ async function boot() {
     poleImpactSide: state.poleImpactSide,
     landingShock: state.landingShock,
     startPush: race.course.id === "SG" && race.phase === "countdown"
-      ? 0.72 : race.course.id === "SG" && race.phase === "racing"
-        ? Math.max(0, 1 - race.time / 1.5) : 0,
+      ? 0.78 : startDriveBlend(race.course.id, race.launchTime),
+    startPhase: race.course.id === "SG"
+      ? race.phase === "countdown" ? -1 : race.launchTime : undefined,
+    startGateAngle: startGateAngle(race.course.id, state.z, state.x),
     finishReach: race.course.id === "SG"
       ? race.phase === "racing"
         ? finishReachAmount("SG", state.z, race.course.length,
@@ -268,9 +271,24 @@ async function boot() {
       snow.ice,
       snow.depth,
     );
-    // Two short pole pushes in the speed-event start cabin. No boost is
-    // given outside the first 1.5 s or on any other discipline.
-    state.vz += startPushAcceleration(race.course.id, race.time) * dt;
+    // The three planted double-pole strokes drive the skis and share their
+    // fixed-step clock with the 18-bone animation and snow-contact sound.
+    const launchBefore = race.launchTime;
+    if (race.course.id === "SG") race.launchTime += dt;
+    state.vz += startPushAcceleration(race.course.id, launchBefore) * dt;
+    if (race.course.id === "SG") {
+      for (const stroke of SUPER_G_START_STROKES) {
+        if (launchBefore < stroke.centre && race.launchTime >= stroke.centre)
+          audio.polePlant();
+      }
+      race.startGateDegrees = startGateAngle("SG", state.z, state.x);
+      const fraction = startGateImpulseFraction("SG",
+        previous.z, state.z, previous.x, state.x);
+      if (fraction !== null && !race.startGateOpened) {
+        race.openStartGate(fraction);
+        audio.startGateClick();
+      }
+    }
     poles.update(previous, state, dt);
     if (poles.lastImpacts)
       audio.impact(
@@ -487,6 +505,10 @@ async function boot() {
           startArchVisible: Boolean(renderer.world.startArch?.enabled),
           startHouse: Boolean(renderer.world.startBooth),
           timingWands: renderer.world.startWands.length,
+          startGateOpened: race.startGateOpened,
+          startGateImpulseTime: race.startGateImpulseTime,
+          startGateDegrees: race.startGateDegrees,
+          startLaunchTime: race.launchTime,
           timingWandAngle: renderer.world.startWands[0]?.getLocalEulerAngles().y ?? 0,
           pairedGatePoles: renderer.world.gateEntities.reduce(
             (count, gate) => count + gate.children.reduce(
