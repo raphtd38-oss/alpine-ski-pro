@@ -569,19 +569,29 @@ export class Athlete {
           // Local Y axis is the pole shaft from snow basket to grip.
           this.poles[i].setLocalRotation(
             new pc.Quat().setFromDirections(pc.Vec3.UP, gripToTip));
+          // Align the actual rubber grip centre with the animated glove,
+          // rather than placing the pole's shaft midpoint at the wrist.
           this.poles[i].setLocalPosition(point.clone().sub(
-            gripToTip.clone().mulScalar(PRO_POLE.shaftLength * .5)
+            gripToTip.clone().mulScalar(
+              (PRO_POLE.shaftLength - PRO_POLE.gripLength) * 0.5)
           ));
         } else {
-          this.poles[i].setLocalPosition(point.x, point.y - 0.45, point.z - 0.24);
           const activePlant = ((i === 0 ? 1 : -1) === this.plantingSide)
             ? this.plantEnergy : 0;
-          this.poles[i].setLocalEulerAngles(
-            27 - tuck * 12 - activePlant * 28 +
-              (i === 1 ? 36 : 0) * finishReach,
-            0,
-            (i === 0 ? -1 : 1) * (9 + activePlant * 7),
-          );
+          // Speed racers trail their bent poles nearly horizontally during
+          // the aero tuck; a vertical slalom-style shaft would go through
+          // the snow whenever the wrists pass below a metre in carving.
+          const polePitch = 48 + tuck * 23 +
+            carvePose.engagement * 11 + airborne * 10 -
+            activePlant * 18 + (i === 1 ? 10 : 0) * finishPose.armReach;
+          const poleRoll = (i === 0 ? -1 : 1) * (6 + activePlant * 5);
+          const rotation = new pc.Quat().setFromEulerAngles(
+            polePitch, 0, poleRoll);
+          const toGrip = rotation.transformVector(new pc.Vec3(
+            0, (PRO_POLE.shaftLength - PRO_POLE.gripLength) * 0.5, 0));
+          // A real hand must remain ON the pole grip throughout the turn.
+          this.poles[i].setLocalRotation(rotation);
+          this.poles[i].setLocalPosition(point.clone().sub(toGrip));
         }
       }
     }
