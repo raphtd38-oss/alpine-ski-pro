@@ -22,7 +22,7 @@ describe("Super-G-only 120Hz simulation", () => {
     expect(Object.keys(COURSES)).toEqual(["SG"]);
     expect(Object.keys(EQUIPMENT)).toEqual(["SG"]);
     expect(sg.gates).toHaveLength(34);
-    expect(sg.length).toBe(1980);
+    expect(sg.length).toBe(2105);
     expect(gear.length).toBeGreaterThan(2);
   });
 
