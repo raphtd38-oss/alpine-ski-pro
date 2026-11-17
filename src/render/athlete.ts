@@ -363,8 +363,13 @@ export class Athlete {
     const carvePose = superGEdgePose(edge, load, f.skid ?? 0, airborne);
     // A strong loaded edge opens the chest even when the player holds tuck.
     // This smooth visual layer never changes the 120Hz controls/physics.
-    const tuckGoal = Math.max(0, Math.min(1, f.tuck)) *
-      (1 - 0.34 * carvePose.engagement);
+    const tuckGoal = Math.max(
+      Math.max(0, Math.min(1, f.tuck)) *
+        (1 - 0.34 * carvePose.engagement),
+      // The player can cross the finish without holding the tuck control:
+      // the low glove reach still requires a compact, forward-driving body.
+      finishPose.armReach * 0.84,
+    );
     this.visualTuck += (tuckGoal - this.visualTuck) *
       (1 - Math.exp(-Math.max(0, dt) * 9));
     const tuck = this.visualTuck;
