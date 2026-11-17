@@ -4,6 +4,7 @@ import type { Course, Quality } from "../game/types";
 import { terrainHeight, courseCenterX } from "../game/course";
 import { superGSector } from "../game/superg";
 import { rng } from "./geometry";
+import { chooseDetailVisibility, detailRange } from "./scenery-lod";
 
 /**
  * Optional licensed visual upgrade. The original course, collision logic and
@@ -15,6 +16,9 @@ import { rng } from "./geometry";
 export class AlpineAssets {
   private models = new Map<string, pc.ContainerResource>();
   private textures = new Map<string, pc.Texture>();
+  private details: { entity: pc.Entity; position: pc.Vec3; key: string }[] = [];
+  private visualUpdateTimer = 0;
+  visibleDetails = 0;
 
   constructor(private readonly app: pc.Application) {}
 
@@ -107,6 +111,11 @@ export class AlpineAssets {
     entity.setLocalScale(scale, scale, scale);
     entity.setLocalEulerAngles(0, heading, 0);
     parent.addChild(entity);
+    this.details.push({
+      entity,
+      position: new pc.Vec3(x, terrainHeight(x, z, course), z),
+      key,
+    });
     // Large numbers of shadow-casting tree instances are costly. Retain
     // close-contact shadowing for buildings, not for all vegetation.
     const casts = (key === "chalet" || key === "guesthouse") &&
@@ -115,7 +124,29 @@ export class AlpineAssets {
       (c as pc.RenderComponent).castShadows = casts;
   }
 
+  /** Imported GLBs switch off outside camera range. The permanent batched
+   * forest & rock silhouettes stay rendered, so there are no empty hills.
+   * Visual-only: no change to physics, gate validation, or replay state. */
+  updateVisuals(dt: number, eye: pc.Vec3, quality: Quality): void {
+    this.visualUpdateTimer += Math.max(0, dt);
+    if (this.visualUpdateTimer < 0.22) return;
+    this.visualUpdateTimer = 0;
+    let visible = 0;
+    for (const detail of this.details) {
+      const distance = detail.position.distance(eye);
+      const next = chooseDetailVisibility(
+        detail.entity.enabled, distance, detailRange(detail.key, quality),
+      );
+      detail.entity.enabled = next;
+      if (next) visible++;
+    }
+    this.visibleDetails = visible;
+  }
+
   populate(parent: pc.Entity, course: Course, quality: Quality): void {
+    this.details.length = 0;
+    this.visualUpdateTimer = 0;
+    this.visibleDetails = 0;
     const edge = course.width / 2;
     const random = rng(20261116);
     if (this.has("chalet")) {

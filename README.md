@@ -1,5 +1,12 @@
 # Alpine Ski Pro
 
+## V1.10 — Studio Kit 2026, tissus PBR, LOD et neige de réception
+
+Le Studio Kit transmis par le joueur a été inspecté et intégré **sélectivement**. Les rochers procéduraux des différents secteurs Super-G utilisent également des UV et des cartes PBR originales de granite/ardoise inspirées du Studio Kit. Les détails importés (sapins, pierres, chalets) utilisent maintenant une distance maximale de rendu adaptée à la qualité avec hystérésis pour éviter le clignotement ; la forêt groupée de fond reste visible. Le skieur UV à 18 os conserve son animation, et ses matériaux reçoivent en plus des albédo des cartes PBR originales de **normales, rugosité et occlusion** inspirées du matériau technique `race_fabric` du kit. Les réceptions de Super-G créent désormais un petit panache de poudreuse distinct du carving, en conservant les effets légers pour les appareils modestes.
+
+Le kit contient 11 GLB prototypes et 42 cartes PBR, mais **aucune copie brute des modèles stylisés ou terrains non compatibles** n'a remplacé les ressources CC0 de qualité supérieure déjà présentes. Rapport et empreintes : [Studio Kit 2026](docs/STUDIO_KIT_2026.md).
+
+
 ## V1.9 — Super-G : réception dégagée, neige marquée, skieur texturé
 
 Le Super-G garde son tracé sinueux de 1 980 m et ses 34 portes. Les cinq zones de saut possèdent désormais une zone libre de portes près de l'appel et sur les 80 mètres suivant la crête, avec espacement minimal entre portes de 36 mètres (valeurs de gameplay, non homologation FIS). Les marquages bleus suivent les courbes avec un aspect colorant pulvérisé au lieu de lignes rigides, et renforcent les approches des bosses.

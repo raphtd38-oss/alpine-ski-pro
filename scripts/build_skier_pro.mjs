@@ -169,13 +169,13 @@ function buildAthleteGlb() {
   // Embed original PNG images directly into the GLB buffer: a complete
   // material remains usable offline, in PlayCanvas and in other glTF viewers.
   const images=[];
-  for(const {kind,png} of originalRacerTextures()){
+  for(const {kind,map,png} of originalRacerTextures()){
     aligned();
     const offset=data.length;
     for(const byte of png)data.push(byte);
     const view=views.length;
     views.push({buffer:0,byteOffset:offset,byteLength:png.length});
-    images.push({name:"Original racer "+kind+" albedo",bufferView:view,mimeType:"image/png"});
+    images.push({name:"Studio Kit racer "+kind+" "+map,bufferView:view,mimeType:"image/png"});
   }
   // The final PNG byte length is not necessarily a multiple of four.
   // glTF BIN chunk and declared buffer.byteLength must match exactly.
@@ -184,11 +184,17 @@ function buildAthleteGlb() {
   // Race suit 0,1; bib 2; carbon boots 3; helmet 4; visor 5; gear 6..12.
   const materialAtlas=[0,0,2,1,1,3,1,1,1,0,0,1,1];
   materials.forEach((m,i)=>{
-    m.pbrMetallicRoughness.baseColorTexture={index:materialAtlas[i]};
+    const atlas=materialAtlas[i];
+    m.pbrMetallicRoughness.baseColorTexture={index:atlas};
+    // Four albedos are followed by two PBR maps per UV-mapped material.
+    // Both shade the original skinning at 18 joints; no new animation cost.
+    m.normalTexture={index:4+atlas*2,scale:.42};
+    m.pbrMetallicRoughness.metallicRoughnessTexture={index:5+atlas*2};
+    m.occlusionTexture={index:5+atlas*2,strength:.6};
   });
   const meshNode=nodes.length;nodes.push({name:"Pro athlete skinned surface",mesh:0,skin:0});
   const gltf={
-    asset:{version:"2.0",generator:"Alpine Ski Pro V1.9 original UV-mapped race apparel"},
+    asset:{version:"2.0",generator:"Alpine Ski Pro Studio Kit V1.10 original PBR race apparel"},
     scene:0,scenes:[{nodes:[0,meshNode]}],nodes,
     skins:[{joints:world.map((_,i)=>i),inverseBindMatrices:ibm,skeleton:0}],
     meshes:[{name:"Competition skier PBR high-detail multi-weight",primitives}],

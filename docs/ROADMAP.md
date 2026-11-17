@@ -127,3 +127,11 @@ Le but est un simulateur de ski de grande qualité, amélioré sur le même dép
 - Faire essayer le tissu original UV en qualité élevée, contrôler l'orientation et le rendu du dossard 61, et introduire des textures photo-PBR légales avec normales/micro-plis et compression KTX2 après test des décodeurs.
 - Améliorer les proportions de la combinaison, les plis des genoux, la forme des épaules et une animation d'appui plus anthropométrique ; conserver les animations et les résultats.
 - Mesurer la lisibilité et le bruit visuel du colorant bleu sur neige Poly Haven Snow 02 sur PC/iPhone, sans supposer que les captures SwiftShader sont des benchmarks.
+
+## Après V1.10 — avancées à tester en vrai
+
+- Comparer les matières PBR du skieur sur PC et iPhone, puis améliorer l'anatomie et les clips professionnels (IK 3D/retarget), sans annoncer mocap absente.
+- Profiler les draw calls et les distances de culling GLB selon qualité ; ajouter des billboards ou vraies versions GLB low-poly si elles apportent une qualité mesurable.
+- Expérimenter sélectivement les matériaux `slate_ridge`, `ice_compacted` et `chalet_wood` du Studio Kit après UV et droits vérifiés ; conserver Snow 02 photo-PBR comme référence.
+- Calibrer l'effet neige de réception et la densité de particules sur GPU réel avant d'augmenter le budget mobile.
+- Poursuivre tests de trajectoire des quatre disciplines, portillon de chrono, timing de la main, gate collisions et vidéo de comparaison propriétaire.

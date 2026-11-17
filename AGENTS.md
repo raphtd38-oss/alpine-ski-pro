@@ -21,6 +21,8 @@ Construire progressivement un vrai simulateur de ski navigateur, sans installati
 
 ## Ressources et outils de production 3D (référence permanente)
 
+La sélection réelle du Studio Kit 2026 transmis par le joueur (11 GLB, 42 PBR, scripts, LOD) est documentée dans `docs/STUDIO_KIT_2026.md` : conserver les gains vérifiés, ne jamais réintroduire les terrains de démonstration comme terrain physique ou des modèles plus stylisés par simple nouveauté.
+
 **Avant toute modification du rendu, des textures, d'un GLB, d'un rig ou d'une animation :** lire docs/RESOURCE_CATALOG.md, docs/ASSET_WORKFLOW.md, docs/ASSETS.md et scripts/alpine-pack.json. Ce sont les connaissances vérifiées du projet.
 
 - Chercher les nouveaux modèles et textures **CC0** via npm run assets:search -- "snow" --type texture ou --type model. Les API publiques Poly Haven / ambientCG ne requièrent pas de compte ; Poly Haven exige un User-Agent identifiable et un crédit pour l'utilisation de l'API. Les téléchargements réels du jeu restent à versionner via des manifestes, pas au runtime.

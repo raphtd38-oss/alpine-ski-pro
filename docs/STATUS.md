@@ -216,3 +216,16 @@ Ce lot outille les prochaines améliorations mais n'importe pas un nouveau skieu
 - **Limite** : modèle 18 os encore anatomiquement simplifié, aucun clip mocap ; textures réelles mais procédurales, pas une refonte réaliste complète.
 
 - Amélioration après contrôle des captures Chromium : caméra de poursuite SG corrigée après interpolation pour éviter de passer sous les crests et d'exposer le fond bleu ; skis orange prototype remplacés par un topsheet de course texturé marine/carbone, avec UV et nettoyage des textures.
+
+## 17 novembre 2026 — V1.10 Studio Kit (validation à vérifier sur GitHub Actions)
+
+- ZIP Studio Kit 2026 fourni par le joueur inspecté : onze prototypes GLB, sept ensembles PBR (42 images), outils de génération, contrôle budgétaire, LOD, guides. Rapport dans `docs/STUDIO_KIT_2026.md` et empreintes SHA-256.
+- Intégration réelle du LOD spatial : modèles GLB CC0 existants masqués en dehors de leur proximité caméra selon le niveau graphique, hystérésis de 12 m, évaluation toutes les 0,22 s ; la forêt groupée et le terrain physique restent actifs.
+- Les rochers de bord de piste Super-G sont désormais regroupés sur un matériau granite/ardoise qui reçoit de vraies UV, des normales calculées et de la rugosité produite à partir du Studio Kit (`studio-rock-texel.ts`). Vérifier la lisibilité de la couleur et du relief en navigateur.
+- Correction des couleurs du terrain : les bordures neige/rochers suivent à nouveau le centre réel des grandes courbes Super-G, et les secteurs glaciaires/combe rocheuse reçoivent une variation subtile de teinte sans modifier la physique.
+- Le skieur GLB original reçoit des normales OpenGL dérivées de micro-reliefs de tissu, des cartes roughness/metallic et AO emballées en ORM glTF. Aucun téléchargement supplémentaire ni changement du rig.
+- Les cristaux de neige réagissent à la compression de réception, avec de courtes gerbes après un saut, même skis droits, en plus du carving ; budget de particules bas maintenu.
+- Le suivi caméra SG corrige aussi les grands déplacements instantanés liés aux replays et à la simulation rapide en sautant vers le skieur, sans perturber le suivi fluide d'une course normale.
+- Tests ajoutés pour hystérésis de LOD, seuils de distance et amplitude des gerbes. Le moteur de simulation conserve son pas fixe de 120 Hz.
+- Aucun modèle du kit plus stylisé n'a remplacé un GLB ou la neige photo-PBR existante ; aucun code ni asset d'autre jeu.
+- Tests et publication : consulter le workflow CI et la PR ; ne pas présumer de FPS ou de compatibilité Safari non mesurés.

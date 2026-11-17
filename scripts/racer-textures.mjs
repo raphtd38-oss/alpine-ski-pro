@@ -67,7 +67,75 @@ function texture(kind) {
   ]);
 }
 
+// Additional PBR maps implement the player's 2026 Studio Kit race_fabric
+// recipe (micro-woven height -> OpenGL tangent normal + glTF packed ORM).
+// They are all deterministic PNGs embedded in the GLB at build time, without
+// a costly runtime dependency on Python/Numpy/Pillow or external downloads.
+function microHeight(kind, x, y) {
+  const u = x / 256, v = y / 256;
+  const fleck = Math.sin(u * 167 + v * 113) * 0.016 +
+    Math.sin(u * 83 - v * 137) * 0.009;
+  if (kind === "woven")
+    return 0.50 + 0.078 * Math.sin(u * Math.PI * 2 * 58) *
+      Math.sin(v * Math.PI * 2 * 58) + fleck;
+  if (kind === "carbon")
+    return 0.50 + 0.052 * Math.sin((u + v) * Math.PI * 2 * 36) *
+      Math.cos((u - v) * Math.PI * 2 * 32) + fleck * 0.55;
+  if (kind === "bib")
+    return 0.50 + 0.028 * Math.sin(u * Math.PI * 2 * 48) *
+      Math.sin(v * Math.PI * 2 * 48) + fleck * 0.2;
+  // Smooth mirrored goggles: almost no bump, very low base roughness.
+  return 0.50 + Math.sin(u * 21 + v * 15) * 0.0025;
+}
+
+function extraPbrTexture(kind, map) {
+  const w = 256, h = 256, raw = Buffer.alloc(h * (w * 4 + 1));
+  const clamp8 = (v) => Math.max(0, Math.min(255, Math.round(v)));
+  for (let y = 0; y < h; y++) {
+    const row = y * (w * 4 + 1);
+    for (let x = 0; x < w; x++) {
+      const p = row + 1 + x * 4;
+      const height = microHeight(kind, x, y);
+      if (map === "normal") {
+        const dx = (microHeight(kind, x + 1, y) -
+          microHeight(kind, x - 1, y)) * 0.5;
+        const dy = (microHeight(kind, x, y + 1) -
+          microHeight(kind, x, y - 1)) * 0.5;
+        const nx = -dx * 3.6, ny = -dy * 3.6, nz = 1;
+        const norm = Math.hypot(nx, ny, nz);
+        raw[p] = clamp8((nx / norm * .5 + .5) * 255);
+        raw[p + 1] = clamp8((ny / norm * .5 + .5) * 255);
+        raw[p + 2] = clamp8((nz / norm * .5 + .5) * 255);
+      } else {
+        // glTF ORM: R=occlusion, G=roughness, B=metallic.
+        const base = kind === "visor" ? 158 :
+          kind === "carbon" ? 210 : kind === "woven" ? 229 : 236;
+        raw[p] = clamp8(238 - Math.max(0, .5 - height) * 42);
+        raw[p + 1] = clamp8(base + (height - .5) * 93);
+        raw[p + 2] = 255; // do not accidentally zero out PBR metallicFactor
+      }
+      raw[p + 3] = 255;
+    }
+  }
+  const hdr = Buffer.alloc(13);
+  hdr.writeUInt32BE(w, 0);hdr.writeUInt32BE(h, 4);
+  hdr[8] = 8;hdr[9] = 6;
+  return Buffer.concat([
+    Buffer.from([137,80,78,71,13,10,26,10]),
+    chunk("IHDR", hdr),
+    chunk("IDAT", deflateSync(raw, { level: 9 })),
+    chunk("IEND", Buffer.alloc(0)),
+  ]);
+}
+
 export const RACER_TEXTURE_NAMES = ["woven","carbon","bib","visor"];
 export function originalRacerTextures() {
-  return RACER_TEXTURE_NAMES.map((kind) => ({ kind, png: texture(kind) }));
+  const base = RACER_TEXTURE_NAMES.map((kind) => ({
+    kind, map: "albedo", png: texture(kind),
+  }));
+  const detail = RACER_TEXTURE_NAMES.flatMap((kind) => [
+    {kind, map: "normal", png: extraPbrTexture(kind, "normal")},
+    {kind, map: "orm", png: extraPbrTexture(kind, "orm")},
+  ]);
+  return [...base, ...detail];
 }

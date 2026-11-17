@@ -19,7 +19,7 @@ const binLength = head.getUint32(binStart, true);
 assert.equal(doc.buffers[0].byteLength, binLength);
 assert.equal(binStart + 8 + binLength, bytes.length);
 assert.ok(doc.materials.length >= 12);
-assert.ok(doc.images?.length >= 4, "Real race suit needs embedded texture maps");
+assert.ok(doc.images?.length >= 12, "Studio Kit race suit needs color, normal and ORM maps");
 assert.ok(doc.textures?.length >= 4, "Race materials must be UV textured");
 for (const image of doc.images) {
   assert.equal(image.mimeType, "image/png");
@@ -29,8 +29,16 @@ for (const image of doc.images) {
     0x89504e47, "Texture must be an embedded PNG");
 }
 for (const index of [0, 1, 2, 3, 4, 5]) {
-  assert.ok(doc.materials[index].pbrMetallicRoughness.baseColorTexture,
+  const m = doc.materials[index];
+  assert.ok(m.pbrMetallicRoughness.baseColorTexture,
     "Suit, bib, helmet, boots and visor require genuine albedo maps");
+  assert.ok(m.normalTexture && m.normalTexture.index >= 4,
+    "Skier suit needs a true OpenGL tangent-space normal map");
+  assert.ok(m.pbrMetallicRoughness.metallicRoughnessTexture &&
+    m.pbrMetallicRoughness.metallicRoughnessTexture.index >= 5,
+    "Skier suit needs packed metallic/roughness maps");
+  assert.ok(m.occlusionTexture && m.occlusionTexture.index >= 5,
+    "Skier suit needs ambient occlusion");
 }
 assert.ok(doc.meshes[0].primitives.length >= 40, "Need substantial body and equipment geometry");
 const skinnedJointNames = [

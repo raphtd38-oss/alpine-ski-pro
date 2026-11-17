@@ -5,6 +5,7 @@ import { terrainHeight, gradient, courseCenterX } from "../game/course";
 import { trainingLineX } from "../game/guide";
 import { sampleSnowSurface } from "../game/surface";
 import { snowTexel } from "./snow-texture";
+import { graniteTexel } from "./studio-rock-texel";
 import { gatePoleCanvas, gateBannerCanvas } from "./gate-textures";
 import { gateFlagFlutter } from "../game/gates-visual";
 import { tipVibration, type PoleState } from "../game/poles";
@@ -151,18 +152,27 @@ export class World {
         const h = terrainHeight(x, z, this.course);
         p.push(x, h, z);
         uv.push(x / 2, z / 3);
+        // Edge weathering must follow the actual winding race corridor.
+        // The older shading field remained at x=0 while the Super-G swung
+        // almost 25m to each side, making groomed/powder borders misalign.
+        const localX = x - courseCenterX(z, this.course);
         const edge = Math.min(
           1,
-          Math.max(0, (Math.abs(x) - this.course.width / 2) / 20),
+          Math.max(0, (Math.abs(localX) - this.course.width / 2) / 20),
         );
+        // More exposed blue ice above the tree line and cooler hardpack in
+        // the rocky canyon, without changing friction or course geometry.
+        const region = this.course.id === "SG" ? superGSector(z) : "spruce";
+        const glacierTint = region === "glacier" ? 0.038 : 0;
+        const canyonTint = region === "canyon" ? 0.016 : 0;
         const n =
           Math.sin(x * 1.2 + z * 0.38) * Math.sin(z * 0.63 + x * 0.2) * 0.018;
         // Broad, subtle blue-grey compressed patches match the grip field.
         const icy = sampleSnowSurface(x, z, this.course).ice;
         col.push(
-          1 - edge * 0.11 + n - icy * 0.075,
-          1 - edge * 0.075 + n - icy * 0.036,
-          1 - edge * 0.04 + n - icy * 0.012,
+          1 - edge * 0.11 + n - icy * 0.075 - glacierTint - canyonTint,
+          1 - edge * 0.075 + n - icy * 0.036 - canyonTint * 0.55,
+          1 - edge * 0.04 + n - icy * 0.012 + glacierTint * 0.25,
           1,
         );
       }
@@ -357,10 +367,52 @@ export class World {
   /** Area-specific, fully batched rock geometry. Unlike repetitive cones,
    * every sector has separate density, silhouettes, exposed granite and
    * frost colour, with the glacier intentionally almost treeless. */
+  /** The Studio Kit granite/slate recipe is applied only to newly
+   * generated near-piste rock faces. Shared texture triplet, one batched
+   * material and real UV/tangents; no new draw call per individual boulder. */
+  studioRockPbr(material: pc.StandardMaterial) {
+    const size = this.quality === "low" ? 128 : 256;
+    const canvases = Array.from({length:3}, () => {
+      const c = document.createElement("canvas");
+      c.width = c.height = size;
+      return c;
+    });
+    const pixels = canvases.map(c => c.getContext("2d")!.createImageData(size,size));
+    for(let y=0;y<size;y++)
+      for(let x=0;x<size;x++) {
+        const t=graniteTexel(x,y), i=(y*size+x)*4;
+        const vectors=[t.diffuse,t.normal,
+          [t.roughness,t.roughness,t.roughness]] as const;
+        for(let k=0;k<3;k++) {
+          const data=pixels[k].data;
+          data[i]=vectors[k][0];data[i+1]=vectors[k][1];
+          data[i+2]=vectors[k][2];data[i+3]=255;
+        }
+      }
+    canvases.forEach((canvas,i)=>
+      canvas.getContext("2d")!.putImageData(pixels[i],0,0));
+    const tex=(c: HTMLCanvasElement,name:string)=>{
+      const t=new pc.Texture(this.app.graphicsDevice,{name,mipmaps:true});
+      t.setSource(c);
+      t.addressU=t.addressV=pc.ADDRESS_REPEAT;
+      t.anisotropy=4;
+      this.resources.push(t);
+      return t;
+    };
+    material.diffuseMap=tex(canvases[0],"Studio Kit original granite albedo");
+    material.normalMap=tex(canvases[1],"Studio Kit original granite normal");
+    material.glossMap=tex(canvases[2],"Studio Kit original granite roughness");
+    material.glossMapChannel="r";
+    material.glossInvert=true;
+    material.gloss=1;
+    material.bumpiness=.34;
+    material.update();
+  }
+
   superGScenery() {
     const random = rng(17122026);
     const vertices: number[] = [], indices: number[] = [],
-      colors: number[] = [];
+      colors: number[] = [], uv: number[] = [];
     const count = {
       low: 88, medium: 155, high: 260, ultra: 370,
     }[this.quality];
@@ -371,6 +423,8 @@ export class World {
       const sides = 7;
       vertices.push(x, y + altitude, z);
       colors.push(tint * 0.78, tint * 0.86, tint * 0.91, 1);
+      uv.push(.5,.5);
+      const rotation = random() * Math.PI * 2;
       for (let k = 0; k < sides; k++) {
         const a = k * Math.PI * 2 / sides;
         const rough = 0.7 + random() * 0.6;
@@ -379,6 +433,8 @@ export class World {
           z + Math.sin(a) * radius * rough);
         const shade = tint * (0.5 + random() * 0.37);
         colors.push(shade * 0.79, shade * 0.86, shade * 0.91, 1);
+        uv.push(.5 + .47 * Math.cos(a + rotation),
+          .5 + .47 * Math.sin(a + rotation));
       }
       for(let k=0;k<sides;k++)
         indices.push(n, n + 1 + k, n + 1 + ((k + 1) % sides));
@@ -399,9 +455,9 @@ export class World {
     }
     const granite = this.mat("Batched rock faces and glacier moraine", "#ffffff");
     granite.diffuseVertexColor = true;
-    granite.update();
+    this.studioRockPbr(granite);
     const mesh = meshEntity(this.app.graphicsDevice, this.root,
-      "Terrain sector granite and moraine", vertices, indices, granite, colors);
+      "Terrain sector granite and moraine", vertices, indices, granite, colors, uv);
     mesh.render!.castShadows = this.quality !== "low";
     const signs: { z: number; text: string; tone: string }[] = [
       { z: 400, text: "FORET DES AIGUILLES", tone: "#245b49" },
