@@ -1,3 +1,12 @@
+## V1.13 — coureur monobloc original fourni par le propriétaire (17 novembre 2026)
+
+- `public/assets/racer/seamless-full.glb` : **17 259 488 octets**, SHA-256 `bd35beb515859628056e9ef7c024f626e2b7580f09fb1d46a4439fb34a9a48a9` ; correspond au `ASP_SUPERG_RACER_SEAMLESS_FULL_212.glb` du ZIP utilisateur `Alpine_SuperG_Coureur_Monobloc_Anime_2026(2).zip`.
+- `public/assets/racer/seamless-mobile.glb` : **5 539 148 octets**, SHA-256 `f61e1a87ac61c954f8afd9e182d4ecc9ff3138af9b36a4c6eb73cc273794bad1` ; correspond au `ASP_SUPERG_RACER_SEAMLESS_MOBILE_512.glb` du même ZIP.
+- Les deux fichiers sont authentifiés en tests. Corps unique fermé, 25 os / poids normalisés, neuf animations glTF **originales mais procédurales**, protections, casque, skis de Super-G 212 cm et fixations attachés aux os des pieds. Documentation d'origine : `07_PLAYCANVAS/README_INTEGRATION.md` et `12_CREDITS_LICENSES/LICENCE_ORIGINAUX.md` dans le ZIP envoyé. Le texte du pack autorise utilisation, modification et distribution des créations originales selon les principes CC0, sans accorder de droits sur des marques tierces.
+- Import binaire effectué et hashes vérifiés via GitHub Actions ; le workflow temporaire de transfert externe a été supprimé avant fusion. Les binaires sont **dans le dépôt**, aucun CDN n'est utilisé au runtime.
+- Skieur historique 18 os conservé pour fallback et fantôme. L'augmentation du nombre de pièces de chaussures/fixations (115 meshes sur le GLB mobile) est réelle et nécessite des mesures GPU mobile ; la variante dite mobile réduit surtout textures et maillage du corps, et ne constitue pas une optimisation avancée de draw calls.
+- Ne pas annoncer un scan photoréaliste ou une motion capture : le GLB demeure stylisé et les animations nécessitent de futures corrections biomécaniques.
+
 ## V1.12 — nettoyage Super-G (17 novembre 2026)
 
 - Fichiers supprimés de l'arbre courant : cinq anciennes captures `docs/screenshots/*.png` (2 437 344 octets) et ancien prototype `scripts/build_skier.py` (6 141 octets). Ces fichiers restent récupérables dans l'historique Git ; ils n'étaient pas embarqués dans le site publié.
@@ -10,7 +19,7 @@ Aucun code, texture, son ni modèle de CarveMania n'est utilisé.
 
 ## Créations originales dans le dépôt
 
-- `public/assets/skier.glb` : nouveau coureur original V1.3, 18 articulations compatibles, 46 surfaces PBR, 13 matériaux et environ 600 ko. La source de génération canonique est maintenant `scripts/build_skier_pro.mjs` (Node, aucun Blender). Le script `scripts/build_skier.py` reste seulement comme ancien prototype. La génération vérifiée en CI fournit des pondérations multi-os qui réduisent la rigidité des articulations, sans prétendre à un scan photoréaliste.
+- `public/assets/skier.glb` : nouveau coureur original V1.3, 18 articulations compatibles, 46 surfaces PBR, 13 matériaux et environ 600 ko. La source de génération canonique est maintenant `scripts/build_skier_pro.mjs` (Node, aucun Blender). Le script `scripts/build_skier.py` a été supprimé en V1.12. La génération vérifiée en CI fournit des pondérations multi-os qui réduisent la rigidité des articulations, sans prétendre à un scan photoréaliste.
 - Géométries de pistes, montagnes, forêt, piquets, infrastructure, skis et textures Canvas : code original dans `src/render/`.
 - Glisse, vent et tonalités de départ/arrivée : synthèse Web Audio originale dans `src/game/audio.ts`.
 - L'habillage de l'arrivée est original. Aucune licence de marque FIS ou Audi n'est revendiquée et aucun partenariat n'est annoncé.
