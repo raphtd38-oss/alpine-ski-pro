@@ -79,9 +79,10 @@ test("training mode has a guide and regular racing can toggle its dashed traject
   await page.locator("#home").click();
   expect(await page.evaluate(() => (window as any).__ski.getState().guideActive)).toBe(false);
   await page.locator("#play").click();
-  expect(await page.evaluate(() => (window as any).__ski.getState().guideActive)).toBe(true);
-  await page.keyboard.press("g");
+  // Competitive runs start without a painted advisory line.
   expect(await page.evaluate(() => (window as any).__ski.getState().guideActive)).toBe(false);
   await page.keyboard.press("g");
   expect(await page.evaluate(() => (window as any).__ski.getState().guideActive)).toBe(true);
+  await page.keyboard.press("g");
+  expect(await page.evaluate(() => (window as any).__ski.getState().guideActive)).toBe(false);
 });
