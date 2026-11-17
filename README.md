@@ -65,3 +65,13 @@ Le workflow [GitHub Actions](.github/workflows/ci.yml) vérifie le code, les ass
 ### Nettoyage V1.12
 
 Les cinq captures obsolètes de `docs/screenshots/` et l'ancien générateur `scripts/build_skier.py` ont été retirés. Ils ne faisaient pas partie du bundle de jeu. Git conserve l'historique ; **la suppression de fichiers ne rend pas ChatGPT moins limité**. La diminution réelle du poids à télécharger dépend surtout des modèles et des textures qui restent en production.
+
+## Cortina Sunset — décor cinématique enrichi
+
+- Massifs de dolomie rosée stratifiés et crêtes enneigées ajoutés autour de la piste.
+- Sous-bois plus dense : grands épicéas, conifères sombres, mélèzes et branches poudrées de neige ; densité adaptée au niveau graphique.
+- Fines rainures de damage qui suivent les virages de la piste, sans modifier le relief ou la physique.
+- Filets A rouges à mailles visibles, plateformes TV, petit village alpin lointain avec fenêtres éclairées.
+- Projecteurs LED déjà en place complétés par halos doux en lumière additive, reflets au sol conformes au relief et nuages roses dans le ciel sunset.
+- Les 34 portes Super-G, les fanions souples, les collisions, les contrôles et les règles sont inchangés par cette extension visuelle.
+- Décor entièrement procédural et original : l'image de référence est une direction artistique, **pas** une texture projetée ni une reconstruction GPS/photogrammétrique.
