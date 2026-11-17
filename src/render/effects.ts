@@ -3,6 +3,7 @@ import type { Course, SkierState, Quality } from "../game/types";
 import { terrainHeight } from "../game/course";
 import { skiTrackQuad, snowSprayVelocity, snowPlumeIntensity, type TrackSample } from "../game/snow";
 import { skiSnowMark, snowPlumeSource, crashSnowEnergy } from "../game/snow-contact";
+import { sampleSnowSurface } from "../game/surface";
 import { material, meshEntity, rng } from "./geometry";
 
 interface Crystal {
@@ -156,23 +157,36 @@ export class SnowEffects {
     }
 
     const crashEnergy = crashSnowEnergy(s.gateCrashElapsed);
+    const snow = sampleSnowSurface(s.x, s.z, this.c);
     const plumeIntensity = Math.max(
-      snowPlumeIntensity(s, speed), crashEnergy * 1.55,
+      snowPlumeIntensity(s, speed) *
+        (0.82 + 0.34 * snow.depth + 0.14 * snow.ice),
+      crashEnergy * 1.55,
     );
     const emitting =
       active && grounded && this.particleLimit > 0 && plumeIntensity > 0.22;
     if (emitting) {
       // Emit by elapsed time, not by frames, so 30/60/144 Hz remain comparable.
       this.emissionTime = Math.min(this.emissionTime + dt, 0.1);
-      const tick = 1 / 35;
+      const tick = 1 / 40;
       while (this.emissionTime >= tick) {
         this.emissionTime -= tick;
-        const n = Math.min(9, Math.ceil(plumeIntensity * 1.55));
+        const n = Math.min(
+          this.quality === "low" ? 4 : 11,
+          Math.ceil(plumeIntensity * (1.75 + snow.depth * .45)),
+        );
         for (let i = 0; i < n && this.particles.length < this.particleLimit; i++) {
           const random = this.random();
           const source = snowPlumeSource(s, i, speed, random);
           const v = snowSprayVelocity(s, this.random());
-          v.y += source.liftMps + s.landingShock * (0.7 + this.random() * 1.6);
+          // The loaded OUTSIDE ski creates the long trailing fan; the
+          // unweighted inside ski contributes only a fine drifting spray.
+          const energy = 0.48 + source.strength * 0.70;
+          v.x *= energy;
+          v.z *= energy;
+          v.y = (v.y * 0.43 + source.liftMps) *
+            (0.62 + source.strength * .46) +
+            s.landingShock * (0.7 + this.random() * 1.6);
           if (crashEnergy > 0) {
             // A body/ski slide throws a much lower, wider fan of crystals.
             v.x += (this.random() - .5) * 6.4 * crashEnergy;
@@ -188,9 +202,11 @@ export class SnowEffects {
             vx: v.x,
             vy: v.y,
             vz: v.z,
-            life: .34 + this.random() * .42 +
-              s.landingShock * .16 + crashEnergy * .10,
-            size: source.radiusM * (crashEnergy > 0 ? 1.35 : 1),
+            life: (.27 + this.random() * .55 +
+              s.landingShock * .16 + crashEnergy * .10) *
+              (0.65 + source.strength * .36),
+            size: source.radiusM * (.72 + this.random() * .72) *
+              (crashEnergy > 0 ? 1.35 : 1),
           });
         }
       }
