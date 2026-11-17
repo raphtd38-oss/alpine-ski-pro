@@ -214,3 +214,5 @@ Ce lot outille les prochaines améliorations mais n'importe pas un nouveau skieu
 - Le test de génération GLB est désormais exécuté avant chaque `npm test`, et des assertions contrôlent les cartes couleur et UV ; les tests de course, de chute, de replay et de pilotage restent inchangés sauf l'espacement SG.
 - **Validation** : consulter les tests GitHub Actions de la PR et le déploiement `main` ; aucun FPS joueur ou certification FIS n'est présumé ici.
 - **Limite** : modèle 18 os encore anatomiquement simplifié, aucun clip mocap ; textures réelles mais procédurales, pas une refonte réaliste complète.
+
+- Amélioration après contrôle des captures Chromium : caméra de poursuite SG corrigée après interpolation pour éviter de passer sous les crests et d'exposer le fond bleu ; skis orange prototype remplacés par un topsheet de course texturé marine/carbone, avec UV et nettoyage des textures.
