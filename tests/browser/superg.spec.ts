@@ -8,6 +8,10 @@ test("World-Cup-style Super-G start house, four-pole flags and terrain crest", a
   // Super-G is the sole selectable discipline and opens by default.
   const setup = await page.evaluate(() => (window as any).__ski.getState());
   expect(setup.course).toBe("SG");
+  const cortina = await page.evaluate(() => (window as any).__ski.getCourse());
+  expect(cortina.name).toContain("Cortina");
+  expect(cortina.length).toBe(2105);
+  expect(cortina.gates).toHaveLength(34);
   expect(setup.startHouse).toBe(true);
   expect(setup.blueBorderDye).toBe(true);
   expect(setup.sprayedBlueDye).toBe(true);
@@ -98,7 +102,7 @@ test("World-Cup-style Super-G start house, four-pole flags and terrain crest", a
     }
     return api.getState();
   });
-  expect(finalApproach.z, JSON.stringify(finalApproach)).toBeGreaterThan(1900);
+  expect(finalApproach.z, JSON.stringify(finalApproach)).toBeGreaterThan(2000);
   await page.waitForTimeout(60);
   await page.screenshot({ path: "test-results/superg-last-turn.png" });
 
@@ -129,7 +133,7 @@ test("World-Cup-style Super-G start house, four-pole flags and terrain crest", a
   // Preserve the SG records and replay workflow after removing other courses.
   if (finish.missed === 0) {
     const records = await page.evaluate(() =>
-      JSON.parse(localStorage.getItem("alpine-ski-pro:v1") ?? "null")?.records?.SG ?? []);
+      JSON.parse(localStorage.getItem("alpine-ski-pro:cortina-2026:v1") ?? "null")?.records?.SG ?? []);
     expect(records.length).toBeGreaterThan(0);
   }
   await page.locator("#replay").click();
