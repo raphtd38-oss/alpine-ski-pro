@@ -237,18 +237,23 @@ export class Renderer {
       look = target;
     } else {
       const inStartHouse = this.course.id === "SG" && f.z < 12;
-      // On SG the old camera flattened rollers and made the racer too tiny.
-      // Keep gates in view while approaching the skier and lowering the lens.
+      // The published browser captures showed the athlete filling only ~10%
+      // of screen height; subtle knee and glove motion was invisible.
+      // Camera points primarily at the rider, not 4 metres past him.
+      // Speed-sensitive look-ahead remains for the next Super-G gate.
       const speedChase = this.course.id === "SG" && this.cameraMode === 0;
-      const distance = inStartHouse ? 5.3 :
-        this.cameraMode === 1 ? 4.8 :
-        speedChase ? 5.85 + speed * 0.032 : 8.6 + speed * 0.065;
+      const distance = inStartHouse ? 3.95 :
+        this.cameraMode === 1 ? 3.65 :
+        speedChase ? 4.65 + speed * 0.026 : 8.6 + speed * 0.065;
       eye = target.clone().sub(forward.clone().mulScalar(distance));
-      eye.y = y + (inStartHouse ? 2.55 :
-        speedChase ? 3.15 : this.cameraMode === 1 ? 3 : 5);
+      eye.y = y + (inStartHouse ? 2.35 :
+        speedChase ? 2.45 : this.cameraMode === 1 ? 2.2 : 5);
+      const lookAhead = inStartHouse ? 1.05 :
+        speedChase ? 2.05 : this.cameraMode === 1 ? 1.35 : 6.5;
       look = target.clone().add(new pc.Vec3(
-        s.vx * 0.12, speedChase ? -0.2 : -0.45,
-        speedChase ? 4.0 : 6.5,
+        s.vx * (speedChase ? 0.07 : 0.12),
+        speedChase ? -0.12 : -0.3,
+        lookAhead,
       ));
     }
     eye.y = Math.max(eye.y, terrainHeight(eye.x, eye.z, this.course) + 0.7);
@@ -293,7 +298,7 @@ export class Renderer {
       this.camera.translateLocal(jitter.x, jitter.y, jitter.z);
     }
     const targetFov = this.menu ? 62 : this.cameraMode === 2
-      ? 76 : speedFov(56, speed);
+      ? 76 : speedFov(this.cameraMode === 0 ? 51 : 55, speed);
     this.camera.camera!.fov += (targetFov - this.camera.camera!.fov) *
       (1 - Math.exp(-dt * 5));
     this.athlete.root.enabled = this.menu || this.cameraMode !== 2;
