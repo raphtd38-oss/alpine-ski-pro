@@ -13,7 +13,7 @@
     "assets": "node scripts/build_skier_pro.mjs",
     "format": "prettier --write src tests scripts/*.mjs *.ts *.json *.html docs/*.md README.md AGENTS.md",
     "assets:verify": "node scripts/check_skier.mjs",
-    "prebuild": "npm run assets && npm run assets:verify",
+    "prebuild": "npm run assets && npm run assets:verify && node scripts/generate_flex_gate_audio.mjs",
     "assets:alpine": "node scripts/fetch_alpine_assets.mjs",
     "assets:search": "node scripts/asset_search.mjs",
     "assets:doctor": "node scripts/asset_tools.mjs doctor",
@@ -21,7 +21,8 @@
     "studio:doctor": "node scripts/studio.mjs doctor",
     "studio:inspect": "node scripts/studio.mjs inspect",
     "studio:verify": "node scripts/studio.mjs verify",
-    "studio:optimize": "node scripts/studio.mjs optimize"
+    "studio:optimize": "node scripts/studio.mjs optimize",
+    "predev": "node scripts/generate_flex_gate_audio.mjs"
   },
   "dependencies": {
     "@fontsource/barlow": "^5.3.0",
