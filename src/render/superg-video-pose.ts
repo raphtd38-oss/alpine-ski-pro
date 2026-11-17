@@ -59,6 +59,104 @@ export function superGEdgePose(
  * Main reports minus the countdown remaining in seconds.
  */
 export function superGStartBrace(startPhase: number): number {
-  if (!Number.isFinite(startPhase) || startPhase >= 0) return 0;
-  return smoothstep(0.1, 1.20, 1.35 + startPhase);
+  if (!Number.isFinite(startPhase)) return 0;
+  if (startPhase < 0) {
+    // An anticipation: bend the knees and load both poles BEFORE the wand.
+    return smoothstep(-1.25, -0.15, startPhase);
+  }
+  // Crucial continuity at GO: the brace must NOT snap from 1 to 0.
+  // Extend the knees into the first two double-pole strokes.
+  return 1 - smoothstep(0.035, 0.42, startPhase);
+}
+
+/** Rest-pose measurements of the original, one-piece 25-joint Super-G GLB.
+ * Local +Y is up; the racer faces local -Z and is rotated 180 degrees by the
+ * PlayCanvas renderer. These are model-specific, NOT universal human ratios.
+ */
+const SG_LEG = Object.freeze({
+  thighY: -0.370,
+  thighZ: -0.191,
+  shinY: -0.319,
+  shinZ: 0.122,
+  hipFromPelvisY: -0.070,
+  bootFromAnkleY: -0.126,
+  soleHeightY: 0.125,
+});
+export interface SuperGLegIK {
+  hipPitch: number;
+  kneePitch: number;
+  anklePitch: number;
+  /** Position of the skier's foot above the local piste (metres). */
+  footHeight: number;
+}
+
+/** Sagittal two-link inverse kinematics respecting the ACTUAL GLB bone
+ * directions, including the shin's forward-offset heel. The old solver
+ * borrowed angles from the 18-bone avatar and drove these boots underground
+ * whenever the athlete crouched. This solver keeps the boot sole on snow
+ * as the pelvis changes height; the outer/inner legs can receive different
+ * targets from the renderer.
+ *
+ * Degrees returned are local X rotations about hip and knee bone pivots.
+ * y is the pelvis pivot height relative to the snow, NOT absolute world Y.
+ */
+export function superGLegIK(
+  pelvisY: number,
+  footLift = 0,
+): SuperGLegIK {
+  const aY = SG_LEG.thighY, aZ = SG_LEG.thighZ;
+  const bY = SG_LEG.shinY, bZ = SG_LEG.shinZ;
+  const upper = Math.hypot(aY, aZ), lower = Math.hypot(bY, bZ);
+  const ankleY = SG_LEG.soleHeightY + footLift - SG_LEG.bootFromAnkleY;
+  const dy = ankleY - (pelvisY + SG_LEG.hipFromPelvisY);
+  const dz = aZ + bZ; // keep fore/aft foot projection independent of knee flex
+  const length = clamp(Math.hypot(dy, dz),
+    Math.abs(upper - lower) + 0.0001, upper + lower - 0.0001);
+  const triangle = clamp(
+    (upper * upper + length * length - lower * lower) /
+      (2 * upper * length), -1, 1);
+  // Select the solution with the knee projecting toward the ski tip (-Z in
+  // this rig). The opposite cosine branch bends the knee backwards.
+  const thighDirection = Math.atan2(dz, dy) + Math.acos(triangle);
+  const thighRest = Math.atan2(aZ, aY);
+  const normalize = (angle: number) =>
+    Math.atan2(Math.sin(angle), Math.cos(angle));
+  const hipAngle = normalize(thighDirection - thighRest);
+  const kneeY = aY * Math.cos(hipAngle) - aZ * Math.sin(hipAngle);
+  const kneeZ = aY * Math.sin(hipAngle) + aZ * Math.cos(hipAngle);
+  const shinDirection = Math.atan2(dz - kneeZ, dy - kneeY);
+  const shinRest = Math.atan2(bZ, bY);
+  const kneeAngle = normalize(shinDirection - shinRest - hipAngle);
+  const deg = 180 / Math.PI;
+  return {
+    hipPitch: hipAngle * deg,
+    kneePitch: kneeAngle * deg,
+    anklePitch: -(hipAngle + kneeAngle) * deg,
+    footHeight: SG_LEG.soleHeightY + footLift,
+  };
+}
+
+/** Engaged carve heel geometry compensation for the 25-bone rig: a tilted
+ * pelvis naturally lifts the outside boot and drives the inner boot lower.
+ * Subtract/raise just enough of the 2D IK target to retain snow contact under
+ * both skis, permitting the inside ski a small release. Signed 'outside'
+ * is the physical outside-leg channel for this side of the turn.
+ */
+export function superGSkiFootLift(outside: number, engagement: number): number {
+  if (Math.abs(outside) < 0.02) return 0;
+  const strength = clamp(engagement, 0, 1);
+  return (outside > 0 ? -0.13 : 0.12) * strength;
+}
+
+/** Render-side finish choreography requested by the player. The real
+ * broadcast did not show the glove close enough to derive this gesture.
+ * Never feed this function into the physics chrono/beam solver.
+ */
+export function superGFinishGesture(reach: number): {
+  drop: number;
+  forward: number;
+  armReach: number;
+} {
+  const a = smoothstep(0, 0.92, clamp(reach, 0, 1));
+  return { drop: a * 0.105, forward: a * 0.07, armReach: a };
 }
