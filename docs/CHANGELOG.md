@@ -1,5 +1,7 @@
 ## 1.9.0 — 17 novembre 2026 — sécurité de réception et vrai textile du coureur
 
+- Après inspection de la capture de saut : maintien de la caméra lissée au-dessus de la piste pour supprimer le grand vide bleu, et ski topsheet UV bleu nuit / graphite avec motif compétition original à la place du matériau orange prototype.
+
 - Après les cinq crêtes majeures de Super-G, les portes sont décalées hors de l'appel (-18 m) et d'une zone libre de réception (+80 m), avec intervalle minimal de 36 m ; ces marges sont des choix de gameplay et ne remplacent pas les règles FIS.
 - La teinture bleue des deux bords devient irrégulière et texturée comme un colorant pulvérisé, avec barres de repérage aux abords des sauts et guides autour des portes ; toutes les bandes partagent un mesh.
 - Skieur glTF à 18 os conservé mais désormais réellement **texturé** : UV propres avec coutures cylindriques, PNG albédo intégrés au GLB pour trame technique, éléments carbone, dossard n°61 et masque réfléchissant.
