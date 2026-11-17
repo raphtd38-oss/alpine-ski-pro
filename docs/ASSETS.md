@@ -1,3 +1,12 @@
+## V1.14 — reconstruction Cortina 2026 issue du ZIP du propriétaire
+
+- Source fournie : `Alpine_Ski_Pro_Cortina_SuperG_2026_3D_PACK (1).zip`, originaux procéduraux décrits dans `cortina_sg_pack/docs/README_FR.md` ; les courbes/cotes/points de stations sont des approximations déclarées dans ce pack, pas des coordonnées officielles des piquets.
+- Modules intégrés : `src/game/superg.ts` (24 points de tracé, référence d'altitude 2 195→1 560 m, cinq crêtes), `src/game/course.ts` (profil physique/visuel à 635 m), `src/render/cortina-scenery.ts` (falaises/éboulis/épicéas/refuges/télésiège procéduraux à faible nombre de draw calls) et recentrage du terrain dans `src/render/world.ts`. Nouvelles dimensions de course nominales : 2 105 m.
+- **Pas de copie** de photos, panoramas officiels, topographie sous licence, ressources de CarveMania ou marques de sponsors. Le modèle original et les scripts sont fournis pour le projet par son propriétaire.
+- `Cortina_2026_SG_Terrain_LOD{0,1,2}.glb` : modèles de travail du ZIP **non intégrés au runtime** (respectivement environ 7,41 Mo, 1,52 Mo, 0,28 Mo). Ils représentent la même géométrie mais ne servent ni de surface de collision ni d'affichage embarqué. Ils restent disponibles dans l'archive fournie au développeur pour Blender.
+- Les 43 portes officielles 2026 sont une référence factuelle FIS ; **34 portes simulées** sont conservées. Le parcours représenté n'est pas homologué ni GPS exact.
+- Source FIS : https://medias1.fis-ski.com/pdf/2026/AL/5183/2026AL5183SLR0.pdf ; détails et limites dans `docs/CORTINA_2026.md`.
+
 ## V1.13 — coureur monobloc original fourni par le propriétaire (17 novembre 2026)
 
 - `public/assets/racer/seamless-full.glb` : **17 259 488 octets**, SHA-256 `bd35beb515859628056e9ef7c024f626e2b7580f09fb1d46a4439fb34a9a48a9` ; correspond au `ASP_SUPERG_RACER_SEAMLESS_FULL_212.glb` du ZIP utilisateur `Alpine_SuperG_Coureur_Monobloc_Anime_2026(2).zip`.
