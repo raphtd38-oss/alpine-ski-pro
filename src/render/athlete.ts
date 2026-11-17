@@ -553,49 +553,60 @@ export class Athlete {
         const wristWorld = wrist.getPosition();
         const inverse = this.root.getWorldTransform().clone().invert();
         const point = inverse.transformPoint(wristWorld);
-        const launchPlant = c.id === "SG" && (
-          (launchContact > 0.13 && startPhase >= 0 && startPhase < 1.45) ||
-          (startPhase < 0 && startBrace > 0.18)
-        );
-        if (launchPlant) {
-          // Foot-to-snow solution for the pole tip. Work in world space to
-          // take real piste gradient into account, then transform to rig.
+        const activePlant = ((i === 0 ? 1 : -1) === this.plantingSide)
+          ? this.plantEnergy : 0;
+        const gripDistance =
+          (PRO_POLE.shaftLength - PRO_POLE.gripLength) * 0.5;
+
+        // Free-flight pole position: the shaft points back, aerodynamically
+        // following the glove without slicing through the snow on low turns.
+        const polePitch = 48 + tuck * 23 + carvePose.engagement * 11 +
+          airborne * 10 - activePlant * 18 +
+          (i === 1 ? 10 : 0) * finishPose.armReach;
+        const poleRoll = (i === 0 ? -1 : 1) * (6 + activePlant * 5);
+        const trailRot = new pc.Quat().setFromEulerAngles(
+          polePitch, 0, poleRoll);
+        const trailGrip = trailRot.transformVector(
+          new pc.Vec3(0, gripDistance, 0));
+        const trailPos = point.clone().sub(trailGrip);
+
+        // The physical acceleration has three distinct Gaussian impulses,
+        // not a 1.45-second permanent pole plant. Match that rhythm while
+        // crossfading the pole rotation/position instead of hard cuts.
+        const plantGoal = c.id !== "SG" ? 0 : startPhase < 0
+          ? startBrace : startPhase < 1.45
+            ? Math.max(0, Math.min(1, (launchContact - 0.32) * 3))
+            : 0;
+        const oldWeight = this.polePlantWeights[i];
+        const poleRate = plantGoal > oldWeight ? 27 : 19;
+        const poleBlend = 1 - Math.exp(-Math.max(0, dt) * poleRate);
+        const plantWeight = oldWeight +
+          (plantGoal - oldWeight) * poleBlend;
+        this.polePlantWeights[i] = plantWeight;
+
+        if (plantWeight > 0.003) {
+          // Grounded pole pose, calculated from actual track terrain. The
+          // rubber grip and the glove coincide on BOTH start and free poses.
           const basketX = wristWorld.x + (i === 0 ? -0.045 : 0.045);
           const ground = terrainHeight(basketX, wristWorld.z - 0.33, c) + 0.025;
-          const vertical = Math.max(0.10, Math.min(PRO_POLE.shaftLength * .96,
-            wristWorld.y - ground));
-          const behind = Math.sqrt(Math.max(.04,
+          const vertical = Math.max(0.10, Math.min(
+            PRO_POLE.shaftLength * 0.96, wristWorld.y - ground));
+          const behind = Math.sqrt(Math.max(0.04,
             PRO_POLE.shaftLength ** 2 - vertical ** 2));
           const tip = inverse.transformPoint(new pc.Vec3(
-            basketX, ground, wristWorld.z - behind,
-          ));
-          const gripToTip = point.clone().sub(tip).normalize();
-          // Local Y axis is the pole shaft from snow basket to grip.
+            basketX, ground, wristWorld.z - behind));
+          const tipToGrip = point.clone().sub(tip).normalize();
+          const plantRot = new pc.Quat().setFromDirections(
+            pc.Vec3.UP, tipToGrip);
+          const plantPos = point.clone().sub(
+            tipToGrip.clone().mulScalar(gripDistance));
           this.poles[i].setLocalRotation(
-            new pc.Quat().setFromDirections(pc.Vec3.UP, gripToTip));
-          // Align the actual rubber grip centre with the animated glove,
-          // rather than placing the pole's shaft midpoint at the wrist.
-          this.poles[i].setLocalPosition(point.clone().sub(
-            gripToTip.clone().mulScalar(
-              (PRO_POLE.shaftLength - PRO_POLE.gripLength) * 0.5)
-          ));
+            new pc.Quat().slerp(trailRot, plantRot, plantWeight));
+          this.poles[i].setLocalPosition(
+            new pc.Vec3().lerp(trailPos, plantPos, plantWeight));
         } else {
-          const activePlant = ((i === 0 ? 1 : -1) === this.plantingSide)
-            ? this.plantEnergy : 0;
-          // Speed racers trail their bent poles nearly horizontally during
-          // the aero tuck; a vertical slalom-style shaft would go through
-          // the snow whenever the wrists pass below a metre in carving.
-          const polePitch = 48 + tuck * 23 +
-            carvePose.engagement * 11 + airborne * 10 -
-            activePlant * 18 + (i === 1 ? 10 : 0) * finishPose.armReach;
-          const poleRoll = (i === 0 ? -1 : 1) * (6 + activePlant * 5);
-          const rotation = new pc.Quat().setFromEulerAngles(
-            polePitch, 0, poleRoll);
-          const toGrip = rotation.transformVector(new pc.Vec3(
-            0, (PRO_POLE.shaftLength - PRO_POLE.gripLength) * 0.5, 0));
-          // A real hand must remain ON the pole grip throughout the turn.
-          this.poles[i].setLocalRotation(rotation);
-          this.poles[i].setLocalPosition(point.clone().sub(toGrip));
+          this.poles[i].setLocalRotation(trailRot);
+          this.poles[i].setLocalPosition(trailPos);
         }
       }
     }
