@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { COURSES } from "../src/game/course";
+import { COURSES, courseCenterX } from "../src/game/course";
 import { trainingLineX } from "../src/game/guide";
 describe("training gate guidance", () => {
   it("crosses the centre of every Super-G gate", () => {
