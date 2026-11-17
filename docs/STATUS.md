@@ -205,3 +205,12 @@ Les téléchargements doivent réussir dans GitHub Actions pour être présents 
 Ajout de docs/RESOURCE_CATALOG.md (Poly Haven, ambientCG, Kenney, Mixamo, Quaternius, Blender, Material Maker, glTF Transform, Khronos) et docs/ASSET_WORKFLOW.md. AGENTS.md et .github/copilot-instructions.md demandent aux futurs développeurs d'utiliser cette connaissance. Scripts disponibles : recherche API CC0 sans compte, audit hors ligne des GLB/licences/poids, diagnostic des logiciels locaux, optimisation GLB non destructive via CLI facultative, export GLB Blender en batch. Des commandes npm rendent ces aides accessibles ; la CI exige désormais le pack CC0 complet et un audit avant compilation.
 
 Ce lot outille les prochaines améliorations mais n'importe pas un nouveau skieur photoréaliste, de nouveaux clips mocap, un transcodeur KTX2 ou un logiciel installé sur l'ordinateur du joueur. N'annoncer un déploiement réussi qu'après vérification GitHub Actions.
+
+## V1.9 — 17 novembre 2026 — tracé SG et vrai habillage du skieur
+
+- Correctif `superGGateZ` : 34 portes SG avec séparation longitudinale minimale de 36 m ; aucune porte placée dans une zone de 18 m avant l'appel ou de **80 m après** les cinq crêtes importantes. 80 m est une marge originale de conception du jeu, **pas une prescription FIS**. Le tracé garde ses secteurs boisés/glaciaires et ses virages.
+- Nouveau dessin de teinture bleue : lignes latérales légèrement irrégulières, pulvérisation translucide texturée et marquages transversaux aux approches des cinq sauts ; un mesh unique dans PlayCanvas, sans emprunt d'assets.
+- Le générateur d'athlète `scripts/build_skier_pro.mjs` produit de vraies UV et des textures PNG intégrées à la GLB pour combinaison bleu nuit, panneaux extensibles, carbone, dossard 61, casque/masque. Atlas générés par `scripts/racer-textures.mjs`, compatibles rendu hors-ligne.
+- Le test de génération GLB est désormais exécuté avant chaque `npm test`, et des assertions contrôlent les cartes couleur et UV ; les tests de course, de chute, de replay et de pilotage restent inchangés sauf l'espacement SG.
+- **Validation** : consulter les tests GitHub Actions de la PR et le déploiement `main` ; aucun FPS joueur ou certification FIS n'est présumé ici.
+- **Limite** : modèle 18 os encore anatomiquement simplifié, aucun clip mocap ; textures réelles mais procédurales, pas une refonte réaliste complète.
