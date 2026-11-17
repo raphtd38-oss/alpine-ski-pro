@@ -71,6 +71,8 @@ export class DeformableGatePole {
   private lastPhase = Number.NaN;
   private lastImpact = Number.NaN;
   private lastFlatten = Number.NaN;
+  /** Local snow level at a bent shaft point, relative to its anchored foot. */
+  private snowLevel: ((dx: number, dz: number) => number) | null = null;
 
   constructor(
     device: pc.GraphicsDevice,
@@ -116,6 +118,11 @@ export class DeformableGatePole {
     );
     this.entity.tags.add("pole");
     this.entity.setLocalPosition(base);
+  }
+
+  /** Keeps pole tips on real sloping Cortina snow, not at y=0 on a flat plane. */
+  setSnowContact(sampler: (dx: number, dz: number) => number): void {
+    this.snowLevel = sampler;
   }
 
   /** Retourne la position du centre du piquet en coordonnées locales du pivot. */
@@ -192,8 +199,14 @@ export class DeformableGatePole {
         z += step * Math.sin(inBetweenTheta) * directionZ;
       }
       const centre = ring * 3;
+      const slopeY = this.snowLevel?.(x, z) ?? 0;
+      // At 100% ground sweep the free tip reaches the ACTUAL terrain y.
+      // During interpolation clamp each ring above its local snow surface.
+      const rawY = y + groundSweep * t * t * slopeY;
+      const correctedY = groundSweep > 0.12
+        ? Math.max(slopeY - 0.008, rawY) : rawY;
       this.centres[centre] = x;
-      this.centres[centre + 1] = y;
+      this.centres[centre + 1] = correctedY;
       this.centres[centre + 2] = z;
 
       // Anneaux circulaires perpendiculaires à la tangente locale.
@@ -209,7 +222,7 @@ export class DeformableGatePole {
         const nz = radial * directionZ * c + around * directionX;
         const v = (ring * (this.sides + 1) + j) * 3;
         this.positions[v] = x + radius * nx;
-        this.positions[v + 1] = y + radius * ny;
+        this.positions[v + 1] = correctedY + radius * ny;
         this.positions[v + 2] = z + radius * nz;
         this.normals[v] = nx;
         this.normals[v + 1] = ny;
@@ -507,6 +520,12 @@ class FlagPair {
       device, this.partner, poleMaterial, new pc.Vec3(), quality,
     );
     this.partner.setLocalPosition(otherBase);
+    // At maximum collision bend, the tip lies on the local Cortina slope
+    // including downhill elevation, camber, and snow bank variation.
+    this.inner.setSnowContact((dx, dz) =>
+      terrainHeight(innerX + dx, gate.z + dz, course) - innerY);
+    this.outer.setSnowContact((dx, dz) =>
+      terrainHeight(outerX + dx, gate.z + EXTRA_PANEL_Z + dz, course) - outerY);
 
     // Pour le calcul du drapeau, toutes les coordonnées doivent être celles
     // du pivot intérieur, y compris le second piquet.
