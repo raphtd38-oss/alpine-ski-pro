@@ -11,6 +11,8 @@ test("World-Cup-style Super-G start house, four-pole flags and terrain crest", a
   // Menu selections rebuild the render scene; race.course switches at start.
   expect(setup.startHouse).toBe(true);
   expect(setup.blueBorderDye).toBe(true);
+  expect(setup.sprayedBlueDye).toBe(true);
+  expect(setup.athleteTexturedSurfaces).toBeGreaterThanOrEqual(40);
   expect(setup.timingWands).toBe(2);
   expect(setup.pairedGatePoles).toBe(68);
   expect(setup.gateFlagCount).toBe(68);
