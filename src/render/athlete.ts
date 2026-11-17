@@ -6,7 +6,7 @@ import { PRO_POLE } from "./equipment-specs";
 import { startDrivePhase, startDriveBlend, startPoleContact } from "../game/start-gate";
 import {
   superGEdgePose, superGStartBrace, superGLegIK,
-  superGSkiFootLift, superGFinishGesture,
+  superGSkiFootLift, superGFinishGesture, superGRacerBank,
 } from "./superg-video-pose";
 export class Athlete {
   root = new pc.Entity("Skier");
@@ -20,6 +20,7 @@ export class Athlete {
   /** Smoother pole-tip contact release between actual SG propulsion strokes. */
   polePlantWeights: number[] = [0, 0];
   visualEdge = 0;
+  visualBank = 0;
   visualCrouch = 0.045;
   /** Visual tuck follows controls smoothly; the 120Hz physics stays untouched. */
   visualTuck = 0;
@@ -320,11 +321,9 @@ export class Athlete {
     const y = terrainHeight(f.x, f.z, c) + f.height;
     this.root.setPosition(f.x, y + 0.015, f.z);
     const [, grade] = gradient(f.x, f.z, c);
-    this.root.setEulerAngles(
-      (-Math.atan(grade) * 180) / Math.PI,
-      (f.heading * 180) / Math.PI,
-      0,
-    );
+    const pitch = (-Math.atan(grade) * 180) / Math.PI;
+    const yaw = (f.heading * 180) / Math.PI;
+    this.root.setEulerAngles(pitch, yaw, this.visualBank);
     // Blend the athlete between turns in rendering time, independently of
     // the deterministic 120 Hz physics. Fast turn transitions stay readable
     // without the "rigid mannequin snaps sideways" appearance.
@@ -361,6 +360,13 @@ export class Athlete {
     const landing = Math.max(0, Math.min(1, f.landingShock ?? 0));
     const airborne = Math.max(0, Math.min(1, f.height * 1.4));
     const carvePose = superGEdgePose(edge, load, f.skid ?? 0, airborne);
+    // Bank the ENTIRE connected athlete and attached skis into the turn;
+    // independent hip/shoulder angulation keeps the torso from becoming a
+    // rigid plank. Smooth release at jumps and on the transition edge.
+    const desiredBank = superGRacerBank(edge, carvePose.engagement, airborne);
+    this.visualBank += (desiredBank - this.visualBank) *
+      (1 - Math.exp(-Math.min(0.1, Math.max(0, dt)) * 11));
+    this.root.setEulerAngles(pitch, yaw, this.visualBank);
     // A strong loaded edge opens the chest even when the player holds tuck.
     // This smooth visual layer never changes the 120Hz controls/physics.
     const tuckGoal = Math.max(
@@ -398,14 +404,17 @@ export class Athlete {
       Math.abs(edge) * 0.085 + load * 0.045 +
       pressureAbsorption + skidStance +
       startPush * (0.11 - launchExtension * 0.078) + landing * 0.075 + airborne * 0.095 +
-      finishPose.drop + carvePose.hipDrop + startBrace * 0.050;
+      finishPose.drop + carvePose.hipDrop +
+      carvePose.engagement * 0.095 + startBrace * 0.050;
     this.visualCrouch += (crouchTarget - this.visualCrouch) * blend;
     // The 25-bone leg IK must not be forced below its anatomical reach.
     const crouch = Math.min(0.475, this.visualCrouch);
     const j = this.joints;
     // The hips move inside the turn while the shoulders look downhill.
     // The outside leg is visibly longer and keeps the ski pressurized.
-    const lean = edge * (0.19 + load * 0.065) + carvePose.hipInside;
+    const lean = edge * (0.19 + load * 0.065) +
+      carvePose.hipInside +
+      Math.sign(edge) * carvePose.engagement * 0.09;
     // Seamless GLB faces local -Z. The old athlete faced +Z: bending the
     // torso forward requires reversed local X rotation on the new model.
     const pitchSign = this.isSeamless ? -1 : 1;
