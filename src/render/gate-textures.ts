@@ -31,60 +31,65 @@ export function gatePoleCanvas(tone: GateColour): HTMLCanvasElement {
 }
 
 export function gateBannerCanvas(tone: GateColour): HTMLCanvasElement {
+  // Inspired by the user's photograph: coloured, slightly wrinkled speed-gate fabric.
+  // Red and blue variants share geometry, with white interlocking rings.
   const canvas = document.createElement("canvas");
-  // Crisp across the camera's close-up; one shared texture per colour.
   canvas.width = 1024;
   canvas.height = 512;
   const ctx = canvas.getContext("2d")!;
   const red = tone === "red";
-  const base = red ? "#c6293b" : "#205cc0";
-  const edge = red ? "#ef6971" : "#65b2ed";
-  const gradient = ctx.createLinearGradient(0, 0, 1024, 512);
-  gradient.addColorStop(0, red ? "#ec4c52" : "#367fe1");
-  gradient.addColorStop(0.45, base);
-  gradient.addColorStop(1, red ? "#a72135" : "#17458e");
-  ctx.fillStyle = gradient;
+  const colour = ctx.createLinearGradient(0, 0, 1024, 0);
+  colour.addColorStop(0, red ? "#df2d20" : "#0756bb");
+  colour.addColorStop(.26, red ? "#ff4930" : "#1379e4");
+  colour.addColorStop(.5, red ? "#e62b1e" : "#0d61cd");
+  colour.addColorStop(.77, red ? "#f5422b" : "#1174df");
+  colour.addColorStop(1, red ? "#d82b20" : "#074eae");
+  ctx.fillStyle = colour;
   ctx.fillRect(0, 0, 1024, 512);
-
-  // Original woven polyester fibres: two directions and staggered crossings.
-  // No downloaded asset or copied sponsor logo.
-  for (let x = 0; x < 1024; x += 6) {
-    ctx.fillStyle = x % 12 ? "rgba(255,255,255,.038)" : "rgba(0,0,0,.075)";
-    ctx.fillRect(x, 0, 2, 512);
+  for (let x = 0; x < 1024; x += 4) {
+    ctx.fillStyle = x % 12 === 0
+      ? "rgba(0,20,30,.04)" : "rgba(255,255,255,.024)";
+    ctx.fillRect(x, 0, 1, 512);
   }
   for (let y = 0; y < 512; y += 6) {
-    ctx.fillStyle = y % 12 ? "rgba(255,255,255,.036)" : "rgba(0,0,0,.042)";
-    ctx.fillRect(0, y, 1024, 2);
+    ctx.fillStyle = "rgba(0,0,0,.022)";
+    ctx.fillRect(0, y, 1024, 1);
   }
-  // Reinforced double-stitched hem and welded corner grommets.
-  ctx.strokeStyle = edge;
-  ctx.lineWidth = 17;
-  ctx.strokeRect(14, 14, 996, 484);
-  ctx.strokeStyle = "rgba(255,255,255,.45)";
-  ctx.setLineDash([13, 9]);
+  // Creased central seam and reinforced upper/lower hems.
+  const pleat = ctx.createLinearGradient(472, 0, 552, 0);
+  pleat.addColorStop(0, "rgba(0,0,0,0)");
+  pleat.addColorStop(.43, "rgba(0,0,0,.20)");
+  pleat.addColorStop(.56, "rgba(255,255,255,.14)");
+  pleat.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = pleat;
+  ctx.fillRect(472, 0, 80, 512);
+  ctx.fillStyle = "rgba(5,16,28,.17)";
+  ctx.fillRect(0, 0, 1024, 19);
+  ctx.fillRect(0, 487, 1024, 25);
+  ctx.strokeStyle = "rgba(255,255,255,.46)";
   ctx.lineWidth = 3;
-  ctx.strokeRect(35, 35, 954, 442);
+  ctx.setLineDash([12, 10]);
+  ctx.strokeRect(23, 27, 978, 459);
   ctx.setLineDash([]);
-  for (const x of [65, 960])
-    for (const y of [59, 453]) {
-      ctx.beginPath();
-      ctx.arc(x, y, 14, 0, Math.PI * 2);
-      ctx.fillStyle = "#263d50";
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(x, y, 6, 0, Math.PI * 2);
-      ctx.fillStyle = "#9ab4c9";
-      ctx.fill();
+  // Five white overlapping rings, centred on the textile panel.
+  ctx.strokeStyle = "rgba(255,255,255,.98)";
+  ctx.lineWidth = 14;
+  ctx.lineCap = "round";
+  for (const [x, y] of [[340,226],[512,226],[684,226],[426,282],[598,282]]) {
+    ctx.beginPath();
+    ctx.arc(x, y, 80, 0, 2 * Math.PI);
+    ctx.stroke();
+  }
+  // Four metal-backed webbing strips to hold the panel to both poles.
+  for (const x of [20, 966]) {
+    for (const y of [35, 425]) {
+      ctx.fillStyle = "rgba(23,40,52,.26)";
+      ctx.fillRect(x, y, 34, 56);
+      ctx.fillStyle = "#9aa9b3";
+      ctx.fillRect(x + 8, y + 2, 13, 51);
+      ctx.fillStyle = "#657582";
+      ctx.fillRect(x + 11, y + 6, 3, 44);
     }
-  // Text is generic original game branding, not a real event sponsor.
-  ctx.fillStyle = "rgba(255,255,255,.96)";
-  ctx.textAlign = "center";
-  ctx.font = "900 127px Arial, sans-serif";
-  ctx.fillText("ALPINE", 512, 225);
-  ctx.font = "bold 91px Arial, sans-serif";
-  ctx.fillText("SKI PRO", 512, 335);
-  ctx.font = "bold 31px Arial, sans-serif";
-  ctx.fillStyle = "rgba(255,255,255,.83)";
-  ctx.fillText("ALPINE RACE SERIES", 512, 404);
+  }
   return canvas;
 }
