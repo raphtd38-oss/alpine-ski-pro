@@ -210,7 +210,9 @@ export class Renderer {
     const y = terrainHeight(f.x, f.z, this.course) + f.height;
     const speed = Math.hypot(s.vx, s.vz);
     const forward = new pc.Vec3(
-      Math.sin(f.heading) * 0.6,
+      // Keep chase view behind the actual running direction through sweeping
+      // Cortina turns; the previous 0.6X skew made skis look misaligned.
+      Math.sin(f.heading),
       0,
       Math.cos(f.heading),
     );
@@ -249,6 +251,13 @@ export class Renderer {
         this.cameraMode === 1 ? 3.65 :
         speedChase ? 4.65 + speed * 0.026 : 8.6 + speed * 0.065;
       eye = target.clone().sub(forward.clone().mulScalar(distance));
+      if (speedChase && !inStartHouse) {
+        // Slight outward tracking shot exposes both steel edges and the spray
+        // fan instead of hiding the downhill ski behind the racer.
+        const bank = Math.max(-1, Math.min(1, f.edge));
+        eye.x += Math.cos(f.heading) * bank * 0.43;
+        eye.z -= Math.sin(f.heading) * bank * 0.43;
+      }
       eye.y = y + (inStartHouse ? 2.35 :
         speedChase ? 2.45 : this.cameraMode === 1 ? 2.2 : 5);
       const lookAhead = inStartHouse ? 1.05 :

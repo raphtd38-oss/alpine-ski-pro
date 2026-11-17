@@ -68,7 +68,7 @@ export const SG_RACE_DEFAULTS: Readonly<SGAnimationTuning> = Object.freeze({
   minPelvisHeightM: 0.55,
   maxPelvisHeightM: 1.01,
   stanceHalfWidthM: 0.18,
-  innerSkiStaggerM: 0.030,
+  innerSkiStaggerM: 0.038,
   slopeContactClearanceM: 0.008,
   skiHalfWidthM: 0.046,
   chestCounterRollDeg: 15,
@@ -343,7 +343,14 @@ export class SuperGCompetitionPose {
       // Outer ski steers the COM through its longer arc; the unloaded inner
       // ski is allowed at most ~2 degrees of divergence for realism.
       const toe = inside ? -sign * engagement * T.maxInsideDivergenceDeg : 0;
-      const skidYaw = cornerPitch + (inside ? toe : 0);
+      // A pressured outside ski tracks the curved running direction; the
+      // inside tip opens by just a couple of degrees as its leg unweights.
+      // During strong side-slip both skis turn slightly toward travel heading
+      // instead of pointing unrealistically straight down the course.
+      const steerTowardVelocity = -slipAngleDeg * skid * 0.12;
+      const carveLead = -sign * engagement * (outside ? 0.85 : 0.35);
+      const skidYaw = cornerPitch + steerTowardVelocity +
+        carveLead + (inside ? toe : 0);
       const foreAftM = inside ? -T.innerSkiStaggerM * engagement : 0;
       const footEdge = edgeRoll * (outside ? 1 : 0.92) +
         (inside ? sign * 0.9 : 0);
@@ -355,7 +362,8 @@ export class SuperGCompetitionPose {
         edgeRollDeg: footEdge,
         foreAftM,
         snowClearanceM: T.slopeContactClearanceM + metalClearance,
-        releaseLiftM: inside && release ? 0.010 * engagement : 0,
+        releaseLiftM: inside
+          ? (release ? 0.015 : 0.004) * engagement : 0,
         visualLoad: outside ? loadBalance : showOutside ? 1 - loadBalance : 0.5,
         bootPitchDeg: -5 - 8 * a.tuck + 4 * extension + 3 * landing,
       };

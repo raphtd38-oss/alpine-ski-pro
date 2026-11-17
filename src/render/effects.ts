@@ -2,6 +2,7 @@ import * as pc from "playcanvas";
 import type { Course, SkierState, Quality } from "../game/types";
 import { terrainHeight } from "../game/course";
 import { skiTrackQuad, snowSprayVelocity, snowPlumeIntensity, type TrackSample } from "../game/snow";
+import { skiSnowMark, snowPlumeSource, crashSnowEnergy } from "../game/snow-contact";
 import { material, meshEntity, rng } from "./geometry";
 
 interface Crystal {
@@ -12,13 +13,17 @@ interface Crystal {
   vy: number;
   vz: number;
   life: number;
+  size: number;
 }
 
 export class SnowEffects {
   root = new pc.Entity("Snow effects");
   trail: pc.Entity;
+  /** Thin pale shoulders of freshly displaced powder beside each edge groove. */
+  ridges: pc.Entity;
   spray: pc.Entity;
   positions: number[];
+  ridgePositions: number[];
   indices: number[];
   cursor = 0;
   lastSample: TrackSample | null = null;
@@ -27,6 +32,7 @@ export class SnowEffects {
   emissionTime = 0;
   sprayDrawTime = 0;
   mat: pc.StandardMaterial;
+  ridgeMat: pc.StandardMaterial;
   sprayMat: pc.StandardMaterial;
   particleLimit: number;
 
@@ -46,8 +52,13 @@ export class SnowEffects {
     const count = { low: 260, medium: 500, high: 900, ultra: 1400 }[quality];
     this.particleLimit = { low: 18, medium: 65, high: 115, ultra: 180 }[quality];
     this.positions = Array(count * 12).fill(0);
-    // Park the as-yet unwritten trail triangles below the mountain.
-    for (let i = 1; i < this.positions.length; i += 3) this.positions[i] = -1000;
+    this.ridgePositions = Array(count * 12).fill(0);
+    // Unused ribbon cells stay well below the mountainside; they never flash
+    // at the start when the geometry buffer is still empty.
+    for (let i = 1; i < this.positions.length; i += 3) {
+      this.positions[i] = -1000;
+      this.ridgePositions[i] = -1000;
+    }
     this.indices = [];
     const upNormals: number[] = [];
     for (let i = 0; i < count; i++) {
@@ -67,6 +78,22 @@ export class SnowEffects {
     const trailMesh = this.trail.render!.meshInstances[0].mesh!;
     trailMesh.setNormals(upNormals);
     trailMesh.update();
+
+    this.ridgeMat = material("Raised fresh snow along ski edges", "#ecf5f7");
+    this.ridgeMat.opacity = 0.53;
+    this.ridgeMat.blendType = pc.BLEND_NORMAL;
+    this.ridgeMat.depthWrite = false;
+    this.ridgeMat.cull = pc.CULLFACE_NONE;
+    this.ridgeMat.update();
+    this.ridges = meshEntity(
+      app.graphicsDevice, this.root,
+      "Dual outside ski edge snow ridges",
+      this.ridgePositions, this.indices, this.ridgeMat,
+    );
+    this.ridges.render!.castShadows = false;
+    const ridgeMesh = this.ridges.render!.meshInstances[0].mesh!;
+    ridgeMesh.setNormals(upNormals);
+    ridgeMesh.update();
 
     this.sprayMat = material("Carving powder crystals", "#f0f7fa");
     this.sprayMat.emissive.set(0.08, 0.1, 0.12);
@@ -101,28 +128,37 @@ export class SnowEffects {
     ) {
       const current: TrackSample = { x: s.x, z: s.z, heading: s.heading };
       if (this.lastSample) {
-        const halfWidth = Math.min(0.075, 0.025 + s.slip * 0.004);
         const ground = (x: number, z: number) => terrainHeight(x, z, this.c);
-        for (const skiOffset of [-0.17, 0.17]) {
-          const quad = skiTrackQuad(
-            this.lastSample,
-            current,
-            skiOffset,
-            halfWidth,
-            ground,
-          );
+        for (const skiSide of [-1, 1] as const) {
+          const skiOffset = skiSide * 0.18;
+          const contact = skiSnowMark(s, skiSide);
+          const cut = skiTrackQuad(this.lastSample, current, skiOffset,
+            contact.halfWidthM, ground);
+          const ridge = skiTrackQuad(this.lastSample, current,
+            skiOffset + contact.ridgeOffsetM,
+            contact.ridgeHalfWidthM, ground);
           const offset = this.cursor * 12;
-          for (let k = 0; k < 12; k++) this.positions[offset + k] = quad[k];
+          for (let k = 0; k < 12; k++) {
+            this.positions[offset + k] = cut[k];
+            this.ridgePositions[offset + k] =
+              k % 3 === 1 ? ridge[k] + contact.ridgeHeightM : ridge[k];
+          }
           this.cursor = (this.cursor + 1) % (this.positions.length / 12);
         }
-        const mesh = this.trail.render!.meshInstances[0].mesh!;
-        mesh.setPositions(this.positions);
-        mesh.update();
+        const grooveMesh = this.trail.render!.meshInstances[0].mesh!;
+        grooveMesh.setPositions(this.positions);
+        grooveMesh.update();
+        const ridgeMesh = this.ridges.render!.meshInstances[0].mesh!;
+        ridgeMesh.setPositions(this.ridgePositions);
+        ridgeMesh.update();
       }
       this.lastSample = current;
     }
 
-    const plumeIntensity = snowPlumeIntensity(s, speed);
+    const crashEnergy = crashSnowEnergy(s.gateCrashElapsed);
+    const plumeIntensity = Math.max(
+      snowPlumeIntensity(s, speed), crashEnergy * 1.55,
+    );
     const emitting =
       active && grounded && this.particleLimit > 0 && plumeIntensity > 0.22;
     if (emitting) {
@@ -131,24 +167,30 @@ export class SnowEffects {
       const tick = 1 / 35;
       while (this.emissionTime >= tick) {
         this.emissionTime -= tick;
-        const n = Math.min(7, Math.ceil(plumeIntensity * 1.35));
-        const outside = s.edge >= 0 ? -1 : 1;
+        const n = Math.min(9, Math.ceil(plumeIntensity * 1.55));
         for (let i = 0; i < n && this.particles.length < this.particleLimit; i++) {
+          const random = this.random();
+          const source = snowPlumeSource(s, i, speed, random);
           const v = snowSprayVelocity(s, this.random());
-          // Landing compression creates a brief upward white fan, while
-          // edge-driven spray keeps its directional outward/backward bias.
-          v.y += s.landingShock * (0.7 + this.random() * 1.6);
-          const lateral = outside * (0.12 + this.random() * 0.13);
+          v.y += source.liftMps + s.landingShock * (0.7 + this.random() * 1.6);
+          if (crashEnergy > 0) {
+            // A body/ski slide throws a much lower, wider fan of crystals.
+            v.x += (this.random() - .5) * 6.4 * crashEnergy;
+            v.z += (this.random() - .5) * 3.8 * crashEnergy;
+            v.y += crashEnergy * 0.85;
+          }
+          const lateral = source.xOffsetM + (this.random() - .5) * .09;
           const x = s.x + Math.cos(s.heading) * lateral;
           const z = s.z - Math.sin(s.heading) * lateral;
           this.particles.push({
-            x,
-            y: terrainHeight(x, z, this.c) + 0.09,
+            x, y: terrainHeight(x, z, this.c) + .05,
             z,
             vx: v.x,
             vy: v.y,
             vz: v.z,
-            life: 0.3 + this.random() * 0.35 + s.landingShock * 0.16,
+            life: .34 + this.random() * .42 +
+              s.landingShock * .16 + crashEnergy * .10,
+            size: source.radiusM * (crashEnergy > 0 ? 1.35 : 1),
           });
         }
       }
@@ -188,7 +230,8 @@ export class SnowEffects {
     for (const a of this.particles) {
       if (a.life <= 0) continue;
       const k = p.length / 3;
-      const radius = Math.min(0.065, 0.016 + a.life * 0.066);
+      const radius = Math.min(0.09, a.size +
+        Math.max(0, a.life) * (a.size * .58));
       // Two triangles form a view-facing translucent snowflake. The previous
       // fixed world-space triangles disappeared edge-on when the camera moved.
       const dx = cameraPosition.x - a.x;
@@ -222,7 +265,11 @@ export class SnowEffects {
 
   reset() {
     this.positions.fill(0);
-    for (let i = 1; i < this.positions.length; i += 3) this.positions[i] = -1000;
+    this.ridgePositions.fill(0);
+    for (let i = 1; i < this.positions.length; i += 3) {
+      this.positions[i] = -1000;
+      this.ridgePositions[i] = -1000;
+    }
     this.cursor = 0;
     this.lastSample = null;
     this.particles = [];
@@ -233,11 +280,15 @@ export class SnowEffects {
     const mesh = this.trail.render!.meshInstances[0].mesh!;
     mesh.setPositions(this.positions);
     mesh.update();
+    const ridge = this.ridges.render!.meshInstances[0].mesh!;
+    ridge.setPositions(this.ridgePositions);
+    ridge.update();
   }
 
   destroy() {
     this.root.destroy();
     this.mat.destroy();
+    this.ridgeMat.destroy();
     this.sprayMat.destroy();
   }
 }
