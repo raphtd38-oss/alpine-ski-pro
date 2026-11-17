@@ -293,9 +293,11 @@ async function boot() {
       }
     }
     poles.update(previous, state, dt);
+    if (poles.lastRebounds)
+      audio.rebound(poles.lastReboundSide, poles.lastReboundStrength);
     if (poles.lastImpacts)
       audio.impact(
-        Math.hypot(state.vx, state.vz), state.edge,
+        Math.hypot(state.vx, state.vz), state.poleImpactSide,
         true,
         poles.lastImpactKind === "arm" ? "arm" : "shin",
       );
