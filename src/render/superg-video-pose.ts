@@ -39,16 +39,16 @@ export function superGEdgePose(
   const pressure = clamp(load / 1.2, 0, 1);
   const grip = 1 - 0.65 * clamp(skid, 0, 1);
   const contact = 1 - clamp(airborne, 0, 1);
-  const engagement = smoothstep(0.22, 0.94, Math.abs(edge)) *
+  const engagement = smoothstep(0.10, 0.72, Math.abs(edge)) *
     (0.65 + 0.35 * pressure) * grip * contact;
   return {
     engagement,
-    hipDrop: engagement * (0.040 + 0.035 * pressure),
-    hipInside: Math.sign(edge) * engagement * (0.055 + 0.035 * pressure),
-    outsideLegLength: engagement * (0.018 + 0.019 * pressure),
-    insideLegShortening: engagement * (0.030 + 0.030 * pressure),
-    pelvicAngle: engagement * (4.5 + 5.5 * pressure),
-    headCounterAngle: engagement * 4.5,
+    hipDrop: engagement * (0.070 + 0.050 * pressure),
+    hipInside: Math.sign(edge) * engagement * (0.10 + 0.065 * pressure),
+    outsideLegLength: engagement * (0.023 + 0.022 * pressure),
+    insideLegShortening: engagement * (0.045 + 0.042 * pressure),
+    pelvicAngle: engagement * (8 + 9 * pressure),
+    headCounterAngle: engagement * 7.5,
   };
 }
 
@@ -176,4 +176,17 @@ export function superGFinishGesture(reach: number): {
 } {
   const a = smoothstep(0, 0.92, clamp(reach, 0, 1));
   return { drop: a * 0.105, forward: a * 0.07, armReach: a };
+}
+
+// The athlete's 25-bone GLB includes skis on the foot pivots. Rolling the
+// *whole* racer a controlled amount is necessary for a visible long-radius
+// Super-G carve: rotating only the pelvis produces a barely moving silhouette
+// from the chase camera. Visual roll is separate from authoritative physics.
+export function superGVisualBank(edge: number, engagement: number, airborne = 0): number {
+  const grip = 1 - clamp(airborne, 0, 1);
+  const signed = Math.sign(edge);
+  return signed * grip * (
+    9 * smoothstep(0.06, 0.42, Math.abs(edge)) +
+    15 * clamp(engagement, 0, 1)
+  );
 }
