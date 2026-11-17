@@ -253,3 +253,9 @@ Nouvelle chaîne de travail **optionnelle** avec 38 outils référencés (`tools
 - Le carving, les contrôles, les replays, le solveur 120 Hz et les impacts des piquets existants restent inchangés.
 - Aucune copie binaire vendue comme packagée : les fichiers Ammo.js sont chargés depuis le serveur PlayCanvas, avec une dépendance réseau à documenter.
 - `npm test` et `npm run build` validés par GitHub Actions (run 44150888859) ; navigateur Chromium et déploiement à confirmer avant de déclarer la V1.12 intégrée au site public.
+
+## 17 novembre 2026 — comparaison réelle / jeu : départ et carves Super-G
+
+Les deux captures vidéo fournies le 17/11/2026 ont été étudiées par planches de vues temporelles et passages rapprochés. Analyse intégrale et limites méthodologiques dans [SUPERG_VIDEO_ANALYSIS_2026-11-17.md](SUPERG_VIDEO_ANALYSIS_2026-11-17.md). À l'image, le réel montre une préparation progressive du buste et des bâtons, une poussée, puis des virages avec hanche basse et forte dissociation jambe extérieure/intérieure. Dans le jeu filmé, les gestes sont plus petits et la caméra rend le skieur difficile à lire.
+
+Ajustements en code : `superg-video-pose.ts` ajoute une enveloppe pure (aucun effet sur la physique) pour descendre/décaler le bassin, allonger la jambe extérieure, replier davantage l'intérieure et stabiliser la tête ; `athlete.ts` applique ces corrections ainsi qu'un appui des bâtons pré-départ ; `main.ts` transmet au rendu le temps restant avant GO au lieu d'une constante ; Vitest vérifie les cas neutres, virages miroir, dérapage/vol et transition préparatoire. Ne pas présenter ces coefficients comme des angles biomécaniques calculés sur la vidéo, ni comme de la motion capture. Déploiement et tests à confirmer sur GitHub Actions.
