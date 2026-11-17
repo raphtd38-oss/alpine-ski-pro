@@ -177,6 +177,9 @@ function buildAthleteGlb() {
     views.push({buffer:0,byteOffset:offset,byteLength:png.length});
     images.push({name:"Original racer "+kind+" albedo",bufferView:view,mimeType:"image/png"});
   }
+  // The final PNG byte length is not necessarily a multiple of four.
+  // glTF BIN chunk and declared buffer.byteLength must match exactly.
+  aligned();
   const textures=images.map((_,i)=>({name:"Racer textile "+i,source:i,sampler:0}));
   // Race suit 0,1; bib 2; carbon boots 3; helmet 4; visor 5; gear 6..12.
   const materialAtlas=[0,0,2,1,1,3,1,1,1,0,0,1,1];
