@@ -4,6 +4,7 @@ import { terrainHeight, gradient } from "../game/course";
 import { shape, material, meshEntity } from "./geometry";
 import { PRO_POLE, PRO_GEAR } from "./equipment-specs";
 import { startDrivePhase, startDriveBlend, startPoleContact } from "../game/start-gate";
+import { superGEdgePose, superGStartBrace } from "./superg-video-pose";
 export class Athlete {
   root = new pc.Entity("Skier");
   rig: pc.Entity;
@@ -330,6 +331,7 @@ export class Athlete {
     this.plantEnergy *= Math.exp(-Math.max(0, dt) * 7);
     const load = Math.max(0, Math.min(1.4, f.flex ?? 0));
     const startPhase = f.startPhase ?? -2;
+    const startBrace = superGStartBrace(startPhase);
     const startPush = f.startPhase === undefined
       ? Math.max(0, Math.min(1, f.startPush ?? 0))
       : startDriveBlend(c.id, startPhase);
@@ -342,6 +344,7 @@ export class Athlete {
       f.finishReach ?? f.finishGesture ?? 0));
     const landing = Math.max(0, Math.min(1, f.landingShock ?? 0));
     const airborne = Math.max(0, Math.min(1, f.height * 1.4));
+    const carvePose = superGEdgePose(edge, load, f.skid ?? 0, airborne);
     const impactSide = Math.sign(f.poleImpactSide ?? 0);
     // Replays generated before V1.5 provide no contact channels: keep their
     // posture and apply only physically grounded data when present.
@@ -367,45 +370,51 @@ export class Athlete {
       Math.abs(edge) * 0.085 + load * 0.045 +
       pressureAbsorption + skidStance +
       startPush * (0.11 - launchExtension * 0.055) + landing * 0.075 + airborne * 0.095 +
-      finishReach * 0.065;
+      finishReach * 0.065 + carvePose.hipDrop + startBrace * 0.050;
     this.visualCrouch += (crouchTarget - this.visualCrouch) * blend;
     const crouch = this.visualCrouch;
     const j = this.joints;
     // The hips move inside the turn while the shoulders look downhill.
     // The outside leg is visibly longer and keeps the ski pressurized.
-    const lean = edge * (0.19 + load * 0.065);
+    const lean = edge * (0.19 + load * 0.065) + carvePose.hipInside;
     j.Pelvis?.setLocalPosition(lean + shake,
       (this.isSeamless ? 1.01 : 0.92) - crouch,
-      (this.isSeamless ? 0.015 : 0) - 0.055 * f.tuck);
+      (this.isSeamless ? 0.015 : 0) - 0.055 * f.tuck - startBrace * 0.04);
     // Professional race start: chest ahead of bindings, hips loaded,
     // alternating pole-drive phase. Airborne posture retracts legs.
     // Double-pole plant is synchronized with the fixed-step acceleration
     // pulses. The hips extend with the shoulder drive, not independently.
     const pushCycle = launchExtension * (1 - Math.min(1, Math.abs(edge)));
     j.Spine?.setLocalEulerAngles(
-      10 + f.tuck * 27 + startPush * 23 - airborne * 7 +
+      10 + f.tuck * 27 + startPush * 23 + startBrace * 11 - airborne * 7 +
         finishReach * 23,
       edge * -4 + this.visualImpact * 6,
-      -edge * (18 + outsidePressure * 8),
+      -edge * (18 + outsidePressure * 8) -
+        Math.sign(edge) * carvePose.pelvicAngle * 0.40,
     );
     // Stabilize the professional racer's upper body toward the fall line while
     // hips and loaded outside leg continue carving below.
     j.Chest?.setLocalEulerAngles(
       5 + f.tuck * 12 + this.visualImpact * 5 + finishReach * 10,
-      this.visualUpperBody, edge * (12 - load * 2) + shake * 90,
+      this.visualUpperBody, edge * (12 - load * 2) +
+        Math.sign(edge) * carvePose.pelvicAngle * 0.18 + shake * 90,
     );
     j.Head?.setLocalEulerAngles(
       -12 - f.tuck * 23 + this.visualImpact * 3 -
         startPush * 12 + finishReach * 9,
-      edge * 7 - this.visualImpact * 3, edge * 3 - shake * 80,
+      edge * 7 - this.visualImpact * 3,
+      edge * 3 - Math.sign(edge) * carvePose.headCounterAngle - shake * 80,
     );
-    j.Pelvis?.setLocalEulerAngles(0, edge * 2, -edge * (19 + outsidePressure * 7));
+    j.Pelvis?.setLocalEulerAngles(0, edge * 2,
+      -edge * (19 + outsidePressure * 7) -
+        Math.sign(edge) * carvePose.pelvicAngle);
     // Analytic sagittal two-link IK. Flexion follows COM height and outside-leg loading.
     for (const [i, side] of ["L", "R"].entries()) {
       const outside = (i === 0 ? 1 : -1) * edge;
       // The outside leg extends under pressure, the unloaded inside leg
       // retracts slightly. Both ankles remain animated by the existing IK.
-      const hipY = 0.9 - crouch + outside * (0.048 + outsidePressure * 0.027);
+      const hipY = 0.9 - crouch + outside * (0.048 + outsidePressure * 0.027) +
+        (outside >= 0 ? carvePose.outsideLegLength : -carvePose.insideLegShortening);
       const dy = Math.min(0.81, hipY - 0.12),
         dz = 0.02 + f.tuck * 0.055,
         L1 = this.isSeamless ? 0.416 : 0.421,
@@ -489,8 +498,10 @@ export class Athlete {
         const wristWorld = wrist.getPosition();
         const inverse = this.root.getWorldTransform().clone().invert();
         const point = inverse.transformPoint(wristWorld);
-        const launchPlant = c.id === "SG" && launchContact > 0.13 &&
-          startPhase >= 0 && startPhase < 1.45;
+        const launchPlant = c.id === "SG" && (
+          (launchContact > 0.13 && startPhase >= 0 && startPhase < 1.45) ||
+          (startPhase < 0 && startBrace > 0.18)
+        );
         if (launchPlant) {
           // Foot-to-snow solution for the pole tip. Work in world space to
           // take real piste gradient into account, then transform to rig.
