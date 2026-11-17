@@ -1,5 +1,9 @@
 # Alpine Ski Pro — instructions de reprise
 
+## Périmètre actif depuis V1.12
+
+**SUPER-G UNIQUEMENT** : le propriétaire a demandé explicitement de supprimer SL, GS et DH. Ne pas restaurer les trois disciplines ni les menus associés sans nouvelle demande. Conserver la course SG 1 980 m, le chronométrage FIS-inspiré, le skieur, les records et replays SG, le moteur 120 Hz et la chaîne Studio Kit. Les anciennes descriptions de quatre disciplines dans les archives documentaires sont historiques, pas des exigences actives. Les anciens screenshots sont dans l'historique Git, pas dans l'arbre courant.
+
 ## Objectif et continuité
 
 Construire progressivement un vrai simulateur de ski navigateur, sans installation chez le joueur. Préserver PlayCanvas + TypeScript + Vite et les fonctionnalités existantes. Lire README.md, docs/STATUS.md et docs/ROADMAP.md avant de modifier le jeu. Ne pas repartir de zéro.
@@ -28,5 +32,5 @@ La sélection réelle du Studio Kit 2026 transmis par le joueur (11 GLB, 42 PBR,
 - Chercher les nouveaux modèles et textures **CC0** via npm run assets:search -- "snow" --type texture ou --type model. Les API publiques Poly Haven / ambientCG ne requièrent pas de compte ; Poly Haven exige un User-Agent identifiable et un crédit pour l'utilisation de l'API. Les téléchargements réels du jeu restent à versionner via des manifestes, pas au runtime.
 - Tester npm run assets:doctor pour détecter Blender, glTF Transform, Khronos KTX-Software et le validateur GLB présents sur le poste. L'absence d'un outil facultatif n'empêche pas de tester la physique ; ne jamais prétendre qu'il est installé.
 - Contrôler npm run assets:audit avant intégration et publication, étendre le registre des assets avec la provenance/licence de chaque nouveau fichier. Une désignation « free » ne vaut pas CC0. Respecter les restrictions exactes de Mixamo/Quaternius et ne pas créer de comptes/paiements sans intervention du propriétaire.
-- Utiliser scripts/blender/export_glb.py pour les scènes originales, et scripts/asset_tools.mjs pour inspecter/optimiser les GLB lorsque ces logiciels sont disponibles. Tester toujours joints, animations, poids, UV et chargement PlayCanvas ; ne pas écraser le skieur original avant la compatibilité des courses.
+- Utiliser scripts/blender/export_glb.py pour les scènes originales, et scripts/asset_tools.mjs pour inspecter/optimiser les GLB lorsque ces logiciels sont disponibles. Tester toujours joints, animations, poids, UV et chargement PlayCanvas ; ne pas écraser le skieur original avant la compatibilité de la course SG.
 - KTX2/BasisU et LOD dynamique nécessitent un chargement PlayCanvas / décodeur et des benchmarks GPU réels : ne pas simplement convertir les fichiers et déclarer le jeu optimisé.
