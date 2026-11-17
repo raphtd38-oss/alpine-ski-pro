@@ -14,6 +14,8 @@ export interface PoleState {
   /** High-frequency fiberglass tip ringing after impacts. */
   tipAmp: number;
   tipPhase: number;
+  recoilArmed: boolean;
+  recoilStrength: number;
 }
 export type ImpactKind = "none" | "shin" | "arm";
 export const tipVibration = (p: Pick<PoleState, "tipAmp" | "tipPhase">) =>
@@ -28,6 +30,9 @@ export class PoleSimulation {
   lastImpacts = 0;
   lastImpactKind: ImpactKind = "none";
   lastImpactStrength = 0;
+  lastRebounds = 0;
+  lastReboundSide = 0;
+  lastReboundStrength = 0;
   readonly length = 2;
   readonly mass = 0.38;
   readonly spring = 13;
@@ -48,12 +53,17 @@ export class PoleSimulation {
           impacts: 0,
           tipAmp: 0,
           tipPhase: 0,
+          recoilArmed: false,
+          recoilStrength: 0,
         });
   }
   update(previous: SkierState, s: SkierState, dt: number) {
     this.lastImpacts = 0;
     this.lastImpactKind = "none";
     this.lastImpactStrength = 0;
+    this.lastRebounds = 0;
+    this.lastReboundSide = 0;
+    this.lastReboundStrength = 0;
     const inertia = (this.mass * this.length * this.length) / 3;
     for (const p of this.poles) {
       const dx = s.x - previous.x,
@@ -97,6 +107,8 @@ export class PoleSimulation {
         s.poleImpact = Math.max(s.poleImpact, strength);
         s.poleImpactSide = p.side;
         p.tipAmp = Math.max(p.tipAmp, strength * 0.15);
+        p.recoilArmed = true;
+        p.recoilStrength = strength;
         if (strength >= this.lastImpactStrength) {
           this.lastImpactKind = kind;
           this.lastImpactStrength = strength;
@@ -121,6 +133,18 @@ export class PoleSimulation {
       p.angleZ += p.omegaZ * dt;
       const tilt = Math.hypot(p.angleX, p.angleZ),
         limit = 1.48;
+      // Return click when a bent fiberglass pole recoils through vertical.
+      if (p.recoilArmed && tilt < 0.10 &&
+          p.angleX * p.omegaX + p.angleZ * p.omegaZ < 0) {
+        p.recoilArmed = false;
+        if (p.recoilStrength > 0.15) {
+          this.lastRebounds++;
+          if (p.recoilStrength >= this.lastReboundStrength) {
+            this.lastReboundSide = p.side;
+            this.lastReboundStrength = p.recoilStrength;
+          }
+        }
+      }
       if (tilt > limit) {
         p.angleX *= limit / tilt;
         p.angleZ *= limit / tilt;
