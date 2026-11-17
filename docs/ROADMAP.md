@@ -145,3 +145,10 @@ Le but est un simulateur de ski de grande qualité, amélioré sur le même dép
 4. ⏳ Valider les captures Playwright d'une vraie exécution et surveiller les régressions caméra/ombres, puis fusionner après CI.
 5. ⏳ Retarget correct de l'avatar 25 os et ses neuf clips procéduraux, avec étude de topologie réelle/skin continu; pas de remplacement 146 meshes sans budget mesuré.
 6. ⏳ Mesures de FPS et rendu PBR sur PC/iPhone réel, validation des angles/contact main-bâton sur vidéo plutôt qu'une promesse de mocap.
+
+## Studio 3D (nouvel outillage, 17 novembre 2026)
+
+- Installer et vérifier Blender + Blender MCP sur une machine compatible (configuration fournie, **non connectée dans le cloud**).
+- Produire une version candidate originale Super-G dans un .blend distinct, avec continuité des articulations, textures PBR, skis, fixations et clips d'animation à valider.
+- Passer `npm run studio:verify -- <candidat.glb> --rig --animations`, Khronos glTF Validator, tests PlayCanvas WebGL2/WebGPU et revue visuelle.
+- N'intégrer le candidat au jeu qu'après mesures GPU PC + iPhone, vérification des droits, des 120 Hz de la physique et des tests de course.

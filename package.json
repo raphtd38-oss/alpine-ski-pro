@@ -17,7 +17,11 @@
     "assets:alpine": "node scripts/fetch_alpine_assets.mjs",
     "assets:search": "node scripts/asset_search.mjs",
     "assets:doctor": "node scripts/asset_tools.mjs doctor",
-    "assets:audit": "node scripts/asset_audit.mjs"
+    "assets:audit": "node scripts/asset_audit.mjs",
+    "studio:doctor": "node scripts/studio.mjs doctor",
+    "studio:inspect": "node scripts/studio.mjs inspect",
+    "studio:verify": "node scripts/studio.mjs verify",
+    "studio:optimize": "node scripts/studio.mjs optimize"
   },
   "dependencies": {
     "@fontsource/barlow": "^5.3.0",
