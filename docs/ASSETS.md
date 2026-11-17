@@ -91,3 +91,11 @@ Les scripts de la nouvelle boîte à outils **n'ajoutent pas automatiquement de 
 - Blender exportateur local et glTF Transform optionnel pour inspection/optimisation WebP, sans remplacement aveugle du coureur actif.
 - Le KTX2, les nouveaux rigs et les animations de ski externes ne sont **pas activés** par ce lot ; aucune modification des licences ElevenLabs existantes.
 - La documentation précise la divergence entre la licence générale récente de Quaternius (QAL) et certaines pages de packs toujours marquées CC0 ; contrôle asset par asset obligatoire.
+
+## V1.9 — habillage original du coureur et marquage de neige
+
+- **Textures d'athlète entièrement originales** : `scripts/racer-textures.mjs`, génération déterministe en Node de quatre PNG RGBA 256×256 (trame de combinaison, motif carbone, dossard de course original n°61 et surface réfléchissante du masque). Aucune image récupérée d'un jeu, marque ou site externe, aucun modèle ou police tiers.
+- **UV et distribution** : `scripts/build_skier_pro.mjs` crée `TEXCOORD_0` sur chaque surface du GLB et les coutures de raccord, puis incorpore les quatre images au format glTF 2.0 `image.bufferView` dans `public/assets/skier.glb`. Les 18 articulations et animations existantes sont conservées ; le contrôle `scripts/check_skier.mjs` vérifie UV, PNG, poids de skinning et structure.
+- **Colorant de neige FIS-inspiré** : texture Canvas originale, pulvérisation irrégulière avec alpha, couloirs bleus le long des deux courbes de piste, guides de portes et marquages transversaux avant sauts ; création locale sans fichier externe.
+- **Licences** : ces textures sont des créations du projet ; pas de reproduction d'une vidéo, pas d'utilisation des graphismes propriétaires de CarveMania, ni d'affiliation officielle FIS. Les neuf GLB CC0 et la neige CC0 de Poly Haven restent en place.
+- **Limite technique** : l'albédo UV et les facteurs de rugosité/métal PBR sont présents ; ce lot n'est pas de la mocap, une normal map textile haute résolution, ou un avatar photoréaliste.
