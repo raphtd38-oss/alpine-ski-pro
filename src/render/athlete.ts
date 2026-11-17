@@ -6,7 +6,7 @@ import { PRO_POLE } from "./equipment-specs";
 import { startDrivePhase, startDriveBlend, startPoleContact } from "../game/start-gate";
 import {
   superGEdgePose, superGStartBrace, superGLegIK,
-  superGSkiFootLift, superGFinishGesture, superGVisualBank, superGRacerBank,
+  superGSkiFootLift, superGFinishGesture, superGRacerBank,
 } from "./superg-video-pose";
 export class Athlete {
   root = new pc.Entity("Skier");
@@ -20,8 +20,7 @@ export class Athlete {
   /** Smoother pole-tip contact release between actual SG propulsion strokes. */
   polePlantWeights: number[] = [0, 0];
   visualEdge = 0;
-  /** Smoothed full-body lean towards the active super-G edge, in degrees. */
-  visualBank = 0;
+  /** Smoothed render-only bank in degrees; physics remains independent. */
   visualBank = 0;
   visualCrouch = 0.045;
   /** Visual tuck follows controls smoothly; the 120Hz physics stays untouched. */
@@ -362,14 +361,11 @@ export class Athlete {
     const landing = Math.max(0, Math.min(1, f.landingShock ?? 0));
     const airborne = Math.max(0, Math.min(1, f.height * 1.4));
     const carvePose = superGEdgePose(edge, load, f.skid ?? 0, airborne);
-    const targetBank = superGVisualBank(edge, carvePose.engagement, airborne) *
-      (1 - 0.85 * finishPose.armReach);
-    this.visualBank += (targetBank - this.visualBank) *
-      (1 - Math.exp(-Math.max(0, dt) * 10));
     // Bank the ENTIRE connected athlete and attached skis into the turn;
     // independent hip/shoulder angulation keeps the torso from becoming a
     // rigid plank. Smooth release at jumps and on the transition edge.
-    const desiredBank = superGRacerBank(edge, carvePose.engagement, airborne);
+    const desiredBank = superGRacerBank(edge, carvePose.engagement, airborne) *
+      (1 - 0.85 * finishPose.armReach);
     this.visualBank += (desiredBank - this.visualBank) *
       (1 - Math.exp(-Math.min(0.1, Math.max(0, dt)) * 11));
     this.root.setEulerAngles(pitch, yaw, this.visualBank);
@@ -638,13 +634,11 @@ export class Athlete {
     const desiredFall = f.fallen > 0 ? 1 : 0;
     this.visualFall += (desiredFall - this.visualFall) *
       (1 - Math.exp(-Math.max(0, dt) * 10));
-    // Roll the racer from its ski-contact origin; the old implementation
-    // only twisted pelvis/chest while the full-body silhouette remained
-    // almost vertical. New banks remain render-only and never change the
-    // fixed-step ski heading or edge physics.
-    this.rig.setLocalEulerAngles(0, this.isSeamless ? 180 : 0,
-      this.visualFall * 76 -
-        (this.isSeamless ? this.visualBank : this.visualBank * 0.45));
+    // The scene root already banks the skier AND attached skis. Bank the
+    // rig only on a fall; a second roll here would cancel the carve angle.
+    this.rig.setLocalEulerAngles(
+      0, this.isSeamless ? 180 : 0, this.visualFall * 76,
+    );
     this.rig.setLocalPosition(0, this.visualFall * 0.15, 0);
   }
   destroy() {
