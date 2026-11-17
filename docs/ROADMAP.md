@@ -1,5 +1,7 @@
 # Feuille de route persistante
 
+> **Priorité actuelle V1.12 : Super-G uniquement.** Les anciens chapitres parlant de SL, GS ou DH constituent une archive des versions précédentes ; ils ne sont plus au périmètre du jeu. À présent : améliorer le départ, le rig et les proportions du skieur, les poses sur les carres, la neige, l'environnement et le temps de chargement, sans recréer d'autres disciplines.
+
 Le but est un simulateur de ski de grande qualité, amélioré sur le même dépôt à chaque session. Aucun travail autonome entre sessions n'est promis.
 
 ## Priorité 1 — sensations et règles
