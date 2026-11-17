@@ -9,8 +9,9 @@ import { poleImpactMix } from "./pole-sound";
  *   public/audio/carving.mp3, ice.mp3, wind.mp3, crowd-long.mp3
  * No runtime API calls, account secrets or paid services are needed to play.
  */
-type SoundName = "pole" | "menu" | "crowd" | "crowd-long" | "carving" | "ice" | "wind";
-type LoopName = Exclude<SoundName, "pole">;
+type SoundName = "pole" | "pole-hard" | "pole-soft" | "pole-return" |
+  "menu" | "crowd" | "crowd-long" | "carving" | "ice" | "wind";
+type LoopName = Exclude<SoundName, "pole" | "pole-hard" | "pole-soft" | "pole-return">;
 type NoiseVoice = { source: AudioBufferSourceNode; filter: BiquadFilterNode; gain: GainNode };
 type BufferLoop = { source: AudioBufferSourceNode; gain: GainNode };
 
@@ -119,10 +120,11 @@ export class SkiAudio {
   private async loadAssets() {
     const ctx = this.ctx!;
     await Promise.all(
-      (["pole", "menu", "crowd", "crowd-long", "carving", "ice", "wind"] as SoundName[])
+      (["pole", "pole-hard", "pole-soft", "pole-return", "menu", "crowd", "crowd-long", "carving", "ice", "wind"] as SoundName[])
         .map(async (name) => {
           try {
-            const response = await fetch(import.meta.env.BASE_URL + "audio/" + name + ".mp3");
+            const extension = name.startsWith("pole-") ? ".wav" : ".mp3";
+            const response = await fetch(import.meta.env.BASE_URL + "audio/" + name + extension);
             if (response.ok) {
               this.buffers[name] = await ctx.decodeAudioData(await response.arrayBuffer());
             }
@@ -206,6 +208,44 @@ export class SkiAudio {
     this.fade(this.looped[name]?.gain, this.crowdProximity * 0.25, 0.5);
   }
 
+  /** Called at the physical spring return, not on a fixed audio delay. */
+  rebound(side: number, strength: number) {
+    if (!this.ctx || !this.master || !this.enabled) return;
+    const ctx = this.ctx;
+    const pan = ctx.createStereoPanner();
+    const gain = ctx.createGain();
+    pan.pan.value = Math.max(-0.8, Math.min(0.8, side * 0.5));
+    gain.gain.value = 0.15 * Math.max(0.2, Math.min(1, strength));
+    gain.connect(pan).connect(this.master);
+
+    const recorded = this.buffers["pole-return"];
+    if (recorded) {
+      const source = ctx.createBufferSource();
+      source.buffer = recorded;
+      source.playbackRate.value = 0.95 + 0.12 * Math.min(1, strength);
+      source.connect(gain);
+      source.start();
+      source.onended = () => {
+        source.disconnect(); gain.disconnect(); pan.disconnect();
+      };
+      return;
+    }
+
+    // Lightweight sound when optional WAV files have not finished loading.
+    const oscillator = ctx.createOscillator();
+    oscillator.type = "triangle";
+    oscillator.frequency.setValueAtTime(360, ctx.currentTime);
+    oscillator.frequency.exponentialRampToValueAtTime(150, ctx.currentTime + 0.09);
+    oscillator.connect(gain);
+    gain.gain.setValueAtTime(Math.max(0.0001, gain.gain.value), ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.105);
+    oscillator.start();
+    oscillator.stop(ctx.currentTime + 0.11);
+    oscillator.onended = () => {
+      oscillator.disconnect(); gain.disconnect(); pan.disconnect();
+    };
+  }
+
   impact(speed: number, side: number, banner = false,
     kind: "shin" | "arm" = "shin") {
     if (!this.ctx || !this.master) return;
@@ -215,6 +255,25 @@ export class SkiAudio {
     if (now - this.lastImpactSeconds < 0.055) return;
     this.lastImpactSeconds = now;
     const mix = poleImpactMix(speed, banner, kind);
+    // Optional synthetic fiberglass WAVs replace the old generic hit.
+    // All physics and the original WebAudio fallback remain unchanged.
+    const sample = this.buffers[kind === "shin" ? "pole-hard" : "pole-soft"];
+    if (sample) {
+      const source = ctx.createBufferSource();
+      const gain = ctx.createGain();
+      const stereo = ctx.createStereoPanner();
+      source.buffer = sample;
+      source.playbackRate.value = Math.max(.9, Math.min(1.17, .96 + speed * .004));
+      stereo.pan.value = Math.max(-.85, Math.min(.85, side * .65));
+      gain.gain.value = (kind === "shin" ? .64 : .43) *
+        Math.max(.30, Math.min(1, speed / 22));
+      source.connect(gain).connect(stereo).connect(this.master);
+      source.start(now);
+      source.onended = () => {
+        source.disconnect(); gain.disconnect(); stereo.disconnect();
+      };
+      return;
+    }
     const pan = ctx.createStereoPanner();
     pan.pan.value = Math.max(-0.8, Math.min(0.8, side * 0.65));
     pan.connect(this.master);
