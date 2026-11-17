@@ -601,6 +601,7 @@ export class World {
     woodMap.anisotropy = 4;
     this.resources.push(woodMap);
     timber.diffuseMap = woodMap;
+    timber.cull = pc.CULLFACE_NONE;
     timber.update();
 
     // Wall quads combine into a single triangulated cladding mesh.
@@ -609,8 +610,7 @@ export class World {
       const i=p.length/3;
       p.push(...a,...b,...d,...e);
       uv.push(0,0,repeatU,0,repeatU,repeatV,0,repeatV);
-      tri.push(i,i+1,i+2,i,i+2,i+3,
-        i,i+2,i+1,i,i+3,i+2);
+      tri.push(i,i+1,i+2,i,i+2,i+3);
     };
     // Sides and back CLOSED; front stays open for a 2.2 m race corridor.
     for(const side of [-1,1]) for(let z=-4.5;z<4.25;z+=1.75) {
@@ -628,6 +628,11 @@ export class World {
     walls.render!.castShadows=this.quality!=="low";
 
     // Sloped, double-pitched roof: actual mesh triangles, not two large boxes.
+    const roofSnow = this.mat("PBR snow roof cover", "#f0f4f6", 0, 0.15);
+    roofSnow.diffuseMap = this.snow.diffuseMap;
+    roofSnow.normalMap = this.snow.normalMap;
+    roofSnow.cull = pc.CULLFACE_NONE;
+    roofSnow.update();
     const roofP:number[]=[],roofUV:number[]=[],roofT:number[]=[];
     for(let i=0;i<=10;i++) {
       const z=-5.05+i*.99;
@@ -638,12 +643,11 @@ export class World {
       }
       if(i) for(let k=0;k<2;k++) {
         const a=(i-1)*3+k,b=i*3+k;
-        roofT.push(a,b,a+1,b,b+1,a+1,
-          a,a+1,b,b,a+1,b+1);
+        roofT.push(a,b,a+1,b,b+1,a+1);
       }
     }
     const roof=meshEntity(this.app.graphicsDevice,root,"Angled timber and snow start house roof",
-      roofP,roofT,this.snow,undefined,roofUV);
+      roofP,roofT,roofSnow,undefined,roofUV);
     roof.render!.castShadows=this.quality!=="low";
     for(const side of [-1,1]) for(let z=-4.92;z<=4.85;z+=2.45) {
       const y=h(0,z)+3.12;
