@@ -1,12 +1,14 @@
 # Feuille de route persistante
 
-> **Priorité actuelle V1.12 : Super-G uniquement.** Les anciens chapitres parlant de SL, GS ou DH constituent une archive des versions précédentes ; ils ne sont plus au périmètre du jeu. À présent : améliorer le départ, le rig et les proportions du skieur, les poses sur les carres, la neige, l'environnement et le temps de chargement, sans recréer d'autres disciplines.
+> **Priorité actuelle V1.13 : Super-G uniquement, avec le coureur monobloc 25 os effectivement intégré.** Les anciens chapitres parlant de SL, GS ou DH constituent une archive des versions précédentes ; ils ne sont plus au périmètre du jeu. À présent : améliorer le départ, le rig et les proportions du skieur, les poses sur les carres, la neige, l'environnement et le temps de chargement, sans recréer d'autres disciplines.
+
+Référence technique actualisée : [inventaire des outils, plugins, ressources et statuts](TOOLS_AND_RESOURCES.md). Les entrées historiques ci-dessous peuvent évoquer des versions antérieures ; ne pas les interpréter comme des fonctions actives.
 
 Le but est un simulateur de ski de grande qualité, amélioré sur le même dépôt à chaque session. Aucun travail autonome entre sessions n'est promis.
 
 ## Priorité 1 — sensations et règles
 
-- Faire essayer le SL au joueur et recueillir ses sensations sur le rayon, la vitesse, les transitions et le freinage.
+- Faire essayer le **Super-G** au joueur et recueillir ses sensations sur les prises d'angle, la vitesse, les transitions, les sauts et le freinage.
 - Définir un mode accessible et un mode course exigeant ; conserver les tests de parcours valides.
 - Raffiner contacts séparés des skis et charges intérieures/extérieures, flexion dynamique plus détaillée (déformation visuelle déjà présente), conservation d'énergie et décollage sur relief.
 - Calibrer les piquets sur des valeurs documentées ; distinguer contacts skis / tibias / mains / corps, plier le fût en plus de l'articulation.
@@ -15,7 +17,7 @@ Le but est un simulateur de ski de grande qualité, amélioré sur le même dép
 
 ## Priorité 2 — athlète
 
-- Remplacer/améliorer le GLB original par un vrai athlète de production, avec licence et provenance conservées.
+- Améliorer le **nouveau GLB monobloc 25 os déjà intégré en V1.13**, avec licence et provenance conservées ; garder le rig 18 os uniquement en secours/fantôme.
 - Skinning multi-poids continu, géométrie anatomique, gants et chaussures détaillés, casque et masque de qualité.
 - Blend d'animations préparatoires, IK 3D pieds/mains, angulation indépendante du bassin, retour élastique des skis.
 - Retargeter des animations autorisées ; aucun fichier d'une autre marque de jeu.
@@ -145,7 +147,7 @@ Le but est un simulateur de ski de grande qualité, amélioré sur le même dép
 2. ✅ Cabane structurée, fermée latéralement et derrière, habillage original à fibres de bois, toiture triangulée, protections, signalétique fictive et traces de skis.
 3. ✅ Trois impulsions de bâtons SG associées à la force, aux poses articulées et aux impacts sonores, bâtons courbés; conservation des autres disciplines.
 4. ⏳ Valider les captures Playwright d'une vraie exécution et surveiller les régressions caméra/ombres, puis fusionner après CI.
-5. ⏳ Retarget correct de l'avatar 25 os et ses neuf clips procéduraux, avec étude de topologie réelle/skin continu; pas de remplacement 146 meshes sans budget mesuré.
+5. ✅ **Retarget de base de l'avatar 25 os intégré en V1.13** (versions mobile et détaillée). ⏳ Vérifier et affiner les neuf clips, les contacts neige-skis et les poses très basses ; mesurer la charge des meshes avant toute nouvelle version.
 6. ⏳ Mesures de FPS et rendu PBR sur PC/iPhone réel, validation des angles/contact main-bâton sur vidéo plutôt qu'une promesse de mocap.
 
 ## Studio 3D (nouvel outillage, 17 novembre 2026)
