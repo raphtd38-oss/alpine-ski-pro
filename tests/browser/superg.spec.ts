@@ -5,10 +5,9 @@ test("World-Cup-style Super-G start house, four-pole flags and terrain crest", a
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto("/?quality=low&renderer=webgl2");
   await expect(page.locator("#loading")).toHaveCount(0, { timeout: 45000 });
-  await page.locator('header [data-nav="courses"]').click();
-  await page.locator('[data-course="SG"]').click();
+  // Super-G is the sole selectable discipline and opens by default.
   const setup = await page.evaluate(() => (window as any).__ski.getState());
-  // Menu selections rebuild the render scene; race.course switches at start.
+  expect(setup.course).toBe("SG");
   expect(setup.startHouse).toBe(true);
   expect(setup.blueBorderDye).toBe(true);
   expect(setup.sprayedBlueDye).toBe(true);
