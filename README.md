@@ -1,5 +1,12 @@
 # Alpine Ski Pro
 
+## V1.9 — Super-G : réception dégagée, neige marquée, skieur texturé
+
+Le Super-G garde son tracé sinueux de 1 980 m et ses 34 portes. Les cinq zones de saut possèdent désormais une zone libre de portes près de l'appel et sur les 80 mètres suivant la crête, avec espacement minimal entre portes de 36 mètres (valeurs de gameplay, non homologation FIS). Les marquages bleus suivent les courbes avec un aspect colorant pulvérisé au lieu de lignes rigides, et renforcent les approches des bosses.
+
+Le skieur original à 18 articulations reçoit un véritable atlas UV avec textures de tissu technique, éléments carbone, masque et dossard 61 intégrées dans le GLB. Sa silhouette reste semi-réaliste ; aucun modèle ni fichier propriétaire d'un autre jeu n'est copié.
+
+
 ## V1.8 — Super-G sinueux, marquages bleus, chrono photoélectrique
 
 La piste Super-G de 1 980 m ne suit plus un simple axe droit : ses passages en forêt, en glacier et en combe rocheuse ont une ligne centrale commune au terrain, aux filets, aux limites physiques et aux portes. Espacements variables (plus de 25 m), lignes de colorant bleu de chaque côté, traverses des crêtes, drapeaux textiles à maillage incurvé et texture originale plus fine (1024×512). La cabine de départ possède parois, façade, protections et deux panneaux de chronométrage ; les tiges s'ouvrent lors du passage du skieur.
