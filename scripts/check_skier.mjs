@@ -19,6 +19,19 @@ const binLength = head.getUint32(binStart, true);
 assert.equal(doc.buffers[0].byteLength, binLength);
 assert.equal(binStart + 8 + binLength, bytes.length);
 assert.ok(doc.materials.length >= 12);
+assert.ok(doc.images?.length >= 4, "Real race suit needs embedded texture maps");
+assert.ok(doc.textures?.length >= 4, "Race materials must be UV textured");
+for (const image of doc.images) {
+  assert.equal(image.mimeType, "image/png");
+  const view = doc.bufferViews[image.bufferView];
+  assert.ok(view.byteLength > 256 && view.byteLength < 200_000);
+  assert.equal(head.getUint32(binStart + 8 + view.byteOffset, false),
+    0x89504e47, "Texture must be an embedded PNG");
+}
+for (const index of [0, 1, 2, 3, 4, 5]) {
+  assert.ok(doc.materials[index].pbrMetallicRoughness.baseColorTexture,
+    "Suit, bib, helmet, boots and visor require genuine albedo maps");
+}
 assert.ok(doc.meshes[0].primitives.length >= 40, "Need substantial body and equipment geometry");
 const skinnedJointNames = [
   "Pelvis", "Spine", "Chest", "Neck", "Head",
@@ -43,6 +56,15 @@ for (const primitive of doc.meshes[0].primitives) {
   const { a: weightAcc, offset: weightsOffset } = accessorView(primitive.attributes.WEIGHTS_0);
   const { a: indexAcc, offset: indexOffset } = accessorView(primitive.indices);
   assert.equal(pos.count, jointAcc.count);
+  const { a: tex, offset: texOffset } = accessorView(primitive.attributes.TEXCOORD_0);
+  assert.equal(tex.count, pos.count);
+  assert.equal(tex.componentType, 5126);
+  for (let i = 0; i < tex.count; i++) {
+    const u = view.getFloat32(texOffset + i * 8, true);
+    const v = view.getFloat32(texOffset + i * 8 + 4, true);
+    assert.ok(Number.isFinite(u) && u >= 0 && u <= 1.001);
+    assert.ok(Number.isFinite(v) && v >= 0 && v <= 1.001);
+  }
   assert.equal(pos.count, weightAcc.count);
   assert.equal(jointAcc.componentType, 5123);
   assert.equal(weightAcc.componentType, 5126);
