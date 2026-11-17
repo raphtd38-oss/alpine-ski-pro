@@ -63,6 +63,11 @@ export interface SkierState {
   distance: number;
 }
 export interface Frame {
+  /** Optional render/replay kinematics; ignored by fixed-step physics. */
+  vx?: number;
+  vz?: number;
+  speed?: number;
+  skiHeading?: number;
   flex?: number;
   /** Optional for backwards-compatible saved replays. */
   load?: number;
