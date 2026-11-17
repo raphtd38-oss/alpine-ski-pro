@@ -285,7 +285,7 @@ async function boot() {
       const fraction = startGateImpulseFraction("SG",
         previous.z, state.z, previous.x, state.x);
       if (fraction !== null && !race.startGateOpened) {
-        race.openStartGate(fraction);
+        race.openStartGate(fraction, dt);
         audio.startGateClick();
       }
     }
