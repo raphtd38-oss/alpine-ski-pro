@@ -483,25 +483,28 @@ export class World {
     }
   }
 
-  /** Original curved textile panel: thin woven fabric rather than a
-   * rectangular box. Tessellation and seam shading are baked once, with
-   * shared 1024px textile materials; hinges retain elastic pole movement. */
+  /** Thin shaped fabric between the pair of speed-gate poles.
+   * Mild crown sag and the central crease reproduce the supplied reference.
+   * The gate hinge and deterministic impact handling stay unchanged. */
   fabricFlag(parent: pc.Entity, side: number, textile: pc.StandardMaterial) {
     const p: number[] = [], uv: number[] = [], idx: number[] = [];
-    const nx = 8, ny = 4, width = 0.79, height = 0.5;
+    const nx = 16, ny = 8, width = 0.80, height = 0.55;
     for (let y = 0; y <= ny; y++)
       for (let x = 0; x <= nx; x++) {
         const u = x / nx, v = y / ny;
-        const fold = 0.040 * Math.sin(u * Math.PI) *
-          Math.sin(v * Math.PI * 1.65) +
+        const sag = 0.037 * Math.sin(Math.PI * u) * (0.65 + 0.35 * v);
+        const centreCrease = 0.027 * Math.exp(-Math.pow((u - 0.5) * 9, 2)) *
+          Math.sin(v * Math.PI);
+        const billow = 0.039 * Math.sin(Math.PI * u) *
+          Math.sin(v * Math.PI) +
           0.012 * Math.sin(u * Math.PI * 4 + v * Math.PI);
-        p.push(side * width * u, 1.20 + height * v,
-          -0.08 + fold);
+        p.push(side * width * u,
+          1.18 + height * v - sag, -0.08 + billow + centreCrease);
         uv.push(u, 1 - v);
       }
-    for(let y=0;y<ny;y++)
-      for(let x=0;x<nx;x++) {
-        const a = y * (nx+1) + x, b = a + nx + 1;
+    for (let y = 0; y < ny; y++)
+      for (let x = 0; x < nx; x++) {
+        const a = y * (nx + 1) + x, b = a + nx + 1;
         idx.push(a, b, a + 1, a + 1, b, b + 1);
       }
     const flag = meshEntity(this.app.graphicsDevice, parent,
@@ -511,6 +514,7 @@ export class World {
   }
 
   gates() {
+    const clips = this.mat("Speed gate metal fasteners", "#9aaab5", 0.55, 0.48);
     for (const g of this.course.gates) {
       const parent = new pc.Entity(`Gate ${g.id + 1}`);
       this.root.addChild(parent);
@@ -554,6 +558,13 @@ export class World {
             [0.034, 1.88, 0.034], m,
           );
           partner.render!.castShadows = this.quality !== "low";
+          // Two small straps per shaft; one flag still spans each pole pair.
+          for (const offset of [0, side * 0.80])
+            for (const y of [1.23, 1.68]) {
+              const strap = shape(pivot, "box", "Fabric pole strap",
+                [offset, y, -0.077], [0.082, 0.08, 0.076], clips);
+              strap.render!.castShadows = false;
+            }
           this.fabricFlag(pivot, side, textile);
         }
       }
