@@ -32,6 +32,56 @@ function face(g: Points, a: number, b: number, c: number) {
 }
 
 /**
+ * Small CC0-independent limestone normal map built deterministically from
+ * sediment ridges and hairline cracks. Tiled UVs follow actual rock vertices,
+ * not a flat normal applied to each entire mountain face.
+ */
+function buildDolomiteNormalMap(
+  app: pc.Application, quality: Quality,
+): pc.Texture | null {
+  if (quality === "low") return null;
+  const size = quality === "ultra" ? 384 :
+    quality === "high" ? 256 : 128;
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = size;
+  const context = canvas.getContext("2d")!;
+  const data = context.createImageData(size, size);
+  const heightAt = (x: number, y: number): number => {
+    const TAU = 2 * Math.PI;
+    const strata = Math.sin(TAU * (14 * y + 1.2 * x)) * .46 +
+      Math.cos(TAU * (6 * y - .55 * x)) * .20;
+    const vein = Math.cos(TAU * (12 * x + 3 * y)) * .11;
+    const fractured = Math.pow(
+      Math.max(0, Math.sin(TAU * (5 * x - 2 * y))), 18) * .20;
+    return strata + vein - fractured;
+  };
+  const du = 1 / size;
+  const out = data.data;
+  for (let v = 0; v < size; v++)
+    for (let u = 0; u < size; u++) {
+      const x = u / size, y = v / size;
+      const dx = heightAt(x + du, y) - heightAt(x - du, y);
+      const dy = heightAt(x, y + du) - heightAt(x, y - du);
+      const nx = -dx * 1.8, ny = -dy * 1.8, nz = 1;
+      const length = Math.hypot(nx, ny, nz);
+      const index = (v * size + u) * 4;
+      out[index] = Math.round(127.5 + 127.5 * nx / length);
+      out[index + 1] = Math.round(127.5 + 127.5 * ny / length);
+      out[index + 2] = Math.round(127.5 + 127.5 * nz / length);
+      out[index + 3] = 255;
+    }
+  context.putImageData(data, 0, 0);
+  const tex = new pc.Texture(app.graphicsDevice, {
+    name: "Original Cortina layered dolomite tangent-space normal atlas",
+    mipmaps: true,
+  });
+  tex.setSource(canvas);
+  tex.addressU = tex.addressV = pc.ADDRESS_REPEAT;
+  tex.anisotropy = quality === "medium" ? 2 : 4;
+  return tex;
+}
+
+/**
  * Ridged limestone with horizontal sediment ledges, hard silhouettes, warm
  * west-facing highlights and snow on the cold summit. Stylized geometry, not DEM.
  */
@@ -39,6 +89,7 @@ function mountainSpurs(
   app: pc.Application, root: pc.Entity, course: Course,
   quality: Quality,
   mats: pc.StandardMaterial[],
+  textures: pc.Texture[],
 ) {
   const cfg = CORTINA_SCENIC_BUDGET[quality];
   const rock = group(), snow = group();
@@ -112,12 +163,25 @@ function mountainSpurs(
   }
   const rockMat = material("Cortina Tofane pink stratified rock", "#ffffff", 0, .15);
   rockMat.diffuseVertexColor = true;
+  const limestoneNormal = buildDolomiteNormalMap(app, quality);
+  if (limestoneNormal) {
+    rockMat.normalMap = limestoneNormal;
+    rockMat.bumpiness = 0.46;
+    textures.push(limestoneNormal);
+  }
   rockMat.cull = pc.CULLFACE_NONE;
   rockMat.update();
   mats.push(rockMat);
+  // Lateral + vertical UVs follow the exposed rock strata and enable
+  // real per-pixel normal response to sun and floodlight spots.
+  const rockUV: number[] = [];
+  for (let n = 0; n < rock.p.length; n += 3) {
+    const x = rock.p[n], y = rock.p[n + 1], z = rock.p[n + 2];
+    rockUV.push(x * .022 + z * .014, y * .026);
+  }
   const escarpment = meshEntity(app.graphicsDevice, root,
     "Tofane towering layered limestone at sunset", rock.p, rock.i,
-    rockMat, rock.colors);
+    rockMat, rock.colors, rockUV);
   escarpment.render!.castShadows = quality === "ultra";
 
   const snowMat = material("Cortina wind-packed snow on ridges", "#e7edf0", 0, .23);
@@ -419,13 +483,14 @@ function broadcastPlatforms(
 /** One entrypoint into the World constructor, with all resources owned by World. */
 export function addCortinaCinematicDetails(
   app: pc.Application, root: pc.Entity, course: Course, quality: Quality,
-): pc.StandardMaterial[] {
+): { materials: pc.StandardMaterial[]; textures: pc.Texture[] } {
   const materials: pc.StandardMaterial[] = [];
-  mountainSpurs(app, root, course, quality, materials);
+  const textures: pc.Texture[] = [];
+  mountainSpurs(app, root, course, quality, materials, textures);
   denseWoodland(app, root, course, quality, materials);
   groomedSnow(app, root, course, quality, materials);
   raceSafetyNets(app, root, course, quality, materials);
   broadcastPlatforms(root, course, quality, materials);
   distantCortinaVillage(app, root, course, quality, materials);
-  return materials;
+  return { materials, textures };
 }
