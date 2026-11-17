@@ -62,7 +62,8 @@ export function snowPlumeSource(
   random01: number,
 ): SnowPlumeSource {
   const outside: SnowSkiSide = state.edge >= 0 ? -1 : 1;
-  const skiSide: SnowSkiSide = particleIndex % 5 === 0 ? -outside : outside;
+  const skiSide: SnowSkiSide = particleIndex % 5 === 0
+    ? (outside === -1 ? 1 : -1) : outside;
   const mark = skiSnowMark(state, skiSide);
   const r = clamp(random01, 0, 1);
   const speedFactor = clamp(speed / 30, 0, 1.7);
