@@ -132,7 +132,7 @@ async function boot() {
     renderer.menu = false;
     renderer.cameraReady = false;
     renderer.effects.reset();
-    if (renderer.world.trainingGuide) renderer.world.trainingGuide.enabled = training;
+    if (renderer.world.trainingGuide) renderer.world.trainingGuide.enabled = true;
     ui.setReplayUI(false);
     ui.setRace(true);
     ui.text("race-message", "");
@@ -210,6 +210,12 @@ async function boot() {
   input.onAction = (key) => {
     if (key === "KeyR" && playing) ui.restart();
     if (key === "KeyC" && playing) ui.toast(renderer.changeCamera());
+    if (key === "KeyG" && playing && renderer.world.trainingGuide) {
+      renderer.world.trainingGuide.enabled = !renderer.world.trainingGuide.enabled;
+      ui.toast(renderer.world.trainingGuide.enabled
+        ? "Trajectoire affichée · passe entre les deux fanions"
+        : "Trajectoire masquée");
+    }
     if (key === "Escape" && !playing && !ui.modal.hidden) {
       ui.close();
       return;
