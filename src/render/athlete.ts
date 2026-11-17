@@ -598,12 +598,16 @@ export class Athlete {
           const tipToGrip = point.clone().sub(tip).normalize();
           const plantRot = new pc.Quat().setFromDirections(
             pc.Vec3.UP, tipToGrip);
-          const plantPos = point.clone().sub(
-            tipToGrip.clone().mulScalar(gripDistance));
-          this.poles[i].setLocalRotation(
-            new pc.Quat().slerp(trailRot, plantRot, plantWeight));
+          const blendedRotation = new pc.Quat().slerp(
+            trailRot, plantRot, plantWeight);
+          // Position MUST be derived from the FINAL rotation, otherwise
+          // a linear interpolation of shaft centres detaches the grip from
+          // the hand even if both endpoint poses were correct.
+          const gripFromRotation = blendedRotation.transformVector(
+            new pc.Vec3(0, gripDistance, 0));
+          this.poles[i].setLocalRotation(blendedRotation);
           this.poles[i].setLocalPosition(
-            new pc.Vec3().lerp(trailPos, plantPos, plantWeight));
+            point.clone().sub(gripFromRotation));
         } else {
           this.poles[i].setLocalRotation(trailRot);
           this.poles[i].setLocalPosition(trailPos);
