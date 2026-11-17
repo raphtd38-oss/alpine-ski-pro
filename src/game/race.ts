@@ -45,10 +45,10 @@ export class Race {
     this.startGateStepRemainder = 1;
   }
   /** Called once by the fixed-step contact detector (never on GO). */
-  openStartGate(fractionIntoTick: number) {
+  openStartGate(fractionIntoTick: number, dt: number) {
     if (this.course.id !== "SG" || this.startGateOpened) return;
     this.startGateOpened = true;
-    this.startGateImpulseTime = this.launchTime;
+    this.startGateImpulseTime = this.launchTime - dt * (1 - fractionIntoTick);
     this.startGateStepRemainder = Math.max(0, Math.min(1, 1 - fractionIntoTick));
   }
   tickCountdown(dt: number) {
