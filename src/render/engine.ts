@@ -251,6 +251,9 @@ export class Renderer {
     this.camera.camera!.fov += (targetFov - this.camera.camera!.fov) *
       (1 - Math.exp(-dt * 5));
     this.athlete.root.enabled = this.menu || this.cameraMode !== 2;
+    // Optional CC0 scenery has camera-range LOD with hysteresis; the
+    // original cheap batched alpine background remains continuously visible.
+    this.alpineAssets.updateVisuals(dt, this.camera.getPosition(), this.quality);
   }
   changeCamera() {
     this.cameraMode = (this.cameraMode + 1) % CAMERAS.length;
