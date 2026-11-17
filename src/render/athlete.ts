@@ -22,6 +22,7 @@ export class Athlete {
   visualImpact = 0;
   material: pc.StandardMaterial;
   ownedMaterials: pc.StandardMaterial[] = [];
+  ownedTextures: pc.Texture[] = [];
   constructor(
     public app: pc.Application,
     asset: pc.Asset,
@@ -57,10 +58,56 @@ export class Athlete {
     }
     this.material = material(
       ghost ? "Ghost cyan" : "Ski topsheet",
-      ghost ? "#59e9ec" : "#f06340",
+      ghost ? "#59e9ec" : "#ffffff",
       0.35,
       0.65,
     );
+
+    if (!ghost) {
+      const canvas = document.createElement("canvas");
+      canvas.width = 128;
+      canvas.height = 512;
+      const ctx = canvas.getContext("2d")!;
+      const carbon = ctx.createLinearGradient(0, 0, 128, 0);
+      carbon.addColorStop(0, "#071726");
+      carbon.addColorStop(0.24, "#183a5c");
+      carbon.addColorStop(0.5, "#213e63");
+      carbon.addColorStop(0.76, "#122d49");
+      carbon.addColorStop(1, "#061624");
+      ctx.fillStyle = carbon;
+      ctx.fillRect(0, 0, 128, 512);
+      for (const x of [17, 22, 105, 110]) {
+        ctx.fillStyle = x < 24 || x > 108 ? "#9ae7ee" : "#568ea9";
+        ctx.fillRect(x, 17, 2.5, 476);
+      }
+      ctx.fillStyle = "rgba(255,255,255,.30)";
+      for (let z = 28; z < 498; z += 29) {
+        ctx.beginPath();
+        ctx.moveTo(37, z);
+        ctx.lineTo(92, z + 21);
+        ctx.lineWidth = 1.2;
+        ctx.strokeStyle = "rgba(180,226,235,.24)";
+        ctx.stroke();
+      }
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#d2edf1";
+      ctx.font = "bold 18px Arial, sans-serif";
+      ctx.fillText("ALPINE", 64, 185);
+      ctx.font = "bold 13px Arial, sans-serif";
+      ctx.fillText("SKI PRO", 64, 208);
+      ctx.fillStyle = "#65d7e6";
+      ctx.fillRect(36, 252, 56, 7);
+      ctx.fillRect(42, 262, 44, 3);
+      const topsheet = new pc.Texture(this.app.graphicsDevice, {
+        name: "Original carbon racing ski topsheet PBR albedo", mipmaps: true,
+      });
+      topsheet.setSource(canvas);
+      topsheet.addressU = topsheet.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+      topsheet.anisotropy = 8;
+      this.ownedTextures.push(topsheet);
+      this.material.diffuseMap = topsheet;
+      this.material.update();
+    }
     const base = material("Ski graphite", "#102736", 0.45, 0.6);
     const poleGrip = material("Professional pole grips", "#202b34", 0.04, 0.5);
     const poleFerrule = material("Steel carbide pole tip", "#cad4d8", 0.65, 0.75);
@@ -71,14 +118,18 @@ export class Athlete {
       this.root.addChild(e);
       this.skis.push(e);
       const p: number[] = [],
-        indices: number[] = [];
+        indices: number[] = [],
+        uv: number[] = [];
       const n = 24;
       for (let i = 0; i <= n; i++) {
         const t = i / n,
           z = (t - 0.5) * equipment.length;
         const w = 0.047 + 0.014 * Math.pow(t * 2 - 1, 2);
         const y = 0.045 + Math.pow(Math.max(0, t - 0.8) / 0.2, 2) * 0.13;
-        for (const x of [-w, w]) p.push(x, y, z);
+        for (const x of [-w, w]) {
+          p.push(x, y, z);
+          uv.push(x < 0 ? 0 : 1, t);
+        }
       }
       for (let i = 0; i < n; i++) {
         const a = i * 2;
@@ -94,6 +145,8 @@ export class Athlete {
         p,
         indices,
         m,
+        undefined,
+        uv,
       );
       this.skiSurfaces.push({
         mesh: surface.render!.meshInstances[0].mesh!,
@@ -192,6 +245,7 @@ export class Athlete {
         // Preserve the graphite compression side panels and the white bib.
         // Only recolour the base fabric; pro racewear needs multiple materials.
         if (
+          mi.material?.name.startsWith("Race suit / alpine navy") ||
           mi.material?.name.startsWith("Race suit / alpine crimson") ||
           mi.material?.name.startsWith("Race suit / ember")
         ) {
@@ -396,5 +450,6 @@ export class Athlete {
   destroy() {
     this.root.destroy();
     this.ownedMaterials.forEach((m) => m.destroy());
+    this.ownedTextures.forEach((t) => t.destroy());
   }
 }

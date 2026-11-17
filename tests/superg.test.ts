@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { COURSES, EQUIPMENT, terrainHeight } from "../src/game/course";
 import { FIXED_DT, initialState, stepPhysics } from "../src/game/physics";
-import { SUPER_G_ROLLERS, superGRelief, shouldLaunchAtCrest, startPushAcceleration } from "../src/game/superg";
+import { SUPER_G_ROLLERS, SUPER_G_LANDING_CLEARANCE, SUPER_G_TAKEOFF_CLEARANCE, SUPER_G_MIN_GATE_SPACING, superGRelief, shouldLaunchAtCrest, startPushAcceleration } from "../src/game/superg";
 import { Race, replayAt } from "../src/game/race";
 import type { Controls } from "../src/game/types";
 
@@ -21,6 +21,29 @@ describe("World-Cup-inspired Super-G course", () => {
     expect(sg.gates.every(g => g.width >= 6 && g.width <= 12)).toBe(true);
     expect(Math.max(...sg.gates.map(g => g.x))).toBeGreaterThan(10);
     expect(Math.min(...sg.gates.map(g => g.x))).toBeLessThan(-10);
+  });
+
+  it("never forces a gate in a World-Cup-style jump takeoff or landing sector", () => {
+    // The FIS specifies a general 25m turning-pole minimum; the larger
+    // 80m landing buffer is an additional playable course-design choice.
+    expect(SUPER_G_LANDING_CLEARANCE).toBeGreaterThanOrEqual(75);
+    expect(SUPER_G_MIN_GATE_SPACING).toBeGreaterThanOrEqual(25);
+    for (const jump of SUPER_G_ROLLERS) {
+      const firstAfter = sg.gates.find(g => g.z > jump.z);
+      expect(firstAfter, jump.name).toBeDefined();
+      expect(firstAfter!.z - jump.z, jump.name)
+        .toBeGreaterThan(SUPER_G_LANDING_CLEARANCE);
+      for (const gate of sg.gates)
+        expect(
+          gate.z < jump.z - SUPER_G_TAKEOFF_CLEARANCE ||
+          gate.z > jump.z + SUPER_G_LANDING_CLEARANCE,
+          `${jump.name}: unsafe gate ${gate.id} at z=${gate.z.toFixed(1)}`,
+        ).toBe(true);
+    }
+    const gap = sg.gates.slice(1).map((g,i)=>g.z-sg.gates[i].z);
+    expect(Math.min(...gap)).toBeGreaterThanOrEqual(SUPER_G_MIN_GATE_SPACING-0.01);
+    expect(sg.gates[sg.gates.length-1].z)
+      .toBeLessThan(sg.length-100);
   });
 
   it("creates multiple distinct compressions and crests, not a flat ramp", () => {

@@ -65,15 +65,45 @@ export const SUPER_G_CENTRE_KNOTS = [
   [1810, 10], [1940, 0], [1980, 0],
 ] as const;
 
-/** Intentional long/middle turns, not a mechanical one-gate-per-55m rhythm.
- * Min longitudinal separation ~33m; never below the 25m FIS turning-pole
- * minimum. All positions remain within the 1.98km course. */
-export function superGGateZ(index: number): number {
+/** Race-design safety buffer, not an extra rule claimed by the FIS.
+ * Leave a genuine landing and regrouping section after the five speed crests.
+ * Turning poles still obey the FIS minimum 25 m separation. */
+export const SUPER_G_LANDING_CLEARANCE = 80;
+export const SUPER_G_TAKEOFF_CLEARANCE = 18;
+export const SUPER_G_MIN_GATE_SPACING = 36;
+
+function nominalSuperGGateZ(index: number): number {
   let z = 55;
-  for (let i = 0; i < Math.max(0, Math.floor(index)); i++)
+  for (let i = 0; i < index; i++)
     z += 52 + 12 * Math.sin(i * 0.81 + 0.3) +
       7 * Math.sin(i * 0.26 - 0.4);
   return z;
+}
+
+/** Medium and long turns with NO flags across a takeoff or its landing zone.
+ * Forward placement preserves gate count and keeps the course finishable.
+ * Position is independent of runtime frame rate or state. */
+export function superGGateZ(index: number): number {
+  const count = Math.max(0, Math.floor(Number.isFinite(index) ? index : 0));
+  let last = -SUPER_G_MIN_GATE_SPACING;
+  for (let i = 0; i <= count; i++) {
+    let z = Math.max(nominalSuperGGateZ(i),
+      last + SUPER_G_MIN_GATE_SPACING);
+    // A shifted gate could move into another crest's exclusion band,
+    // so keep resolving until outside all five regions.
+    for (let attempt = 0; attempt <= SUPER_G_ROLLERS.length; attempt++) {
+      const before = z;
+      for (const roller of SUPER_G_ROLLERS) {
+        if (z >= roller.z - SUPER_G_TAKEOFF_CLEARANCE &&
+            z <= roller.z + SUPER_G_LANDING_CLEARANCE)
+          z = roller.z + SUPER_G_LANDING_CLEARANCE + 0.5;
+      }
+      z = Math.max(z, last + SUPER_G_MIN_GATE_SPACING);
+      if (z === before) break;
+    }
+    last = z;
+  }
+  return last;
 }
 
 export function superGCenterX(z: number): number {

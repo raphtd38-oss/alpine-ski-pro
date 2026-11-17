@@ -11,6 +11,9 @@ test("World-Cup-style Super-G start house, four-pole flags and terrain crest", a
   // Menu selections rebuild the render scene; race.course switches at start.
   expect(setup.startHouse).toBe(true);
   expect(setup.blueBorderDye).toBe(true);
+  expect(setup.sprayedBlueDye).toBe(true);
+  expect(setup.athleteTexturedSurfaces).toBeGreaterThanOrEqual(40);
+  expect(setup.raceSkiTextureCount).toBe(1);
   expect(setup.timingWands).toBe(2);
   expect(setup.pairedGatePoles).toBe(68);
   expect(setup.gateFlagCount).toBe(68);
@@ -53,6 +56,10 @@ test("World-Cup-style Super-G start house, four-pole flags and terrain crest", a
   expect(crest.maxHeight).toBeGreaterThan(0.05);
   await page.waitForTimeout(200);
   await page.screenshot({ path: "test-results/superg-airborne.png" });
+  const clearance = await page.evaluate(
+    () => (window as any).__ski.getState().cameraTerrainClearance,
+  );
+  expect(clearance).toBeGreaterThan(1.65);
 
   // Check the last turn and show the blue-dyed sides before the photo-finish.
   const finalApproach = await page.evaluate(() => {

@@ -120,3 +120,10 @@ Le but est un simulateur de ski de grande qualité, amélioré sur le même dép
 - Adapter le moteur PlayCanvas aux cartes KTX2 avec décodeur validé et fallback sur les JPG/GLB actuels.
 - Étendre l'audit aux futures animations, modèles externes et sons avec provenance et licences par fichier.
 - Vérifier l'échelle des UV, les niveaux LOD, le draw-call budget et les performances réelles sur GPU/iPhone avant promotion visuelle.
+
+## Après V1.9 — finitions physiques et graphiques
+
+- Faire vérifier visuellement la longueur réelle de réception des cinq sauts (la marge de placement de 80 m est volontairement conservatrice), puis ajuster le piquet suivant d'après la vitesse et le profil de saut, et non uniquement la distance z.
+- Faire essayer le tissu original UV en qualité élevée, contrôler l'orientation et le rendu du dossard 61, et introduire des textures photo-PBR légales avec normales/micro-plis et compression KTX2 après test des décodeurs.
+- Améliorer les proportions de la combinaison, les plis des genoux, la forme des épaules et une animation d'appui plus anthropométrique ; conserver les animations et les résultats.
+- Mesurer la lisibilité et le bruit visuel du colorant bleu sur neige Poly Haven Snow 02 sur PC/iPhone, sans supposer que les captures SwiftShader sont des benchmarks.

@@ -7,7 +7,7 @@ import "@fontsource/barlow-condensed/latin-500.css";
 import "@fontsource/barlow-condensed/latin-600.css";
 import "@fontsource/barlow-condensed/latin-700.css";
 import "./ui/style.css";
-import { COURSES, EQUIPMENT } from "./game/course";
+import { COURSES, EQUIPMENT, terrainHeight } from "./game/course";
 import { startPushAcceleration } from "./game/superg";
 import { finishReachAmount } from "./game/finish-timing";
 import { sampleSnowSurface } from "./game/surface";
@@ -501,6 +501,9 @@ async function boot() {
           finishReach: finishReachAmount(race.course.id, state.z,
             race.course.length, Math.hypot(state.vx, state.vz), state.fallen),
           blueBorderDye: Boolean(renderer.world.blueBorderDye),
+          sprayedBlueDye: renderer.world.resources.some(
+            (tex) => tex.name === "Original powder sprayed FIS-style blue dye",
+          ),
           gateFlagCount: renderer.world.gateEntities.reduce(
             (count, gate) => count + gate.children.reduce(
               (flags, pivot) => flags + pivot.children.filter(
@@ -523,6 +526,17 @@ async function boot() {
             ), 0,
           ),
           athleteBones: Object.keys(renderer.athlete.joints).length,
+          raceSkiTextureCount: renderer.athlete.ownedTextures.length,
+          cameraTerrainClearance: (() => {
+            const p = renderer.camera.getPosition();
+            return p.y - terrainHeight(p.x, p.z, race.course);
+          })(),
+          athleteTexturedSurfaces: renderer.athlete.rig.findComponents("render").reduce(
+            (n,c) => n + (c as import("playcanvas").RenderComponent)
+              .meshInstances.filter(mi =>
+                Boolean((mi.material as import("playcanvas").StandardMaterial).diffuseMap),
+              ).length, 0,
+          ),
           athleteSurfaces: renderer.athlete.rig.findComponents("render").reduce(
             (n, c) => n + (c as import("playcanvas").RenderComponent).meshInstances.length, 0,
           ),
