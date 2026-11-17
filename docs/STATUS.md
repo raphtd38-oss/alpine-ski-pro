@@ -242,3 +242,11 @@ Asset kit 25 os inspecté : 146 meshes sur les versions 15.09/1.95 Mo avec nine 
 ## Outils Studio 3D (17 novembre 2026)
 
 Nouvelle chaîne de travail **optionnelle** avec 38 outils référencés (`tools/studio/catalog.json`), commandes locales `studio:doctor`, `studio:inspect`, `studio:verify`, `studio:optimize`, configuration Blender MCP (`tools/studio/blender-mcp.json`) et brief skieur de Super-G (`docs/SUPERG_SKIER_BRIEF.md`). Voir `docs/STUDIO_3D_STACK.md`. Aucun moteur externe, produit payant, serveur MCP desktop ou asset propriétaire n'a été installé dans le jeu. Le skieur et les courses restent inchangés. CI et validation humaine nécessaires avant l'adoption de nouveaux modèles.
+
+## Intégration Ammo.js — PR #24 (17 novembre 2026)
+
+- Chargement de l'Ammo.js WebAssembly officiel via `pc.WasmModule` avant l'application PlayCanvas ; fallback sur la simulation historique si indisponible, option de désactivation `?physics=off`.
+- Capsule cinématique du skieur et 68 volumes de déclenchement des piquets du Super-G ; événements de collision enregistrés pour diagnostic, pas encore autoritaires pour les chutes ou le chrono.
+- Le carving, les contrôles, les replays, le solveur 120 Hz et les impacts des piquets existants restent inchangés.
+- Aucune copie binaire vendue comme packagée : les fichiers Ammo.js sont chargés depuis le serveur PlayCanvas, avec une dépendance réseau à documenter.
+- `npm test` et `npm run build` validés par GitHub Actions (run 44150888859) ; navigateur Chromium et déploiement à confirmer avant de déclarer la V1.12 intégrée au site public.
