@@ -134,6 +134,21 @@ function nominalSuperGGateZ(index: number): number {
     z += 52 + 12 * Math.sin(i * 0.81 + 0.3) + 7 * Math.sin(i * 0.26 - 0.4);
   return z;
 }
+/** Authored Super-G race line: alternating wide turns, with a restrained
+ * lead into the slope's natural bends. Official gate GPS is unavailable. */
+export function superGGateRacingOffset(index: number, z: number): number {
+  const step = 24;
+  const before = superGCenterX(z - step);
+  const center = superGCenterX(z);
+  const after = superGCenterX(z + step);
+  const slope = (after - before) / (2 * step);
+  const bend = after - 2 * center + before;
+  const direction = index % 2 === 0 ? -1 : 1;
+  const magnitude = 8.7 + 1.7 * Math.sin(index * 0.46 + 0.5);
+  const courseLead = Math.max(-3.0, Math.min(3.0, slope * 2.2 + bend * 0.5));
+  return direction * magnitude + courseLead;
+}
+
 export function superGGateZ(index: number): number {
   const count = Math.max(0, Math.floor(Number.isFinite(index) ? index : 0));
   let last = -SUPER_G_MIN_GATE_SPACING;
