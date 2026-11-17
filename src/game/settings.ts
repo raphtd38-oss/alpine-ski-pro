@@ -10,7 +10,7 @@ export function readSettings(): Settings {
     sound: true,
     ghost: true,
     edges: true,
-    suit: "#eb552d",
+    suit: "#1688b0",
   };
   try {
     const v = JSON.parse(localStorage.getItem(KEY) ?? "null");
