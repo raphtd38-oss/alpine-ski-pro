@@ -1,3 +1,12 @@
+## 1.9.0 — 17 novembre 2026 — sécurité de réception et vrai textile du coureur
+
+- Après les cinq crêtes majeures de Super-G, les portes sont décalées hors de l'appel (-18 m) et d'une zone libre de réception (+80 m), avec intervalle minimal de 36 m ; ces marges sont des choix de gameplay et ne remplacent pas les règles FIS.
+- La teinture bleue des deux bords devient irrégulière et texturée comme un colorant pulvérisé, avec barres de repérage aux abords des sauts et guides autour des portes ; toutes les bandes partagent un mesh.
+- Skieur glTF à 18 os conservé mais désormais réellement **texturé** : UV propres avec coutures cylindriques, PNG albédo intégrés au GLB pour trame technique, éléments carbone, dossard n°61 et masque réfléchissant.
+- Nouvel habillage de combinaison bleu glacier / bleu nuit et liserés turquoise, sans recopier des sponsors ou modèles propriétaires.
+- Tests de structure PNG/GLB et UV, assertions de sécurité de l'espacement, vérification navigateur des surfaces texturées et du colorant atomisé.
+- Les textures sont originales et restent un progrès semi-réaliste : aucun photo-scan ni mocap haute précision revendiqué.
+
 ## 1.8.0 — 16 novembre 2026 — Super-G sinueux et vrai geste de chronométrage
 
 - Nouvelle ligne centrale de vitesse qui s'enroule à travers plusieurs vallons ; le sol, les bords neigeux, les filets et les portes suivent la même trajectoire.
