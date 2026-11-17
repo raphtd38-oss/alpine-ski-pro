@@ -40,3 +40,12 @@ Les obstacles et dessins 3D de ce pack sont originaux, et aucune image ou ressou
 - Tests spécifiques : départ/arrivée, 24 points, 635 m de dénivelé, 34 portes conservées, préservation de l'ancienne sauvegarde, nouveau titre et distance dans Chromium.
 - Validation des appuis sur skis et des temps au travers de la course, ligne de fin à z=2105.
 - Les mesures de performance **GPU réel** sur iPhone et PC demeurent à effectuer.
+
+## Ambiance sunset et éclairage de course (extension)
+
+- `src/render/cortina-atmosphere.ts` ajoute un ciel de crépuscule entièrement procédural (dégradé rose/orangé/violet), **15 pylônes** originaux avec têtes LED émissives et protection orange.
+- Le moteur utilise un soleil directionnel bas et chaud, une ambiance plus froide sur la neige, et du brouillard de distance rose. Les intensités de soleil restent adaptées à la météo sélectionnée.
+- Les luminaires proches (2 en moyen, 3 en haut, 4 en ultra, aucun en faible) créent de vrais éclairages non ombrés sur la neige ; les autres panneaux lumineux restent visibles sans lumière dynamique, afin de préserver le rendu mobile.
+- Les **34 portes jouables** existantes sont recentrées sur une trajectoire de Super-G à virages alternés et sorties de courbes. Leurs systèmes de piquets souples, de collision, de fanions et de marquage bleu sont préservés.
+- Les positions de projecteurs et des portes sont des choix de création **non mesurés par les organisateurs**. L'illustration demandée est une référence artistique, pas une carte exacte du site ni une preuve de rendu identique en jeu.
+- Aucune photo source, texture de marque, modèle ou audio tiers supplémentaire n'est incorporé au dépôt.
