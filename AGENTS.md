@@ -30,3 +30,8 @@ La sélection réelle du Studio Kit 2026 transmis par le joueur (11 GLB, 42 PBR,
 - Contrôler npm run assets:audit avant intégration et publication, étendre le registre des assets avec la provenance/licence de chaque nouveau fichier. Une désignation « free » ne vaut pas CC0. Respecter les restrictions exactes de Mixamo/Quaternius et ne pas créer de comptes/paiements sans intervention du propriétaire.
 - Utiliser scripts/blender/export_glb.py pour les scènes originales, et scripts/asset_tools.mjs pour inspecter/optimiser les GLB lorsque ces logiciels sont disponibles. Tester toujours joints, animations, poids, UV et chargement PlayCanvas ; ne pas écraser le skieur original avant la compatibilité des courses.
 - KTX2/BasisU et LOD dynamique nécessitent un chargement PlayCanvas / décodeur et des benchmarks GPU réels : ne pas simplement convertir les fichiers et déclarer le jeu optimisé.
+
+
+## Studio 3D supplémentaire (17/11/2026)
+
+Avant un nouvel asset GLB ou un outil de conception, consulter `docs/3D_STUDIO_PIPELINE.md` et `scripts/studio-toolchain.json`. `npm run studio:doctor` inspecte les outils disponibles; `npm run studio:validate -- artwork/candidat.glb --profile=skier` valide uniquement la structure d'un candidat, jamais la qualité en jeu. Aucun autre moteur ne remplace PlayCanvas et aucun logiciel externe n'est automatiquement installé; licences et tests réels restent obligatoires.

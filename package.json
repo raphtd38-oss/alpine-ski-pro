@@ -1,6 +1,6 @@
 {
   "name": "alpine-ski-pro",
-  "version": "1.10.0",
+  "version": "1.11.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -17,7 +17,10 @@
     "assets:alpine": "node scripts/fetch_alpine_assets.mjs",
     "assets:search": "node scripts/asset_search.mjs",
     "assets:doctor": "node scripts/asset_tools.mjs doctor",
-    "assets:audit": "node scripts/asset_audit.mjs"
+    "assets:audit": "node scripts/asset_audit.mjs",
+    "studio:list": "node scripts/studio-toolchain.mjs list",
+    "studio:doctor": "node scripts/studio-toolchain.mjs doctor",
+    "studio:validate": "node scripts/studio-toolchain.mjs validate"
   },
   "dependencies": {
     "@fontsource/barlow": "^5.3.0",

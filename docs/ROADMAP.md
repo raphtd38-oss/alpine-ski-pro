@@ -135,3 +135,20 @@ Le but est un simulateur de ski de grande qualité, amélioré sur le même dép
 - Expérimenter sélectivement les matériaux `slate_ridge`, `ice_compacted` et `chalet_wood` du Studio Kit après UV et droits vérifiés ; conserver Snow 02 photo-PBR comme référence.
 - Calibrer l'effet neige de réception et la densité de particules sur GPU réel avant d'augmenter le budget mobile.
 - Poursuivre tests de trajectoire des quatre disciplines, portillon de chrono, timing de la main, gate collisions et vidéo de comparaison propriétaire.
+
+
+## V1.11 — départ du Super-G (branche PR #19)
+
+1. ✅ Portillon unique à échelle FIS-inspirée, chrono SG déclenché au franchissement interpolé à 120 Hz.
+2. ✅ Cabane structurée, fermée latéralement et derrière, habillage original à fibres de bois, toiture triangulée, protections, signalétique fictive et traces de skis.
+3. ✅ Trois impulsions de bâtons SG associées à la force, aux poses articulées et aux impacts sonores, bâtons courbés; conservation des autres disciplines.
+4. ⏳ Valider les captures Playwright d'une vraie exécution et surveiller les régressions caméra/ombres, puis fusionner après CI.
+5. ⏳ Retarget correct de l'avatar 25 os et ses neuf clips procéduraux, avec étude de topologie réelle/skin continu; pas de remplacement 146 meshes sans budget mesuré.
+6. ⏳ Mesures de FPS et rendu PBR sur PC/iPhone réel, validation des angles/contact main-bâton sur vidéo plutôt qu'une promesse de mocap.
+
+
+### Studio 3D et contrôle d'assets — 17 novembre 2026
+
+- Maintenir le moteur PlayCanvas pour le jeu navigateur; conserver les éditeurs Blender/Houdini/Gaea/Unreal/Unity/Godot comme workflows séparés, jamais comme dépendances du runtime.
+- `scripts/studio-toolchain.json` centralise les outils; `npm run studio:validate` contrôle les GLB candidats avant l'audit et le test de rendu.
+- Étapes ultérieures : reconstruire un skieur professionnel original riggé, produire les clips de Super-G, tester retargeting, GLB, LOD, mémoire et FPS sur des GPU réels. Les fonctionnalités visuelles ne sont pas implémentées par le simple ajout du catalogue.

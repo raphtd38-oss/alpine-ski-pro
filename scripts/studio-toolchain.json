@@ -1,0 +1,220 @@
+{
+  "schema": 1,
+  "purpose": "External 3D and design authoring tools only; no automatic install or browser-runtime dependency. Nothing here changes the PlayCanvas engine.",
+  "runtime": {
+    "engine": "PlayCanvas 2.24.1",
+    "format": "glTF 2.0 / GLB",
+    "source": "package.json"
+  },
+  "tools": [
+    {
+      "id": "blender",
+      "name": "Blender",
+      "role": "modeling, rigging, sculpting, skiing animation, GLB export",
+      "license": "free/open source",
+      "url": "https://www.blender.org/",
+      "kind": "cli-or-editor",
+      "priority": "core",
+      "check": [
+        "blender",
+        "--version"
+      ]
+    },
+    {
+      "id": "playcanvas",
+      "name": "PlayCanvas Engine",
+      "role": "existing browser runtime; keep it for the game",
+      "license": "open source",
+      "url": "https://github.com/playcanvas/engine",
+      "kind": "runtime",
+      "priority": "core"
+    },
+    {
+      "id": "gltf-transform",
+      "name": "glTF Transform",
+      "role": "inspect and optimize GLB",
+      "license": "MIT",
+      "url": "https://gltf-transform.dev/cli",
+      "kind": "cli-or-editor",
+      "priority": "core",
+      "check": [
+        "gltf-transform",
+        "--version"
+      ]
+    },
+    {
+      "id": "ktx",
+      "name": "Khronos KTX-Software",
+      "role": "KTX2 texture compression; test decoder first",
+      "license": "open source",
+      "url": "https://github.com/KhronosGroup/KTX-Software",
+      "kind": "cli-or-editor",
+      "priority": "core",
+      "check": [
+        "ktx",
+        "--version"
+      ]
+    },
+    {
+      "id": "gltf-validator",
+      "name": "Khronos glTF Validator",
+      "role": "official glTF conformance checks",
+      "license": "open source",
+      "url": "https://github.com/KhronosGroup/glTF-Validator",
+      "kind": "cli-or-editor",
+      "priority": "core",
+      "check": [
+        "gltf_validator",
+        "--version"
+      ]
+    },
+    {
+      "id": "uvx",
+      "name": "uvx / Blender MCP",
+      "role": "optional local MCP server runner",
+      "license": "open source",
+      "url": "https://github.com/ahujasid/mcp-for-blender",
+      "kind": "cli-or-editor",
+      "priority": "core",
+      "check": [
+        "uvx",
+        "--version"
+      ]
+    },
+    {
+      "id": "godot",
+      "name": "Godot",
+      "role": "independent physics and visual prototypes; not the PlayCanvas runtime",
+      "license": "MIT",
+      "url": "https://godotengine.org/",
+      "kind": "optional-editor-or-service",
+      "priority": "optional"
+    },
+    {
+      "id": "unreal",
+      "name": "Unreal Engine",
+      "role": "offline cinematic references and separate prototypes",
+      "license": "Epic commercial terms",
+      "url": "https://www.unrealengine.com/",
+      "kind": "optional-editor-or-service",
+      "priority": "optional"
+    },
+    {
+      "id": "unity",
+      "name": "Unity",
+      "role": "independent prototypes only",
+      "license": "commercial terms",
+      "url": "https://unity.com/",
+      "kind": "optional-editor-or-service",
+      "priority": "optional"
+    },
+    {
+      "id": "houdini",
+      "name": "Houdini",
+      "role": "procedural mountains and terrain meshes",
+      "license": "commercial / Apprentice restrictions",
+      "url": "https://www.sidefx.com/products/houdini/",
+      "kind": "optional-editor-or-service",
+      "priority": "optional"
+    },
+    {
+      "id": "gaea",
+      "name": "Gaea",
+      "role": "erosion and terrain heightmaps",
+      "license": "free/commercial tiers",
+      "url": "https://quadspinner.com/",
+      "kind": "optional-editor-or-service",
+      "priority": "optional"
+    },
+    {
+      "id": "substance",
+      "name": "Adobe Substance 3D",
+      "role": "material painting, baking, high-quality PBR",
+      "license": "commercial subscription",
+      "url": "https://www.adobe.com/products/substance3d.html",
+      "kind": "optional-editor-or-service",
+      "priority": "optional"
+    },
+    {
+      "id": "material-maker",
+      "name": "Material Maker",
+      "role": "free procedural materials, snow, fabric and rock",
+      "license": "open source",
+      "url": "https://www.materialmaker.org/",
+      "kind": "optional-editor-or-service",
+      "priority": "optional"
+    },
+    {
+      "id": "krita",
+      "name": "Krita",
+      "role": "texture paint and concept designs",
+      "license": "open source",
+      "url": "https://krita.org/",
+      "kind": "optional-editor-or-service",
+      "priority": "optional"
+    },
+    {
+      "id": "cascadeur",
+      "name": "Cascadeur",
+      "role": "physically informed animation and posing",
+      "license": "free/commercial tiers",
+      "url": "https://cascadeur.com/",
+      "kind": "optional-editor-or-service",
+      "priority": "optional"
+    },
+    {
+      "id": "mixamo",
+      "name": "Adobe Mixamo",
+      "role": "auto rigging and base humanoid animations",
+      "license": "Adobe usage terms",
+      "url": "https://www.mixamo.com/",
+      "kind": "optional-editor-or-service",
+      "priority": "optional"
+    },
+    {
+      "id": "poly-haven",
+      "name": "Poly Haven",
+      "role": "CC0 snow and rock PBR, HDRI",
+      "license": "CC0 content",
+      "url": "https://polyhaven.com/",
+      "kind": "optional-editor-or-service",
+      "priority": "optional"
+    },
+    {
+      "id": "ambientcg",
+      "name": "ambientCG",
+      "role": "CC0 materials",
+      "license": "CC0 content",
+      "url": "https://ambientcg.com/",
+      "kind": "optional-editor-or-service",
+      "priority": "optional"
+    },
+    {
+      "id": "figma",
+      "name": "Figma",
+      "role": "HUD and race menus design via connected plugin where available",
+      "license": "free/commercial tiers",
+      "url": "https://www.figma.com/",
+      "kind": "chatgpt-connector",
+      "priority": "optional"
+    },
+    {
+      "id": "adobe",
+      "name": "Adobe Creative Cloud",
+      "role": "concept visuals and texture images with available ChatGPT tools; not necessarily Substance",
+      "license": "free/commercial tiers",
+      "url": "https://www.adobe.com/",
+      "kind": "chatgpt-connector",
+      "priority": "optional"
+    },
+    {
+      "id": "fal",
+      "name": "fal",
+      "role": "optional AI 3D generation, inspect price/license/mesh output",
+      "license": "model-dependent costs",
+      "url": "https://fal.ai/",
+      "kind": "chatgpt-connector",
+      "priority": "optional"
+    }
+  ]
+}

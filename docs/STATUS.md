@@ -229,3 +229,15 @@ Ce lot outille les prochaines améliorations mais n'importe pas un nouveau skieu
 - Tests ajoutés pour hystérésis de LOD, seuils de distance et amplitude des gerbes. Le moteur de simulation conserve son pas fixe de 120 Hz.
 - Aucun modèle du kit plus stylisé n'a remplacé un GLB ou la neige photo-PBR existante ; aucun code ni asset d'autre jeu.
 - Tests et publication : consulter le workflow CI et la PR ; ne pas présumer de FPS ou de compatibilité Safari non mesurés.
+
+
+## 17 novembre 2026 — branche feat/v1.11-fis-superg-start
+
+Refonte codée dans la PR #19 : cabane originale fermée avec textures et toiture profilée, une seule tige de 70 cm à 43 cm du sol, contact 20°; timing SG déclenché par un calcul de franchissement interpolé à 120 Hz, trois pousses bipolaires reliées à la force et aux gestes articulaires, contacts terrain des bâtons, sons courts et tubes courbés. Tests Vitest et test de Super-G Playwright renforcés. Référence FIS officielle à jour : Timing Booklet v2.67 (16/06/2026), pp. 41-44. Le portillon reste ouvert après déclenchement, avec réarmement de la prochaine course.
+
+Asset kit 25 os inspecté : 146 meshes sur les versions 15.09/1.95 Mo avec nine animations procédurales. Il ne remplace PAS automatiquement l'avatar 18 os ni les modèles CC0 actifs ; test de retarget et FPS nécessaire avant substitution. Voir docs/V111_START.md. Publication et tests finaux à confirmer par le dernier run GitHub Actions associé à cette PR.
+
+
+### Outils 3D / conception (17 novembre 2026)
+
+Ajout proposé dans la branche `feat/3d-studio-toolchain` : catalogue de 21 moteurs, logiciels et services de production, outil CLI hors-runtime de diagnostic et validation de GLB candidates, tests unitaires et guide `docs/3D_STUDIO_PIPELINE.md`. Cela **ne change ni le moteur PlayCanvas ni les graphismes en production**. Exécuter la CI sur la PR avant intégration, et installer éventuellement les logiciels externes sur un poste adapté.
