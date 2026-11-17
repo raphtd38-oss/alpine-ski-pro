@@ -89,7 +89,24 @@ function sunsetSky(app: pc.Application, root: pc.Entity, course: Course) {
   return mat;
 }
 
-interface FloodLamp { z: number; light: pc.Entity; }
+interface FloodLamp {
+  z: number;
+  light: pc.Entity;
+  baseIntensity: number;
+}
+
+/** Pure distance priority for capped dynamic spotlights (can be unit tested). */
+export function selectFloodlightStations(
+  skierZ: number, budget: number, radius = 165,
+): number[] {
+  const limit = Math.max(0, Math.floor(Number.isFinite(budget) ? budget : 0));
+  return CORTINA_LIGHT_STATIONS
+    .map((z, index) => ({ z, index, distance: Math.abs(z - skierZ) }))
+    .filter(item => item.distance < radius)
+    .sort((a, b) => a.distance - b.distance)
+    .slice(0, limit)
+    .map(item => item.index);
+}
 
 /** Returns registered materials and a fast position-dependent light update. */
 export function createCortinaAtmosphere(
@@ -143,19 +160,32 @@ export function createCortinaAtmosphere(
     for (let col = -2; col <= 2; col++)
       for (const row of [-0.5, 0.5])
         addPanel(x + col * 0.94, top + row * 0.76, z);
-    // A limited number of lamps cast real light onto the snow.
-    if (quality !== "low") {
-      const light = new pc.Entity("Cortina actual LED light pool");
-      light.setLocalPosition(x - side * 3.0, top - 2.4, z);
-      light.addComponent("light", {
-        type: "omni", color: color("#ffe7c5"),
-        intensity: quality === "medium" ? 1.65 : 2.30,
-        range: 93, castShadows: false,
-      });
-      light.enabled = false;
-      root.addChild(light);
-      lamps.push({ z, light });
-    }
+    // Physically lit surface and nearby PBR objects: spots point into the
+    // course, not horizontally and not down the entity's -Z axis. In
+    // PlayCanvas, spots shine along local -Y, hence setFromDirections.
+    const source = new pc.Vec3(x - side * 1.5, top - 0.25, z - 0.8);
+    const targetZ = Math.min(course.length, z + 8);
+    const targetX = courseCenterX(targetZ, course) - side * 4;
+    const target = new pc.Vec3(
+      targetX, terrainHeight(targetX, targetZ, course) + 1, targetZ);
+    const light = new pc.Entity("Cortina PBR spotlight aimed at ski corridor");
+    light.setLocalPosition(source);
+    light.setLocalRotation(new pc.Quat().setFromDirections(
+      new pc.Vec3(0, -1, 0), target.sub(source).normalize(),
+    ));
+    const baseIntensity = quality === "low" ? 3.6 :
+      quality === "medium" ? 5.3 : 7.2;
+    light.addComponent("light", {
+      type: "spot", color: color("#fff1d9"),
+      intensity: baseIntensity, range: 135,
+      innerConeAngle: 24, outerConeAngle: 47,
+      castShadows: false,
+      shadowResolution: quality === "ultra" ? 512 : 256,
+      shadowBias: 0.22, normalOffsetBias: 0.06,
+    });
+    light.enabled = false;
+    root.addChild(light);
+    lamps.push({ z, light, baseIntensity });
   }
   white.cull = pc.CULLFACE_NONE;
   white.update();
@@ -164,17 +194,29 @@ export function createCortinaAtmosphere(
     panelP, panelI, white).render!.castShadows = false;
 
   let lastSector = -1;
-  const budget = quality === "ultra" ? 4 : quality === "high" ? 3 : 2;
+  const budget = quality === "ultra" ? 4 :
+    quality === "high" ? 3 : quality === "medium" ? 2 : 1;
   const update = (skierZ: number) => {
     // Update every ~8 m, not every 120-Hz physics tick.
     const sector = Math.round(skierZ / 8);
     if (sector === lastSector) return;
     lastSector = sector;
-    const nearest = lamps.filter(item => Math.abs(item.z - skierZ) < 145)
-      .sort((a, b) => Math.abs(a.z - skierZ) - Math.abs(b.z - skierZ))
-      .slice(0, budget);
-    const active = new Set(nearest.map(item => item.light));
-    for (const item of lamps) item.light.enabled = active.has(item.light);
+    const nearestIds = selectFloodlightStations(skierZ, budget);
+    const nearest = new Set(nearestIds);
+    // Gradual switch-on: intensities rise as the run descends into dusk.
+    // Sunset remains artistic (not a simulated astronomical clock).
+    const dusk = Math.max(0, Math.min(1, (skierZ - 80) / 900));
+    lamps.forEach((item, index) => {
+      const active = nearest.has(index);
+      item.light.enabled = active;
+      if (!active) return;
+      const light = item.light.light!;
+      light.intensity = item.baseIntensity * (0.68 + dusk * 0.32);
+      // Shadow budget: one 256/512 px shadow map for the nearest lamp only,
+      // preserving the player's responsive 60 Hz physics and mobile FPS.
+      light.castShadows = (quality === "high" || quality === "ultra") &&
+        index === nearestIds[0];
+    });
   };
   update(0);
   return { materials: [sky, steel, joint, white, insulation], update };
