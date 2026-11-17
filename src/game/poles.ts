@@ -160,16 +160,22 @@ export class PoleSimulation {
       const distance = Math.hypot(p.x - nearestX, p.z - nearestZ);
       const height = previous.height +
         fraction * (current.height - previous.height);
-      const contact = distance < 0.50 && height < 1.85;
+      // Model the racer's shoulders/arms and pole-guards, not just the
+      // ski centre point. The former 0.50m threshold barely ever triggered
+      // a visible touch in real play, so gates stayed perfectly straight.
+      // The middle of a 7.6m gate remains completely collision-free.
+      const contact = distance < 0.86 && height < 1.85;
 
       if (
         contact && !p.contact && speed > 1.5 &&
         Math.hypot(p.angleX, p.angleZ) < 1.15
       ) {
-        const kind: ImpactKind = distance < 0.23 ? "shin" : "arm";
-        const grazing = clamp(1 - distance / 0.60, 0.14, 1);
-        const strikeScale = kind === "shin" ? 1 : 0.68;
-        const impulse = clamp(speed * 0.19 * grazing * strikeScale, 0, 3.8);
+        const kind: ImpactKind = distance < 0.26 ? "shin" : "arm";
+        // Soft contact still sends a clearly visible bending wave along the
+        // entire fiberglass rod; direct shin impacts remain the strongest.
+        const grazing = clamp(1 - distance / 1.26, 0.30, 1);
+        const strikeScale = kind === "shin" ? 1 : 0.87;
+        const impulse = clamp(speed * 0.28 * grazing * strikeScale, 0, 5.4);
         const vx = current.vx / speed;
         const vz = current.vz / speed;
 
@@ -178,9 +184,9 @@ export class PoleSimulation {
         p.omegaX += (vz * impulse * 1.08) / INNER_INERTIA;
         p.omegaZ -= (vx * impulse * 1.08) / INNER_INERTIA;
         p.impactHeight = kind === "shin" ? 0.63 : 1.34;
-        const strength = clamp(impulse / 3.8, 0, 1);
-        p.clothEnergy = Math.max(p.clothEnergy, strength);
-        p.tipAmp = Math.max(p.tipAmp, strength * 0.14);
+        const strength = clamp(impulse / 5.4, 0, 1);
+        p.clothEnergy = Math.max(p.clothEnergy, 0.20 + 0.80 * strength);
+        p.tipAmp = Math.max(p.tipAmp, strength * 0.19);
         p.recoilArmed = true;
         p.recoilStrength = strength;
         p.impacts++;
@@ -222,21 +228,21 @@ export class PoleSimulation {
       );
       const outerHeight = previous.height +
         outerFraction * (current.height - previous.height);
-      const outerContact = outerDistance < 0.48 && outerHeight < 1.85;
+      const outerContact = outerDistance < 0.80 && outerHeight < 1.85;
       if (
         outerContact && !p.partnerContact && speed > 1.5 &&
         Math.hypot(p.partnerAngleX, p.partnerAngleZ) < 0.95
       ) {
-        const impulse = clamp(speed * 0.11 *
-          clamp(1 - outerDistance / 0.52, 0.16, 1), 0, 2.8);
+        const impulse = clamp(speed * 0.20 *
+          clamp(1 - outerDistance / 1.20, 0.30, 1), 0, 4.0);
         const vx = current.vx / speed;
         const vz = current.vz / speed;
         p.partnerOmegaX += vz * impulse / OUTER_INERTIA;
         p.partnerOmegaZ -= vx * impulse / OUTER_INERTIA;
         p.impactHeight = 1.22;
-        const strength = clamp(impulse / 3.8, 0, 1);
-        p.clothEnergy = Math.max(p.clothEnergy, strength);
-        p.tipAmp = Math.max(p.tipAmp, 0.07 * strength);
+        const strength = clamp(impulse / 4.0, 0, 1);
+        p.clothEnergy = Math.max(p.clothEnergy, 0.16 + 0.84 * strength);
+        p.tipAmp = Math.max(p.tipAmp, 0.12 * strength);
         p.recoilArmed = true;
         p.recoilStrength = Math.max(p.recoilStrength, strength);
         current.poleImpact = Math.max(current.poleImpact, strength);

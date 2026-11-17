@@ -22,7 +22,7 @@ const FLAG_BOTTOM = 1.13 / POLE_LENGTH;
 const FLAG_TOP = 1.76 / POLE_LENGTH;
 const PARTNER_DISTANCE = 1.03;
 const EXTRA_PANEL_Z = -0.08;
-const MAX_RENDER_DISTANCE = 145;
+const MAX_RENDER_DISTANCE = 190;
 const TWO_PI = Math.PI * 2;
 
 const clamp = (x: number, a: number, b: number) =>
@@ -153,9 +153,13 @@ export class DeformableGatePole {
 
     // Les angles sont orientés autour de X et Z ; la déflexion latérale
     // correspond donc respectivement à Z+ et X- (sens d'une vraie rotation).
-    const angle = clamp(Math.hypot(ax, az), 0, 1.40);
-    const directionX = angle < 1e-7 ? 0 : -az / angle;
-    const directionZ = angle < 1e-7 ? 1 : ax / angle;
+    // The old V2 barely moved on glancing impacts: keep the physical spring
+    // authoritative, but amplify its visible curved deformation. Normalize
+    // direction against the ORIGINAL angle, not the amplified value.
+    const physicalAngle = Math.hypot(ax, az);
+    const angle = clamp(physicalAngle * 1.52, 0, 1.62);
+    const directionX = physicalAngle < 1e-7 ? 0 : -az / physicalAngle;
+    const directionZ = physicalAngle < 1e-7 ? 1 : ax / physicalAngle;
     const hit = clamp(impactHeight / POLE_LENGTH, 0.18, 0.95);
     const step = POLE_LENGTH / this.rings;
     let x = 0;
@@ -164,13 +168,13 @@ export class DeformableGatePole {
 
     for (let ring = 0; ring <= this.rings; ring++) {
       const t = ring / this.rings;
-      const theta = angle * Math.pow(t, hit < 0.5 ? 1.20 : 1.58) +
+      const theta = angle * Math.pow(t, hit < 0.5 ? 0.98 : 1.22) +
         clamp(tipAmp, -0.18, 0.18) *
           Math.pow(t, 2.4) * Math.sin(phase + 4 * t);
       if (ring > 0) {
         const u = (ring - 0.5) / this.rings;
         const inBetweenTheta = angle *
-            Math.pow(u, hit < 0.5 ? 1.20 : 1.58) +
+            Math.pow(u, hit < 0.5 ? 0.98 : 1.22) +
           clamp(tipAmp, -0.18, 0.18) *
             Math.pow(u, 2.4) * Math.sin(phase + 4 * u);
         x += step * Math.sin(inBetweenTheta) * directionX;
@@ -415,12 +419,17 @@ export class ElasticGateFlag {
           const v = row / this.rows;
           const flutter = Math.sin(this.elapsed * 7.1 + u * 8.6 + v * 5.2);
           const ripple = Math.sin(this.elapsed * 4.1 + u * 5.9 - v * 3.7);
-          const blow = 0.55 + 0.75 * flutter + 0.28 * ripple;
+          // Snow-race flags remain alive in the wind even without contact.
+          // The wind operates only on free interior vertices: both vertical
+          // hems remain pinned to their independently deforming pole shafts.
+          const blow = 1.9 + 5.2 * flutter + 2.1 * ripple;
           const strike = clamp(impactEnergy, 0, 1) *
             Math.sin(Math.PI * u) * Math.sin(Math.PI * v);
           this.positions[i] = x + vx + 0.12 * flutter * h * h;
-          this.positions[i + 1] = y + vy - 2.1 * h * h;
-          this.positions[i + 2] = z + vz + (blow + 25 * strike) * h * h;
+          this.positions[i + 1] = y + vy -
+            (2.1 + 8.0 * strike * Math.sin(this.elapsed * 9 + 4 * u)) * h * h;
+          this.positions[i + 2] = z + vz +
+            (blow + 90 * strike) * h * h;
         }
       }
       this.pinBorders();

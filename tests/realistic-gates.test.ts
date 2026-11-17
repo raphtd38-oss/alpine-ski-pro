@@ -70,4 +70,31 @@ describe("Super-G elastic gate pairs", () => {
     expect(sim.lastImpacts).toBe(1);
     expect(race.gateStatus).toEqual(["passed"]);
   });
+  it("responds visibly to a near arm brush without blocking the corridor", () => {
+    const sim = new PoleSimulation(course);
+    // 0.69m from the pole: a real racer can still hit with a forearm/guard.
+    const before = { ...initialState(), x: target - 0.69, z: 9, vz: 28 };
+    const after = { ...before, z: 11 };
+    sim.update(before, after, DT);
+    expect(sim.lastImpacts).toBe(1);
+    expect(sim.poles[1].tipAmp).toBeGreaterThan(0.015);
+    expect(sim.poles[1].clothEnergy).toBeGreaterThan(0.20);
+    const away = { ...after, z: 40, vx: 0, vz: 0 };
+    let peak = 0;
+    for (let i = 0; i < 25; i++) {
+      sim.update(away, away, DT);
+      peak = Math.max(peak, Math.abs(sim.poles[1].angleX));
+    }
+    expect(peak).toBeGreaterThan(0.12);
+  });
+
+  it("never bends the poles when skier stays in the center of the opening", () => {
+    const sim = new PoleSimulation(course);
+    const before = { ...initialState(), x: 0, z: 9, vz: 26 };
+    const after = { ...before, z: 11 };
+    sim.update(before, after, DT);
+    expect(sim.lastImpacts).toBe(0);
+    expect(sim.poles.every(p => p.angleX === 0 && p.partnerAngleX === 0)).toBe(true);
+  });
+
 });
