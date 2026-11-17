@@ -52,6 +52,22 @@ export function superGEdgePose(
   };
 }
 
+/**
+ * Visible full-body banking for an aggressive but controllable Super-G carve.
+ * Combined with pelvis counter-angulation: skis and body tilt together,
+ * knees flex deeper and the torso stays downhill-facing.
+ * This is presentation only; race collisions remain independent.
+ */
+export function superGRacerBank(
+  edge: number, engagement: number, airborne = 0,
+): number {
+  const contact = 1 - clamp(airborne, 0, 1);
+  const sign = Math.sign(edge);
+  const magnitude = clamp(Math.abs(edge), 0, 1.1);
+  return -sign * Math.min(34, 14 * magnitude +
+    19 * clamp(engagement, 0, 1)) * contact;
+}
+
 /** Visual anticipation before the GO signal.
  * In the real start footage, the athlete dips down shortly before leaving
  * the gate (roughly source-video 5.2–6.2 s); these numbers are an envelope,
