@@ -20,7 +20,13 @@ test("World-Cup-style Super-G start house, four-pole flags and terrain crest", a
   await page.screenshot({ path: "test-results/superg-start-house.png" });
 
   await page.locator("#play").click();
-  await page.evaluate(() => (window as any).__ski.freezeSimulation(true));
+  // Reset and freeze in one page task: rendering delays cannot advance GO
+  // before the first pole plant screenshot on slow SwiftShader machines.
+  await page.evaluate(() => {
+    const api = (window as any).__ski;
+    api.start();
+    api.freezeSimulation(true);
+  });
   await page.screenshot({ path: "test-results/superg-in-start-house.png" });
   const firstPush = await page.evaluate(() => {
     const api = (window as any).__ski;
