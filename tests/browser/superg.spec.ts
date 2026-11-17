@@ -14,7 +14,7 @@ test("World-Cup-style Super-G start house, four-pole flags and terrain crest", a
   expect(setup.sprayedBlueDye).toBe(true);
   expect(setup.athleteTexturedSurfaces).toBeGreaterThanOrEqual(40);
   expect(setup.raceSkiTextureCount).toBe(1);
-  expect(setup.timingWands).toBe(2);
+  expect(setup.timingWands).toBe(1);
   expect(setup.pairedGatePoles).toBe(68);
   expect(setup.gateFlagCount).toBe(68);
   await page.screenshot({ path: "test-results/superg-start-house.png" });
@@ -31,6 +31,9 @@ test("World-Cup-style Super-G start house, four-pole flags and terrain crest", a
   expect(state.course).toBe("SG");
   expect(state.phase).toBe("racing");
   expect(state.vz).toBeGreaterThan(2);
+  expect(state.startGateOpened).toBe(true);
+  expect(state.startGateImpulseTime).not.toBeNull();
+  expect(state.startGateDegrees).toBeGreaterThanOrEqual(20);
   await page.waitForTimeout(300);
   expect((await page.evaluate(() => (window as any).__ski.getState())).timingWandAngle)
     .toBeGreaterThan(10);
