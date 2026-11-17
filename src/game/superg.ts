@@ -146,7 +146,8 @@ export function superGGateRacingOffset(index: number, z: number): number {
   const direction = index % 2 === 0 ? -1 : 1;
   const magnitude = 8.7 + 1.7 * Math.sin(index * 0.46 + 0.5);
   const courseLead = Math.max(-3.0, Math.min(3.0, slope * 2.2 + bend * 0.5));
-  return direction * magnitude + courseLead;
+  // Never collapse the corridor to a near-straight 'fake' gate in a bend.
+  return direction * Math.max(6.25, Math.min(13.5, magnitude + direction * courseLead));
 }
 
 export function superGGateZ(index: number): number {
