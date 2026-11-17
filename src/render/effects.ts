@@ -1,7 +1,7 @@
 import * as pc from "playcanvas";
 import type { Course, SkierState, Quality } from "../game/types";
 import { terrainHeight } from "../game/course";
-import { skiTrackQuad, snowSprayVelocity, type TrackSample } from "../game/snow";
+import { skiTrackQuad, snowSprayVelocity, snowPlumeIntensity, type TrackSample } from "../game/snow";
 import { material, meshEntity, rng } from "./geometry";
 
 interface Crystal {
@@ -44,7 +44,7 @@ export class SnowEffects {
     this.mat.update();
 
     const count = { low: 260, medium: 500, high: 900, ultra: 1400 }[quality];
-    this.particleLimit = { low: 0, medium: 65, high: 115, ultra: 180 }[quality];
+    this.particleLimit = { low: 18, medium: 65, high: 115, ultra: 180 }[quality];
     this.positions = Array(count * 12).fill(0);
     // Park the as-yet unwritten trail triangles below the mountain.
     for (let i = 1; i < this.positions.length; i += 3) this.positions[i] = -1000;
@@ -122,22 +122,22 @@ export class SnowEffects {
       this.lastSample = current;
     }
 
+    const plumeIntensity = snowPlumeIntensity(s, speed);
     const emitting =
-      active &&
-      grounded &&
-      this.particleLimit > 0 &&
-      speed > 4 &&
-      (Math.abs(s.edge) > 0.15 || s.slip > 1);
+      active && grounded && this.particleLimit > 0 && plumeIntensity > 0.22;
     if (emitting) {
       // Emit by elapsed time, not by frames, so 30/60/144 Hz remain comparable.
       this.emissionTime = Math.min(this.emissionTime + dt, 0.1);
       const tick = 1 / 35;
       while (this.emissionTime >= tick) {
         this.emissionTime -= tick;
-        const n = Math.min(4, Math.ceil(Math.abs(s.edge) * 2.4 + s.slip * 0.22));
+        const n = Math.min(7, Math.ceil(plumeIntensity * 1.35));
         const outside = s.edge >= 0 ? -1 : 1;
         for (let i = 0; i < n && this.particles.length < this.particleLimit; i++) {
           const v = snowSprayVelocity(s, this.random());
+          // Landing compression creates a brief upward white fan, while
+          // edge-driven spray keeps its directional outward/backward bias.
+          v.y += s.landingShock * (0.7 + this.random() * 1.6);
           const lateral = outside * (0.12 + this.random() * 0.13);
           const x = s.x + Math.cos(s.heading) * lateral;
           const z = s.z - Math.sin(s.heading) * lateral;
@@ -148,7 +148,7 @@ export class SnowEffects {
             vx: v.x,
             vy: v.y,
             vz: v.z,
-            life: 0.3 + this.random() * 0.35,
+            life: 0.3 + this.random() * 0.35 + s.landingShock * 0.16,
           });
         }
       }
