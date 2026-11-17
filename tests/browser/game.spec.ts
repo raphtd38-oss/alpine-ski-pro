@@ -69,7 +69,7 @@ test("renders the Super-G, responds to keys, pauses, restarts and changes suit",
   await page.waitForTimeout(600);
   expect(errors).toEqual([]);
 });
-test("training mode reveals advisory guide but regular racing does not", async ({ page }) => {
+test("training mode has a guide and regular racing can toggle its dashed trajectory with G", async ({ page }) => {
   await page.goto("/?quality=low");
   await expect(page.locator("#loading")).toHaveCount(0, { timeout: 45000 });
   expect(await page.evaluate(() => (window as any).__ski.getState().guideActive)).toBe(false);
@@ -79,5 +79,9 @@ test("training mode reveals advisory guide but regular racing does not", async (
   await page.locator("#home").click();
   expect(await page.evaluate(() => (window as any).__ski.getState().guideActive)).toBe(false);
   await page.locator("#play").click();
+  expect(await page.evaluate(() => (window as any).__ski.getState().guideActive)).toBe(true);
+  await page.keyboard.press("g");
   expect(await page.evaluate(() => (window as any).__ski.getState().guideActive)).toBe(false);
+  await page.keyboard.press("g");
+  expect(await page.evaluate(() => (window as any).__ski.getState().guideActive)).toBe(true);
 });
