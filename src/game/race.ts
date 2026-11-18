@@ -126,6 +126,8 @@ export class Race {
         t: this.time,
         x: s.x,
         z: s.z,
+        vx: s.vx,
+        vz: s.vz,
         heading: s.heading,
         edge: s.edge,
         flex: s.flex,
@@ -187,6 +189,10 @@ export function replayAt(frames: Frame[], time: number): Frame | null {
     t: time,
     x: a.x + (b.x - a.x) * u,
     z: a.z + (b.z - a.z) * u,
+    vx: a.vx === undefined && b.vx === undefined ? undefined :
+      (a.vx ?? b.vx ?? 0) + ((b.vx ?? a.vx ?? 0) - (a.vx ?? b.vx ?? 0)) * u,
+    vz: a.vz === undefined && b.vz === undefined ? undefined :
+      (a.vz ?? b.vz ?? 0) + ((b.vz ?? a.vz ?? 0) - (a.vz ?? b.vz ?? 0)) * u,
     heading: a.heading + angleDiff(b.heading, a.heading) * u,
     edge: a.edge + (b.edge - a.edge) * u,
     flex: (a.flex ?? 0) + ((b.flex ?? 0) - (a.flex ?? 0)) * u,
