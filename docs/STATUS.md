@@ -295,3 +295,10 @@ Les coefficients sont des choix d'animation guidés par des séquences filmées,
 - Activé exclusivement pour le coureur monobloc SG ; le modèle de secours 18 os et le fantôme conservent leur animation précédente. Aucune modification du tracé Cortina, des portes, du chronomètre, des collisions ni de la physique à 120 Hz.
 - Replays anciens compatibles avec l'absence de vitesse; nouveaux échantillons peuvent porter `vx/vz` pour le dérapage visuel. Diagnostic dev `getAthletePose().competitionPose`.
 - Tests unitaires ajoutés pour les poses gauche/droite, l'absorption, l'envol et les anciens replays. **Compilation, navigateur, fidélité visuelle à l'image et performances matérielles à confirmer par CI et captures** avant de déclarer le rendu validé.
+
+## 18 novembre 2026 — comparaison visuelle avec la référence de ski
+- Nouvelle amélioration **strictement visuelle** du coureur SG : gestes de vérification de gants/poignées avant la poussée et retour à la position de départ, synchronisés avec `startPhase` sans nouvel état de simulation.
+- Montagnes plus lisibles en profondeur avec perspective atmosphérique linéaire de 880 m à 2 250 m, raccordée à la couleur du ciel (jour et coucher de soleil).
+- Réglage conservateur des ombres directionnelles : portée portée à 155 m et réduction des offsets de shadow bias ; ombre projetée par le corps monobloc du coureur et réception explicite des ombres par le terrain neigeux. Les petites pièces de fixations ne multiplient pas les passes de shadow cascades.
+- Aucun asset, modèle ou animation propriétaire importé depuis le jeu de la vidéo de comparaison. La physique 120 Hz, les chronos, les portes et les parcours restent inchangés.
+- À valider : rendu réellement observé en captures WebGL2, Safari mobile, finesse des ombres et contraste suivant l'éclairage. **Cela n'est pas encore une égalité de rendu avec la vidéo de référence.**

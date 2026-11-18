@@ -135,6 +135,8 @@ export interface SGPose {
   /** Negative in pre-start, positive after breaking the start wand. */
   startPhase: number;
   startBrace: number;
+  /** Visual-only preparation gestures before the start wand opens. */
+  startPreparation: number;
   startExtension: number;
   startPoleImpulse: number;
   finishReach: number;
@@ -312,6 +314,12 @@ export class SuperGCompetitionPose {
     const startPhase = Number.isFinite(frame.startPhase) ?
       frame.startPhase! : -4;
     const brace = this.preStartBrace(startPhase);
+    // The first seconds in the start house should not be a frozen mannequin.
+    // Two short glove/pole grip checks precede the compact, stable start brace.
+    // The countdown is replay-safe, so no animation clock is added to physics.
+    const startPreparation = startPhase >= 0 ? 0 :
+      smoothstep(-3.70, -3.15, startPhase) *
+      (1 - smoothstep(-1.75, -1.20, startPhase));
     const drive = this.propulsion(startPhase);
     const extension = this.launchExtension(startPhase);
     a.start = smooth(a.start, brace, 20, sDt);
@@ -396,21 +404,25 @@ export class SuperGCompetitionPose {
         (0.70 - 0.25 * extension) : 1);
       const counterSide = side === "L" ? -1 : 1;
       const compact = a.tuck * (1 - 0.36 * engagement);
+      const prepBeat = Math.sin((startPhase + 4) * 12 +
+        (side === "L" ? 0 : Math.PI * 0.68));
+      const gloveCheck = startPreparation *
+        (0.62 + 0.38 * prepBeat);
       return {
         shoulderPitchDeg: -13 * compact - 37 * speedStroke +
           9 * extension + 10 * engagement * (outside ? 0 : 1) -
-          46 * lowFinishArm,
+          46 * lowFinishArm - 14 * gloveCheck,
         // Reference: arm silhouette is open in the loaded carve, but both hands
         // remain mobile for recovery and do not inherit the ski edge roll.
         shoulderRollDeg: counterSide *
           (8 + 16 * engagement - 5 * compact) + 6 * sign * engagement,
         upperArmPitchDeg: -17 * compact +
-          12 * a.pole + 11 * lowFinishArm,
+          12 * a.pole + 11 * lowFinishArm - 7 * gloveCheck,
         upperArmYawDeg: counterSide *
-          (5 + 9 * engagement + 3 * compact),
+          (5 + 9 * engagement + 3 * compact + 7 * gloveCheck),
         elbowPitchDeg: -46 * compact * (outside ? 0.25 : 1) +
-          30 * speedStroke - 36 * lowFinishArm,
-        wristPitchDeg: -8 * speedStroke + 9 * lowFinishArm,
+          30 * speedStroke - 36 * lowFinishArm - 18 * gloveCheck,
+        wristPitchDeg: -8 * speedStroke + 9 * lowFinishArm + 12 * gloveCheck,
         poleContact: a.pole * (1 - 0.95 * finishReach),
         trailing: sat(0.20 + 0.74 * compact +
           0.37 * engagement + 0.32 * flight),
@@ -425,7 +437,8 @@ export class SuperGCompetitionPose {
     const spineRoll = counter * 16.5;
     const chestRoll = counter * T.chestCounterRollDeg;
     const forwardPitch = 13 + 29 * a.tuck +
-      12 * a.start + 12 * a.pole + 22 * finishReach;
+      12 * a.start + 12 * a.pole + 22 * finishReach +
+      3 * startPreparation;
 
     return {
       bankDeg: a.bank,
@@ -443,7 +456,7 @@ export class SuperGCompetitionPose {
       chestYawDeg: -counter * 9.5 -
         Math.sign(safe(frame.poleImpactSide)) * sat(safe(frame.poleImpact)) * 9,
       headPitchDeg: -12 - 19 * a.tuck - 10 * a.start +
-        4 * finishReach,
+        4 * finishReach - 7 * startPreparation,
       headRollDeg: -sign * 6.8 * engagement,
       headYawDeg: counter * 5.5,
       tuck: a.tuck,
@@ -452,6 +465,7 @@ export class SuperGCompetitionPose {
       phase,
       startPhase,
       startBrace: a.start,
+      startPreparation,
       startExtension: extension,
       startPoleImpulse: a.pole,
       finishReach,

@@ -47,6 +47,24 @@ describe("photo-inspired Super-G carve posture", () => {
     expect(flight.phase).toBe("airborne");
     expect(flight.bankDeg).toBeCloseTo(0, 1);
   });
+  it("animates start-house glove preparation before the pole-drive brace", () => {
+    const rig = new SuperGCompetitionPose();
+    const frame = (startPhase: number): Frame => ({
+      t: 0, x: 0, z: 0, heading: 0, edge: 0,
+      startPhase, height: 0, tuck: 0, fallen: 0,
+    });
+    const early = rig.sample(frame(-4), 1 / 60);
+    const preparing = rig.sample(frame(-2.95), 1 / 60);
+    const bracing = rig.sample(frame(-0.4), 1 / 60);
+    const racing = rig.sample(frame(0.5), 1 / 60);
+    expect(early.startPreparation).toBe(0);
+    expect(preparing.startPreparation).toBeGreaterThan(0.6);
+    expect(preparing.leftArm.wristPitchDeg).not.toBeCloseTo(
+      preparing.rightArm.wristPitchDeg);
+    expect(bracing.startPreparation).toBe(0);
+    expect(racing.startPreparation).toBe(0);
+    expect(racing.startPoleImpulse).toBeGreaterThanOrEqual(0);
+  });
   it("does not require velocity channels in old replay frames", () => {
     const rig = new SuperGCompetitionPose();
     const sample = rig.sample({ t: 1, x: 0, z: 10, heading: 0,
