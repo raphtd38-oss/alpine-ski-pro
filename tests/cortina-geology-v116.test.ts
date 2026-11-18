@@ -75,6 +75,6 @@ describe("Cortina V1.16 wind sculpted snow does not break the race", () => {
     expect(COURSES.SG.length).toBe(2105);
     expect(COURSES.SG.gates).toHaveLength(34);
     expect(BANNER_CRASH_THRESHOLD).toBe(.45);
-    expect(courseCenterX(500,COURSES.SG)).toBeFinite();
+    expect(Number.isFinite(courseCenterX(500,COURSES.SG))).toBe(true);
   });
 });
