@@ -7,6 +7,16 @@ import { material, meshEntity } from "./geometry";
  * Wind-sculpted snow shoulders outside the Super-G race corridor.
  * Visual-only: never modify terrainHeight, gate or ski physics. One mesh.
  */
+export function snowShoulderLift(u: number, z: number, side: number): number {
+  const shoulder = Math.sin(Math.max(0, Math.min(1, u)) * Math.PI) ** 2;
+  const drift = .12 + shoulder * (
+    .28 + .20 * Math.sin(z * .037 + side * 2.4) ** 2 +
+    .27 * Math.sin(z * .009 + u * 15) ** 2
+  );
+  const micro = .028 * Math.sin(z * .47 + u * 7.84) *
+    Math.cos(z * .13 - u * 4.9);
+  return Math.max(.025, drift * shoulder + micro * shoulder + .055);
+}
 export function addCortinaSnowShoulders(
   app: pc.Application, root: pc.Entity, course: Course, quality: Quality,
 ): pc.StandardMaterial {
@@ -27,15 +37,8 @@ export function addCortinaSnowShoulders(
         const edgeDistance = course.width / 2 + 1.6 + u * 16;
         const x = centerX + side * edgeDistance;
         const shoulder = Math.sin(u * Math.PI) ** 2;
-        const drift = .12 + shoulder * (
-          .28 + .20 * Math.sin(z * .037 + side * 2.4) ** 2 +
-          .27 * Math.sin(z * .009 + i * 2.5) ** 2
-        );
         // Blended snow at the racing edge, accumulations in outer wind shadow.
-        const micro = .028 * Math.sin(z * .47 + i * 1.12) *
-          Math.cos(z * .13 - u * 4.9);
-        const y = terrainHeight(x, z, course) +
-          Math.max(.025, drift * shoulder + micro * shoulder + .055);
+        const y = terrainHeight(x, z, course) + snowShoulderLift(u, z, side);
         p.push(x, y, z);
         uv.push(x * .23, z * .21);
         const dark = .055 * shoulder * (.5 + .5 * Math.sin(z * .1 + u * 7));
