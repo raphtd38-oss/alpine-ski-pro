@@ -2,6 +2,7 @@ import * as pc from "playcanvas";
 import type { Course, Quality } from "../game/types";
 import { courseCenterX, terrainHeight } from "../game/course";
 import { beam, material, meshEntity, rng, shape } from "./geometry";
+import { appendDolomiteRidge } from "./cortina-geology";
 
 /** Original procedural Cortina skyline and trackside details from the supplied
  * 2026 3D pack. Schematic, not GIS or official photogrammetry.
@@ -16,48 +17,19 @@ const LIMITS: Record<Quality, { cliffs: number; scree: number; trees: number }> 
 
 function taperedCliff(
   vertices: number[], indices: number[], colors: number[],
-  x: number, y: number, z: number, radius: number, height: number,
-  noiseSeed: number,
+  uvs: number[], x: number, y: number, z: number, radius: number,
+  height: number, noiseSeed: number, course: Course,
 ) {
-  const start = vertices.length / 3;
-  const random = rng(noiseSeed);
-  const sides = 11, levels = 11;
-  const rotation = random() * Math.PI * 2;
-  const roughness = Array.from({ length: sides }, () => 0.79 + random() * 0.48);
-  for (let l = 0; l <= levels; l++) {
-    const t = l / levels;
-    const ledge = l === 4 || l === 7 ? 1.16 : 1;
-    const taper = (1 - t * 0.62) * ledge;
-    for (let side = 0; side < sides; side++) {
-      const a = rotation + side / sides * Math.PI * 2;
-      const ridge = 1 + 0.14 * Math.sin(t * 19 + side * 2.7);
-      const r = radius * taper * roughness[side] * ridge;
-      const lean = Math.sin(t * 3.5 + noiseSeed) * height * 0.055;
-      const xx = x + Math.cos(a) * r + lean;
-      const zz = z + Math.sin(a) * r * (0.85 + 0.25 * Math.sin(noiseSeed));
-      const yy = y + height * t + Math.sin(a * 5 + t * 11) * (0.1 + t * 0.3);
-      vertices.push(xx, yy, zz);
-      const band = 0.93 - 0.16 * Math.abs(Math.sin(l * 1.15 + 0.3));
-      const shadow = 0.68 + 0.26 * Math.max(0, Math.sin(a + 0.5));
-      const snow = t > 0.81 && (side % 3 === 0 || t > 0.95);
-      const light = band * shadow;
-      colors.push(snow ? 0.94 : 0.88 * light, snow ? 0.96 : 0.84 * light,
-        snow ? 0.96 : 0.75 * light, 1);
-    }
-  }
-  for (let l = 0; l < levels; l++)
-    for (let side = 0; side < sides; side++) {
-      const a = start + l * sides + side;
-      const b = start + l * sides + (side + 1) % sides;
-      const c = a + sides, d = b + sides;
-      indices.push(a, c, b, b, c, d);
-    }
-  const summit = vertices.length / 3;
-  vertices.push(x, y + height * 1.035, z);
-  colors.push(0.95, 0.96, 0.95, 1);
-  for (let side = 0; side < sides; side++)
-    indices.push(start + levels * sides + side,
-      summit, start + levels * sides + (side + 1) % sides);
+  // Replace the old 11-sided tower with a stratified, asymmetric wall.
+  // The root base stays on the exact visual terrain outside the ski lane.
+  appendDolomiteRidge({
+    positions: vertices, indices, colors, uvs,
+  }, {
+    x, z, radius, height, seed: noiseSeed,
+    ground: (xx, zz) => y +
+      terrainHeight(xx, zz, course) - terrainHeight(x, z, course),
+    segments: 22, strata: 14, elongation: 1.55,
+  });
 }
 
 function chalet(
@@ -118,7 +90,8 @@ export function addCortinaScenery(
 
   // Limestone cliffs / Schuss pinch and stratified cliffs are one vertex-colored
   // mesh, not dozens of draw calls. They do not obstruct the racing corridor.
-  const p: number[] = [], indices: number[] = [], colors: number[] = [];
+  const p: number[] = [], indices: number[] = [],
+    colors: number[] = [], uv: number[] = [];
   const shoulders = [
     { z: 75, side: -1, offset: 70, r: 22, h: 85 },
     { z: 96, side: 1, offset: 69, r: 19, h: 91 },
@@ -131,8 +104,9 @@ export function addCortinaScenery(
   ];
   for (const [i, cliff] of shoulders.entries()) {
     const x = courseCenterX(cliff.z, course) + cliff.side * cliff.offset;
-    taperedCliff(p, indices, colors, x, terrainHeight(x, cliff.z, course) - 2,
-      cliff.z, cliff.r, cliff.h, 437 + i * 17);
+    taperedCliff(p, indices, colors, uv,
+      x, terrainHeight(x, cliff.z, course) - 2,
+      cliff.z, cliff.r, cliff.h, 437 + i * 17, course);
   }
   for (let i = 0; i < q.cliffs; i++) {
     const z = 225 + rand() * 1250;
@@ -141,11 +115,13 @@ export function addCortinaScenery(
     const x = courseCenterX(z, course) + side * distance;
     const factor = z > 1080 ? 0.48 : 1;
     const r = (4 + rand() * 14) * factor;
-    taperedCliff(p, indices, colors, x, terrainHeight(x, z, course) - 1,
-      z, r, (16 + rand() * 53) * factor, 1907 + i * 47);
+    taperedCliff(p, indices, colors, uv,
+      x, terrainHeight(x, z, course) - 1,
+      z, r, (16 + rand() * 53) * factor, 1907 + i * 47, course);
   }
   const rock = meshEntity(app.graphicsDevice, root,
-    "CORTINA Tofane stratified limestone cliffs", p, indices, mStone, colors);
+    "CORTINA asymmetric Schuss rock walls and limestone shelves",
+    p, indices, mStone, colors, uv);
   rock.render!.castShadows = quality === "high" || quality === "ultra";
 
   const gravelP: number[] = [], gravelI: number[] = [];
