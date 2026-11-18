@@ -1,11 +1,11 @@
 /** Original Cortina sky palettes. Geometry and image references are illustrative,
  * not an astronomical or meteorological reconstruction of 12 February 2026.
- * Olympic daylight is default; previous pink sunset remains via ?lighting=sunset.
+ * Owner-preferred Dolomite sunset is default; daylight remains via ?lighting=daylight.
  */
 export type CortinaLightMode = "daylight" | "sunset";
 export const cortinaLightingMode = (query: string): CortinaLightMode => {
-  try { return new URLSearchParams(query).get("lighting") === "sunset" ? "sunset" : "daylight"; }
-  catch { return "daylight"; }
+  try { return new URLSearchParams(query).get("lighting") === "daylight" ? "daylight" : "sunset"; }
+  catch { return "sunset"; }
 };
 type SkyStop = { y: number; rgb: readonly [number,number,number] };
 export const DAYLIGHT_RAMP: readonly SkyStop[] = [
