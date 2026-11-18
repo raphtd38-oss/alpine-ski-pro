@@ -68,3 +68,8 @@ Le nouveau module `src/render/cortina-reference-landmarks.ts` dessine dans la sc
 **Précision :** ces profils sont artistiques, **pas** une reconstruction géographique exacte. Pour créer un véritable jumeau numérique, acquérir un DEM admissible pour la zone et la licence d'utilisation, géoréférencer les orthophotos exploitables, ajuster des levés de contrôle et valider chaque portion de piste avant de toucher aux collisions. Les 43 portes officielles (39 directionnelles) ne sont pas extrapolées depuis les photos. La V1.15 reste la base fonctionnelle ; aucun objectif de qualité AAA ou de FPS sur GPU réel n'est certifié par cet ajout.
 
 **Attention licences (novembre 2026) :** les accès au service Copernicus DEM GLO-30 sont soumis aux catégories éligibles depuis juillet 2026, contrairement à l'hypothèse d'un téléchargement universel gratuit. Voir https://dataspace.copernicus.eu/news/2026-7-17-copernicus-dem-30m-view-service-license-acceptance et la licence associée. Aucun DEM tiers n'est livré dans cette extension.
+
+
+## Éclairage photographique de jour (18 novembre 2026)
+
+Les photos du propriétaire montrent un ciel bleu de compétition et des falaises aux couleurs beige/gris/ocre. Le ciel de crépuscule rose déjà présent en V1.15 ne permettait pas une comparaison raisonnable avec ces références ; un profil **diurne** procédural devient le mode par défaut, avec lumière solaire moins chaude, ambient et brume raccordés au même bleu. L'ancien sunset demeure accessible via `?lighting=sunset` et les projecteurs restent fonctionnels. Les couleurs sont artistiques, pas un éphéméride astronomique certifié. Le rendu doit être mesuré sur GPU réels iPhone et PC et comparé visuellement aux références ; aucune photographie n'est embarquée dans les assets.
