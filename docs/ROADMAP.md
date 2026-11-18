@@ -195,3 +195,8 @@ Le but est un simulateur de ski de grande qualité, amélioré sur le même dép
 - Comparer, en capture vidéo côté piste, la position en virage droit et gauche à la référence wireframe : bassin bas, hanche intérieure, flexion asymétrique, bras extérieur ouvert, skis parallèles sur la carre et spatules dans la trajectoire.
 - Tester les variantes de GLB mobile et full ; corriger au besoin les axes de repos de cheville et les poids de skinning. Suivre les diagnostics `getAthletePose().competitionPose` pour atteindre une direction ski cohérente et une bonne erreur de cheville/poignée.
 - Tester transitions de carres, deux appuis, piquets, départ, réception, arrivée, pause et anciens replays en WebGL2 sans modification de la physique à 120 Hz.
+
+## Après la comparaison visuelle du 18 novembre
+- Capturer de vrais plans côte à côte du jeu publié et de la référence (départ, carving à haute vitesse, arbres et roches, arrivée) ; calibrer caméra, pose, proportions et textures par observation, pas seulement par réglage de chiffres.
+- Remplacer progressivement les volumes de roche et sapins trop géométriques par des modèles et matériaux PBR contrôlés, avec LOD/instancing. Ne pas copier les assets de la vidéo et ne pas supprimer les ressources CC0 existantes.
+- Mesurer le rendu des ombres sur GPU mobile et GPU PC, vérifier les creux de neige, dépister artefacts de transparence / z-fighting et comparer coucher de soleil/jour.
