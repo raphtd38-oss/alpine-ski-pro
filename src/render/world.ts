@@ -74,7 +74,15 @@ export class World {
     ));
     // The active Super-G is Cortina Olympia delle Tofane, not Glacier Express.
     // Snow, blue-dye and pole collision meshes keep their own unchanged code.
-    this.materials.push(...addCortinaScenery(this.app, this.root, this.course, this.quality));
+    const nearCortina = addCortinaScenery(
+      this.app, this.root, this.course, this.quality,
+    );
+    this.materials.push(...nearCortina);
+    // The Schuss walls must carry actual PBR albedo, normal and roughness,
+    // even in Low. Flat untextured polygons overwhelmed the old screenshots.
+    const schussLimestone = nearCortina.find(m =>
+      m.name === "Cortina pale stratified dolomite");
+    if (schussLimestone) this.studioRockPbr(schussLimestone);
     this.buildTrainingGuide();
     // Legacy smooth high mountains made giant flat polygon walls that obscured
     // the Schuss in screenshots. The new fractured ridge groups below replace

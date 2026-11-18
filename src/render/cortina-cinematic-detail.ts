@@ -40,9 +40,10 @@ function face(g: Points, a: number, b: number, c: number) {
 function buildDolomiteNormalMap(
   app: pc.Application, quality: Quality,
 ): pc.Texture | null {
-  if (quality === "low") return null;
+  // Even mobile gets an inexpensive normal map: plain flat cliff
+  // triangles were too smooth to resemble limestone in real race views.
   const size = quality === "ultra" ? 384 :
-    quality === "high" ? 256 : 128;
+    quality === "high" ? 256 : quality === "medium" ? 128 : 96;
   const canvas = document.createElement("canvas");
   canvas.width = canvas.height = size;
   const context = canvas.getContext("2d")!;
@@ -113,7 +114,8 @@ function mountainSpurs(
       entry.side * (entry.dist + (rand() - 0.5) * 25);
     appendDolomiteRidge(ridge, {
       x, z,
-      height: entry.h * (.77 + rand() * .41),
+      height: entry.h * (quality === "low" ? .66 : .79) *
+        (.77 + rand() * .41),
       radius: entry.w * (.85 + rand() * .31),
       seed: 600 + n * 23,
       ground: (xx, zz) => terrainHeight(xx, zz, course) - 10,
