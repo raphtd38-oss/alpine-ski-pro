@@ -241,7 +241,7 @@ export class World {
           b = a + nx + 1;
         ind.push(a, b, a + 1, a + 1, b, b + 1);
       }
-    meshEntity(
+    const pisteMesh = meshEntity(
       this.app.graphicsDevice,
       this.root,
       "Continuous piste terrain",
@@ -251,6 +251,10 @@ export class World {
       col,
       uv,
     );
+    // Boots, body and course objects must anchor visibly into the piste.
+    // Shadows are sampled by the continuous terrain, with no second
+    // collision surface or geometry duplicate.
+    pisteMesh.render!.receiveShadows = true;
     // Fine piste strips follow the exact ground surface and make corduroy readable at close range.
   }
   buildTrainingGuide() {
