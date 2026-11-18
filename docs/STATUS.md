@@ -1,3 +1,6 @@
+
+> **18 novembre 2026 — branche `feat/cortina-reference-landmarks-v116` :** ajout visuel dans `World` de parois Schuss/Duca/Delta/Gran Curvone/Scarpadon/Rumerlo plus sculptées, corniches de neige, épicéas/mélèzes hivernaux de premier plan, éboulis. Maillages regroupés et budgets par qualité ; aucune modification des hauteurs physiques, des collisions, des 34 portes, du skieur, des records ni du moteur à 120 Hz. Références : six photos utilisateur, non diffusées dans le bundle. Modules : `src/render/cortina-reference-landmarks.ts`, tests : `tests/cortina-reference-landmarks.test.ts`. Ce n'est **pas** une reconstruction géoréférencée. Résultats CI à contrôler après PR ; pas de benchmark réel iPhone/PC.
+
 # État de reprise — 17 novembre 2026
 
 > **V1.16, chantier visuel Cortina (18/11/2026)** : falaises de calcaire proches du Schuss et massifs Tofane lointains reconstruits via un générateur de crêtes stratifiées multi-sommets, sommets partiellement enneigés et murs asymétriques. Ajout de bourrelets de neige hors de la piste, sapins/mélèzes penchés avec troncs géométriques. Aucun nouveau binaire ni changement de collision, piste, 34 portes, chrono, replays ou IK. Contrôle final CI et captures à vérifier avant publication. Ce n'est PAS du DEM officiel ou du photoréalisme.\n\n

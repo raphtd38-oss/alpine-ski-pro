@@ -16,6 +16,7 @@ import { ALPINE_START_GATE } from "../game/start-gate";
 import { addCortinaScenery } from "./cortina-scenery";
 import { createCortinaAtmosphere } from "./cortina-atmosphere";
 import { addCortinaCinematicDetails } from "./cortina-cinematic-detail";
+import { addCortinaReferenceLandmarks } from "./cortina-reference-landmarks";
 import { addCortinaSnowShoulders } from "./cortina-snow-banks";
 import { createCortinaLightAccents } from "./cortina-light-accents";
 import type { Course, Quality, Weather } from "../game/types";
@@ -94,6 +95,11 @@ export class World {
     );
     this.materials.push(...cinematic.materials);
     this.resources.push(...cinematic.textures);
+    // 2026 photo references: Schuss limestone, spruce, leafless larch, talus.
+    // Visual-only: terrain physics, 34 gates and timed race are unchanged.
+    this.materials.push(...addCortinaReferenceLandmarks(
+      this.app, this.root, this.course, this.quality,
+    ));
     // Original warm sunset, 15 LED floodlight towers and nearby light pools.
     const atmosphere = createCortinaAtmosphere(
       this.app, this.root, this.course, this.quality,
