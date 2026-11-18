@@ -1,3 +1,6 @@
+
+> **18 novembre 2026 — branche `feat/cortina-reference-landmarks-v116` :** ajout visuel dans `World` de parois Schuss/Duca/Delta/Gran Curvone/Scarpadon/Rumerlo plus sculptées, corniches de neige, épicéas/mélèzes hivernaux de premier plan, éboulis. Maillages regroupés et budgets par qualité ; aucune modification des hauteurs physiques, des collisions, des 34 portes, du skieur, des records ni du moteur à 120 Hz. Références : six photos utilisateur, non diffusées dans le bundle. Modules : `src/render/cortina-reference-landmarks.ts`, tests : `tests/cortina-reference-landmarks.test.ts`. Ce n'est **pas** une reconstruction géoréférencée. Résultats CI à contrôler après PR ; pas de benchmark réel iPhone/PC.
+
 # État de reprise — 17 novembre 2026
 
 > **V1.15 — Ultimate Realism (première passe)** : analyse de l'existant puis amélioration ciblée de l'IK visuelle du skieur monobloc (load transfer, angle/COM, ski heading), projecteurs LED remplacés par de véritables spots PBR orientés, ombre locale plafonnée à 1, neige gauche/droite et micro-normal map calcaire. Seuil 45 % et portes inchangés. Références et contrôles : docs/ULTIMATE_REALISM_V115.md. Statut de validation définitif à vérifier dans GitHub Actions avant de déclarer la version publiée.\n\n
