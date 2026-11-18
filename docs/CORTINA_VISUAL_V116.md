@@ -20,3 +20,7 @@ Le Schuss du parcours Olympia delle Tofane est caractérisé par un couloir étr
 - La performance sur matériel GPU réel (iPhone/PC) et l'exactitude topographique / la licence de futurs actifs DEM ou PBR restent à vérifier séparément. Aucune photo ou marque d'ayant droit n'a été intégrée à l'archive du jeu.
 
 Ce travail est une reconstruction visuelle originale, non une reproduction photogrammétrique exacte du site olympique.
+
+## Correction après inspection des captures CI
+
+Les screenshots Chromium du premier essai montraient encore des falaises trop plates et imposantes près du Schuss. L'ancien maillage smooth de `World.mountains()` a été désactivé au profit des crêtes géologiques. Les roches du premier plan utilisent désormais les cartes PBR albedo/normales/roughness originales du Studio Kit même en mode Low ; la roche lointaine garde une petite normal-map (96 px sur Low). La hauteur des massifs décoratifs est réduite en Low pour préserver la lisibilité de la ligne de course et du ciel. Les nouvelles captures sont à inspecter avant validation finale. Les roches ne sont toujours pas des scans réels.
