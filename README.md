@@ -92,3 +92,8 @@ Les cinq captures obsolètes de `docs/screenshots/` et l'ancien générateur `sc
 - Forêts plus naturelles : troncs visibles, épicéas et mélèzes légèrement inclinés, avec leurs branches et dépôts de neige, tous regroupés par maillage.
 - Aucun changement de skieur, portes, contact banderole, 45 %, chronomètre, enregistrement, tracé, physique à 120 Hz.
 - L'environnement reste une reconstitution artistique et pas une photogrammétrie exacte de Cortina. Voir [notes V1.16](docs/CORTINA_VISUAL_V116.md).
+
+
+### Extension visuelle Cortina 2026 — repères photographiques
+
+Un nouveau module original de décor (`src/render/cortina-reference-landmarks.ts`) ajoute des falaises continues à strates, corniches enneigées, conifères et mélèzes hivernaux détaillés en premier plan, et éboulis le long de la piste de Super-G. La géométrie est regroupée et plafonnée selon la qualité graphique. Les images de référence fournies ne sont **pas** intégrées comme textures. Cette extension préserve les 34 portes, la physique à 120 Hz et la piste active ; il ne s'agit pas encore d'un terrain topographiquement exact. Voir `docs/CORTINA_2026.md`.
