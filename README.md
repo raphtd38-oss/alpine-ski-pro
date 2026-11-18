@@ -83,3 +83,12 @@ Les cinq captures obsolètes de `docs/screenshots/` et l'ancien générateur `sc
 - Matériau calcaire PBR doté de micro-normales UV, gerbe de neige dépendante de la pression réelle sur chaque ski (correction du virage à droite).
 - Les règles des portes flexibles et le seuil de chute strict **>45%**, la physique 120 Hz et le chrono restent inchangés.
 - Voir [l'audit, les preuves et les limites de V1.15](docs/ULTIMATE_REALISM_V115.md). Aucun FPS réel ni rendu photo-identique n'est revendiqué.
+
+## V1.16 — Cortina Visual Geology Upgrade (novembre 2026)
+
+- Anciennes falaises artificielles cylindriques remplacées par des **parois rocheuses stratifiées** : crêtes dentelées sur plusieurs sommets, érosion et fissures, névés discontinus, teintes calcaires chaudes au sunset.
+- Nouveau générateur géométrique pur et testable `src/render/cortina-geology.ts`, utilisé **à la fois** par les falaises proches du Schuss et par les massifs lointains. Un maillage groupé, qualité graphique adaptée, pas de nouvelle dépendance.
+- Ajout de bourrelets de neige irréguliers **hors de la bande de course** sur les deux bords, conformes à la pente existante, `src/render/cortina-snow-banks.ts`.
+- Forêts plus naturelles : troncs visibles, épicéas et mélèzes légèrement inclinés, avec leurs branches et dépôts de neige, tous regroupés par maillage.
+- Aucun changement de skieur, portes, contact banderole, 45 %, chronomètre, enregistrement, tracé, physique à 120 Hz.
+- L'environnement reste une reconstitution artistique et pas une photogrammétrie exacte de Cortina. Voir [notes V1.16](docs/CORTINA_VISUAL_V116.md).

@@ -2,6 +2,7 @@ import * as pc from "playcanvas";
 import type { Course, Quality } from "../game/types";
 import { courseCenterX, terrainHeight } from "../game/course";
 import { material, meshEntity, rng, shape, beam } from "./geometry";
+import { appendDolomiteRidge, newRockBatch } from "./cortina-geology";
 
 /**
  * Cinematic, original Cortina scenery inspired by the owner's sunset image.
@@ -87,13 +88,14 @@ function buildDolomiteNormalMap(
  */
 function mountainSpurs(
   app: pc.Application, root: pc.Entity, course: Course,
-  quality: Quality,
-  mats: pc.StandardMaterial[],
+  quality: Quality, mats: pc.StandardMaterial[],
   textures: pc.Texture[],
 ) {
   const cfg = CORTINA_SCENIC_BUDGET[quality];
-  const rock = group(), snow = group();
   const rand = rng(20260212);
+  // This replaces the former tall ring/cylinder stacks. Each section is a
+  // fractured rock *wall* with a jagged, continuous summit silhouette.
+  const ridge = newRockBatch();
   const anchors = [
     { z: 85, side: -1, dist: 200, h: 225, w: 52 },
     { z: 150, side: -1, dist: 290, h: 300, w: 67 },
@@ -107,95 +109,35 @@ function mountainSpurs(
   for (let n = 0; n < cfg.mountainSpurs; n++) {
     const entry = anchors[n % anchors.length];
     const z = entry.z + (n >= anchors.length ? 65 + rand() * 220 : 0);
-    const side = entry.side;
-    const cx = courseCenterX(z, course) + side * (entry.dist + (rand() - 0.5) * 25);
-    const baseY = terrainHeight(cx, z, course) - 9;
-    const height = entry.h * (0.72 + rand() * 0.46);
-    const width = entry.w * (0.82 + rand() * 0.40);
-    const slices = 13, segments = 13;
-    const start = rock.p.length / 3;
-    const centerLean = (rand() - .5) * width * .48;
-    const ridge = Array.from({length: segments}, () => .84 + rand() * .32);
-    for (let level = 0; level <= slices; level++) {
-      const t = level / slices;
-      const sediment = level % 3 === 0 ? 1.10 : level % 3 === 1 ? .96 : 1;
-      const taper = Math.max(.035, (1 - t * .79) * sediment);
-      for (let sideIndex = 0; sideIndex < segments; sideIndex++) {
-        const a = Math.PI * 2 * sideIndex / segments;
-        const jag = .84 + .16 * Math.sin(level * 1.93 + sideIndex * 2.71);
-        const r = width * taper * ridge[sideIndex] * jag;
-        const x = cx + r * Math.cos(a) + centerLean * t;
-        const yy = baseY + t * height +
-          (1 - t) * 2.8 * Math.sin(a * 5.1 + level * 1.6);
-        const zz = z + r * Math.sin(a) * 1.55;
-        const strata = .88 - .13 * Math.abs(Math.sin(level * 1.7));
-        const westLit = .67 + .29 * Math.max(0, Math.cos(a - 2.2));
-        const lowerShade = (.89 + t * .13) * strata * westLit;
-        // Pink limestone from a low amber sunset, cooler shaded faces.
-        const rgb: [number, number, number] = [
-          Math.min(1, .93 * lowerShade),
-          Math.min(1, .78 * lowerShade),
-          Math.min(1, .68 * lowerShade),
-        ];
-        vert(rock, x, yy, zz, rgb);
-        // Irregular snow band near upper escarpments, not a solid white cone.
-        if (t > .81 && (sideIndex + level * 3) % 5 !== 0)
-          vert(snow, x + .12, yy + .34, zz, [.90, .93, .96]);
-        else vert(snow, x + .12, yy + .34, zz, [.56, .64, .72], 0);
-      }
-    }
-    for (let level = 0; level < slices; level++)
-      for (let j = 0; j < segments; j++) {
-        const a = start + level * segments + j;
-        const b = start + level * segments + (j + 1) % segments;
-        const c = a + segments, d = b + segments;
-        face(rock, a, c, b); face(rock, b, c, d);
-      }
-    // Separate vertex-coloured patches on high ridges; same indexing.
-    const snowStart = snow.p.length / 3 - (slices + 1) * segments;
-    for (let level = Math.floor(slices * .81); level < slices; level++)
-      for (let j = 0; j < segments; j++) {
-        const a = snowStart + level * segments + j;
-        const b = snowStart + level * segments + (j + 1) % segments;
-        const c = a + segments, d = b + segments;
-        face(snow, a, c, b); face(snow, b, c, d);
-      }
+    const x = courseCenterX(z, course) +
+      entry.side * (entry.dist + (rand() - 0.5) * 25);
+    appendDolomiteRidge(ridge, {
+      x, z,
+      height: entry.h * (.77 + rand() * .41),
+      radius: entry.w * (.85 + rand() * .31),
+      seed: 600 + n * 23,
+      ground: (xx, zz) => terrainHeight(xx, zz, course) - 10,
+      segments: quality === "low" ? 16 : quality === "medium" ? 22 : 30,
+      strata: quality === "low" ? 10 : quality === "medium" ? 14 : 19,
+      elongation: n % 3 === 0 ? 2.1 : 1.75,
+    });
   }
-  const rockMat = material("Cortina Tofane pink stratified rock", "#ffffff", 0, .15);
+  const rockMat = material("Tofane continuous fractured limestone ridges",
+    "#ffffff", 0, .12);
   rockMat.diffuseVertexColor = true;
+  rockMat.cull = pc.CULLFACE_NONE;
   const limestoneNormal = buildDolomiteNormalMap(app, quality);
   if (limestoneNormal) {
     rockMat.normalMap = limestoneNormal;
-    rockMat.bumpiness = 0.46;
+    rockMat.bumpiness = .54;
     textures.push(limestoneNormal);
   }
-  rockMat.cull = pc.CULLFACE_NONE;
   rockMat.update();
   mats.push(rockMat);
-  // Lateral + vertical UVs follow the exposed rock strata and enable
-  // real per-pixel normal response to sun and floodlight spots.
-  const rockUV: number[] = [];
-  for (let n = 0; n < rock.p.length; n += 3) {
-    const x = rock.p[n], y = rock.p[n + 1], z = rock.p[n + 2];
-    rockUV.push(x * .022 + z * .014, y * .026);
-  }
-  const escarpment = meshEntity(app.graphicsDevice, root,
-    "Tofane towering layered limestone at sunset", rock.p, rock.i,
-    rockMat, rock.colors, rockUV);
-  escarpment.render!.castShadows = quality === "ultra";
-
-  const snowMat = material("Cortina wind-packed snow on ridges", "#e7edf0", 0, .23);
-  snowMat.cull = pc.CULLFACE_NONE;
-  snowMat.diffuseVertexColor = true;
-  snowMat.update();
-  mats.push(snowMat);
-  // Only triangles with light summit vertices are emitted.
-  if (snow.i.length) {
-    const cap = meshEntity(app.graphicsDevice, root,
-      "Tofane uneven high-altitude snow caps", snow.p, snow.i,
-      snowMat, snow.colors);
-    cap.render!.castShadows = false;
-  }
+  const mesh = meshEntity(app.graphicsDevice, root,
+    "Tofane multi-peak jagged limestone walls with snow gullies",
+    ridge.positions, ridge.indices, rockMat, ridge.colors, ridge.uvs);
+  mesh.render!.castShadows = quality === "ultra";
 }
 
 /** Layered dark larch/spruce forest and scattered golden larches. */
@@ -221,32 +163,65 @@ function denseWoodland(
     const radius = .23 * height;
     const foliage = rand() < .12 ? larch : rand() < .38 ? bluePine : pine;
     const snow = rand() < .73;
+    const leanX = (rand() - .5) * height * .12;
+    const leanZ = (rand() - .5) * height * .10;
+    // Four-sided larch/spruce trunk with subtle bending in alpine wind.
+    // Still part of the ONE batched woodland mesh, not per-tree draw calls.
+    if (quality !== "low") {
+      const trunkRadius = .075 + height * .009;
+      const t0 = wood.p.length / 3;
+      for (const sy of [0, height * .53])
+        for (const [dx, dz] of [[-1,-1],[1,-1],[1,1],[-1,1]]) {
+          const fraction = sy / height;
+          vert(wood,
+            x + dx * trunkRadius + leanX * fraction,
+            y + sy,
+            z + dz * trunkRadius + leanZ * fraction,
+            [.28 - fraction * .06, .20 - fraction * .03, .15]);
+        }
+      for (let j = 0; j < 4; j++) {
+        const n0 = t0 + j, n1 = t0 + (j + 1) % 4;
+        face(wood, n0, n0 + 4, n1);
+        face(wood, n1, n0 + 4, n1 + 4);
+      }
+    }
     // Branch whorls make recognisable natural silhouettes, with white tips.
     for (let tier = 0; tier < 6; tier++) {
       const t = tier / 6;
       const by = y + .7 + t * height * .85;
       const r = radius * (1 - .77 * t) * (.78 + rand() * .35);
-      const tip = vert(wood, x, by + height * (.22 - .05 * t), z,
+      const tip = vert(wood,
+        x + leanX * (.2 + t * .72),
+        by + height * (.22 - .05 * t),
+        z + leanZ * (.2 + t * .72),
         [foliage[0] * 1.35, foliage[1] * 1.25, foliage[2] * 1.25]);
       const indices: number[] = [];
       for (let j = 0; j < sides; j++) {
         const a = (j / sides) * Math.PI * 2;
         const tint = .77 + .23 * Math.max(0, Math.sin(a + .35));
-        indices.push(vert(wood, x + r * Math.cos(a), by - .07, z + r * Math.sin(a),
+        indices.push(vert(wood,
+          x + leanX * t + r * Math.cos(a),
+          by - .07,
+          z + leanZ * t + r * Math.sin(a),
           [foliage[0] * tint, foliage[1] * tint, foliage[2] * tint]));
       }
       for (let j = 0; j < sides; j++)
         face(wood, tip, indices[j], indices[(j + 1) % sides]);
       if (snow && (tier >= 3 || (i + tier) % 4 === 0)) {
-        const snowTip = vert(wood, x, by + height * (.22 - .05 * t) + .09, z,
+        const snowTip = vert(wood,
+          x + leanX * (.2 + t * .72),
+          by + height * (.22 - .05 * t) + .09,
+          z + leanZ * (.2 + t * .72),
           [.80, .88, .90]);
         for (let j = 0; j < sides; j += 2) {
           const a = 2 * Math.PI * j / sides;
           const b = 2 * Math.PI * (j + 1) / sides;
-          const v1 = vert(wood, x + r * .78 * Math.cos(a), by + .06,
-            z + r * .78 * Math.sin(a), [.69, .77, .79]);
-          const v2 = vert(wood, x + r * .78 * Math.cos(b), by + .06,
-            z + r * .78 * Math.sin(b), [.91, .95, .94]);
+          const v1 = vert(wood, x + leanX * t + r * .78 * Math.cos(a),
+            by + .06, z + leanZ * t + r * .78 * Math.sin(a),
+            [.69, .77, .79]);
+          const v2 = vert(wood, x + leanX * t + r * .78 * Math.cos(b),
+            by + .06, z + leanZ * t + r * .78 * Math.sin(b),
+            [.91, .95, .94]);
           face(wood, snowTip, v1, v2);
         }
       }

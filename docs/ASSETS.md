@@ -1,4 +1,12 @@
 
+## V1.16 — Géologie dolomitique et bourrelets de neige originaux
+
+- `src/render/cortina-geology.ts` : algorithme original déterministe de maillages d'escarpements, strates, goulets d'érosion, névés et UV (géométrie / couleurs de sommet, zéro photo téléchargée).
+- Remplacement des colonnes rocheuses lisses par les parois rocheuses calculées dans `src/render/cortina-scenery.ts` et `src/render/cortina-cinematic-detail.ts` ; les normal maps procédurales V1.15 restent intégrées.
+- `src/render/cortina-snow-banks.ts` : géométrie originale de bourrelets de neige suivant le terrain en dehors du couloir de compétition. Sapins/larch avec troncs/port décalé d'après algorithme original, zéro ressource externe.
+- Aucun fichier GLB/PBR, son ou image tiers supplémentaire introduit ; aucun extrait photo Getty/FIS incorporé au jeu. L'image de référence reste uniquement une inspiration artistique.
+
+
 ## V1.15 — micro-relief calcaire et éclairage d'origine procédurale
 
 - Un normal map tangent-space procédural est désormais fabriqué via Canvas selon la qualité (128/256/384 pixels) dans src/render/cortina-cinematic-detail.ts ; aucune photographie ni nouveau modèle GLB ajouté et aucune licence tierce consommée.
