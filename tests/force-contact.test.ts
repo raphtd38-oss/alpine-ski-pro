@@ -12,21 +12,22 @@ function actorFromActualGLB(): SGActor {
   const bytes = readFileSync('public/assets/racer/seamless-mobile.glb');
   const gltf = JSON.parse(bytes.toString('utf8',20,20+bytes.readUInt32LE(12)));
   const nodes = gltf.nodes.map((n: any) => {
-    const node = new pc.Entity(n.name);
+    const node = new pc.GraphNode(n.name);
     if (n.translation) node.setLocalPosition(...n.translation as [number,number,number]);
     if (n.rotation) node.setLocalRotation(...n.rotation as [number,number,number,number]);
     if (n.scale) node.setLocalScale(...n.scale as [number,number,number]);
     return node;
   });
   gltf.nodes.forEach((n: any,i: number)=>n.children?.forEach((j:number)=>nodes[i].addChild(nodes[j])));
-  const root = new pc.Entity(), rig = new pc.Entity(); root.addChild(rig);
+  const root = new pc.GraphNode(), rig = new pc.GraphNode(); root.addChild(rig);
   gltf.scenes[gltf.scene ?? 0].nodes.forEach((i:number)=>rig.addChild(nodes[i]));
-  // GraphNode world-transform propagation requires an enabled hierarchy.
-  const scene = new pc.Entity(); scene.addChild(root);
+  // Transform-only nodes reproduce the GLB hierarchy without an Application.
+  // Entity's default constructor asserts when no GPU application is current.
+  const scene = new pc.GraphNode(); scene.addChild(root);
   const aliases: Record<string,string> = {Pelvis:'Hips',LHip:'LeftUpLeg',LKnee:'LeftLeg',LAnkle:'LeftAnkle',RHip:'RightUpLeg',RKnee:'RightLeg',RAnkle:'RightAnkle',LShoulder:'LeftShoulder',RShoulder:'RightShoulder',LUpperArm:'LeftUpperArm',RUpperArm:'RightUpperArm',LElbow:'LeftForeArm',RElbow:'RightForeArm',LWrist:'LeftHand',RWrist:'RightHand'};
   const joints:Record<string,pc.GraphNode>={};
   for (const [alias,name] of Object.entries(aliases)) joints[alias]=rig.findByName(name)!;
-  const poles = [new pc.Entity(),new pc.Entity()]; poles.forEach(p=>root.addChild(p));
+  const poles = [new pc.GraphNode(),new pc.GraphNode()]; poles.forEach(p=>root.addChild(p));
   return {root,rig,joints,poles,isSeamless:true,visualBank:0,visualCrouch:0,visualEdge:0,visualTuck:0};
 }
 const fixture = (edge=0,height=0): Frame => ({t:10,x:0,z:100,heading:.3,
