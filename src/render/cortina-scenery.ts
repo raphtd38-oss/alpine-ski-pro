@@ -1,3 +1,4 @@
+import { appendAlpineTree } from "./alpine-tree-geometry";
 import * as pc from "playcanvas";
 import type { Course, Quality } from "../game/types";
 import { courseCenterX, terrainHeight } from "../game/course";
@@ -176,18 +177,6 @@ export function addCortinaScenery(
   forestMat.update();
   mats.push(forestMat);
   const fP: number[] = [], fI: number[] = [], fC: number[] = [];
-  const addCone = (x: number,y: number,z: number,r: number,h: number,
-    tint: readonly number[])=>{
-    const n=fP.length/3, sides=7;
-    fP.push(x,y+h,z); fC.push(tint[0]*1.05,tint[1]*1.07,tint[2]*1.03,1);
-    for(let k=0;k<sides;k++) {
-      const angle=k/sides*Math.PI*2;
-      fP.push(x+Math.cos(angle)*r,y,z+Math.sin(angle)*r);
-      fC.push(tint[0],tint[1],tint[2],1);
-    }
-    for(let k=0;k<sides;k++)
-      fI.push(n,n+1+k,n+1+(k+1)%sides);
-  };
   for(let i=0;i<q.trees;i++) {
     const z=760+rand()*1170;
     const side=rand()<0.5?-1:1;
@@ -196,17 +185,8 @@ export function addCortinaScenery(
     const y=terrainHeight(x,z,course);
     const h=4+rand()*8;
     const winter=rand()>0.76;
-    for(let j=0;j<3;j++) {
-      const r=(2.2-j*.48)*(h/8);
-      const tint=winter ? [0.42,0.55,0.49] : [0.07,0.18,0.14];
-      addCone(x,y+h*(.15+j*.22),z,r,h*.48,tint);
-    }
-    if(quality!=="low") {
-      const n=fP.length/3, r=.13;
-      fP.push(x-r,y,z-r,x+r,y,z-r,x+r,y+h*.55,z+r,x-r,y+h*.55,z+r);
-      for(let k=0;k<4;k++) fC.push(.24,.22,.17,1);
-      fI.push(n,n+1,n+2,n,n+2,n+3);
-    }
+    appendAlpineTree({p:fP,i:fI,colors:fC}, x,y,z,h,rand,
+      quality === "low" ? 2 : 4, winter);
   }
   if(fI.length) {
     const forest = meshEntity(app.graphicsDevice,root,

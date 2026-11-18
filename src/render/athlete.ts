@@ -39,6 +39,18 @@ export class Athlete {
   ownedTextures: pc.Texture[] = [];
   /** Connected 25-bone racer owns its own 3D carving solver. Ghost/fallback unchanged. */
   private competitionDirector: SuperGRacePoseDirector | null = null;
+  /** Contact projection of the actual rendered skis, for matching snow trails. */
+  getSkiContacts() {
+    if (!this.isSeamless) return undefined;
+    const contact = (name: string) => {
+      const foot = this.rig.findByName(name)!;
+      const candidates = [-.046,.046].map(x => foot.getWorldTransform()
+        .transformPoint(new pc.Vec3(x,-.125,0)));
+      const p = candidates[0].y < candidates[1].y ? candidates[0] : candidates[1];
+      return {x:p.x,z:p.z};
+    };
+    return {left:contact("RightFoot"),right:contact("LeftFoot")};
+  }
   constructor(
     public app: pc.Application,
     asset: pc.Asset,

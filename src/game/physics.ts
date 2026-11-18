@@ -18,7 +18,15 @@ import {
   tiltGripFactor,
 } from "./carving";
 export const FIXED_DT = 1 / 120;
+/** Athlete + boots/skis/poles. SI constants; tuning, not measured athlete data. */
+export const SKIER_MASS_KG = 88;
+export const AIR_DENSITY = 1.05;
 export const initialState = (): SkierState => ({
+  edgeLeft: 0, edgeRight: 0, skiYawLeft: 0, skiYawRight: 0,
+  normalForceLeft: SKIER_MASS_KG * 9.81 / 2,
+  normalForceRight: SKIER_MASS_KG * 9.81 / 2,
+  yawRate: 0, suspension: 0, suspensionVelocity: 0,
+  normalAcceleration: 9.81, turnRadius: 1e6,
   x: 0,
   z: 3,
   vx: 0,
@@ -61,17 +69,19 @@ export function stepPhysics(
 ): void {
   const speed = Math.hypot(s.vx, s.vz);
   const lengthFactor = Math.sqrt(e.length / 1.65);
-  const target = input.steer * (input.brake ? 0.35 : 0.92);
-  s.edge = smooth(
-    s.edge,
-    target,
-    (e.response * (0.7 + e.stiffness * 0.3)) / lengthFactor,
-    dt,
-  );
-  // Load transfers progressively to the downhill/outside ski. Faster turns
-  // increase pressure without teleporting the centre of mass.
-  const pressureFactor = clamp(0.65 + speed / 35, 0.65, 1.17);
-  s.load = smooth(s.load, 0.5 + s.edge * 0.42 * pressureFactor, 7, dt);
+  const grounded = s.height <= 0;
+  const previousHeading = s.heading;
+  const target = input.steer * (input.brake ? 0.35 : 1.10);
+  const response = (e.response * (0.7 + e.stiffness * 0.3)) / lengthFactor;
+  // The two edges roll continuously through flat; the inside ski is lighter
+  // and slightly flatter. These exact angles feed both forces and the rig.
+  s.edgeLeft = smooth(s.edgeLeft, target * (target >= 0 ? 1 : 0.89), response, dt);
+  s.edgeRight = smooth(s.edgeRight, target * (target <= 0 ? 1 : 0.89), response, dt);
+  s.edge = s.edgeLeft * s.load + s.edgeRight * (1 - s.load);
+  const lateralG = Math.abs(s.lateralAcceleration) / 9.81;
+  const loadTarget = grounded ? 0.5 + Math.sign(s.edge) *
+    clamp(lateralG * 0.22, 0, 0.40) : 0.5;
+  s.load = smooth(s.load, loadTarget, 8, dt);
   const outsideLoad = 0.5 + Math.abs(s.load - 0.5);
   // Fine hard-snow chatter is a filtered contact signal, not random physics:
   // render FPS and playback cannot change the path taken through a gate.
@@ -105,12 +115,18 @@ export function stepPhysics(
   // Deterministic relief-induced loading: compressions press the skis in,
   // while convex crests lighten the edges. Capped for forgiving gameplay.
   const h = terrainHeight(s.x, s.z, c);
+  // Directional curvature along actual travel, including crossfall. Evaluating
+  // along Z alone gave wrong loading and takeoff when traversing the piste.
+  const dx = speed > 0.1 ? s.vx / speed : 0;
+  const dz = speed > 0.1 ? s.vz / speed : 1;
   const curvature =
-    (terrainHeight(s.x, s.z + 1.5, c) - 2 * h +
-      terrainHeight(s.x, s.z - 1.5, c)) / 2.25;
-  s.pressure = smooth(s.pressure,
-    clamp(1 + speed * speed * curvature / 9.81, 0.6, 1.5),
-    12, dt);
+    (terrainHeight(s.x + dx * 1.5, s.z + dz * 1.5, c) - 2 * h +
+      terrainHeight(s.x - dx * 1.5, s.z - dz * 1.5, c)) / 2.25;
+  const normalScale = Math.sqrt(1 + gx * gx + gz * gz);
+  const support = Math.max(0, (9.81 + speed * speed * curvature) / normalScale);
+  s.normalAcceleration = grounded ? support : 0;
+  s.pressure = grounded ? smooth(s.pressure,
+    clamp(support / 9.81, 0, 2.8), 16, dt) : 0;
   let ax = -gx * gravityScale,
     az = -gz * gravityScale;
   if (s.fallen > 0) {
@@ -143,13 +159,13 @@ export function stepPhysics(
     const carveBudget = gripLimit * (0.82 + 0.13 *
       Math.min(1, Math.abs(s.edge)));
     const lateral = clamp(rawSidecutDemand, -carveBudget, carveBudget);
-    const contact = s.height < 0.005 ? 1 : 0.03;
+    const contact = grounded ? 1 : 0;
     s.heading = clamp(
       s.heading + ((contact * lateral) / Math.max(3, speed)) * dt,
       -1.28,
       1.28,
     );
-    s.heading +=
+    s.heading += contact *
       angleDiff(Math.atan2(s.vx, Math.max(0.01, s.vz)), s.heading) * 0.22 * dt;
     const nx = Math.cos(s.heading),
       nz = -Math.sin(s.heading);
@@ -184,7 +200,8 @@ export function stepPhysics(
       s.skid * speed * 0.035 +
       (input.brake ? speed * 0.25 : 0);
     s.slip = smooth(s.slip, skidSpeed, 8, dt);
-    const drag = (input.tuck ? 0.0024 : 0.0047) * speed;
+    const dragArea = input.tuck ? 0.40 : 0.79; // Cd*A, m²
+    const drag = 0.5 * AIR_DENSITY * dragArea / SKIER_MASS_KG * speed;
     // A clean carve preserves speed; excessive sideways scraping loses it.
     const edgeScrub = clamp(
       Math.abs(sideVelocity) * 0.0018 + gripOverflow * 0.0035,
@@ -230,11 +247,15 @@ export function stepPhysics(
     s.lastTakeoffZ = s.z;
   }
   s.jumpHeld = input.jump;
-  if (s.height > 0) {
-    s.lateralAcceleration = smooth(s.lateralAcceleration, 0, 16, dt);
+  if (s.height > 0 || takeoff) {
+    s.lateralAcceleration = 0;
+    s.pressure = 0;
+    s.normalAcceleration = 0;
     // No invisible snow-particle acceleration while airborne.
-    ax = -s.vx * 0.01;
-    az = -s.vz * 0.01;
+    const airDrag = 0.5 * AIR_DENSITY * (input.tuck ? 0.40 : 0.79) /
+      SKIER_MASS_KG * speed;
+    ax = -s.vx * airDrag;
+    az = -s.vz * airDrag;
   }
   s.vx += ax * dt;
   s.vz = Math.max(0, s.vz + az * dt);
@@ -258,6 +279,26 @@ export function stepPhysics(
       s.verticalSpeed = 0;
     }
   }
+  // Damped leg suspension driven by support and impact, independent of FPS.
+  // The bounded spring is a compliant-body approximation, not extra propulsion.
+  const suspensionTarget = s.height > 0 ? 0.07 : clamp(
+    (s.pressure - 1) * 0.045 + Math.abs(s.lateralAcceleration) * 0.0025 +
+    s.landingShock * 0.16, -0.035, 0.19);
+  const omega = 18;
+  s.suspensionVelocity += (omega * omega * (suspensionTarget - s.suspension) -
+    2 * omega * s.suspensionVelocity) * dt;
+  s.suspension = clamp(s.suspension + s.suspensionVelocity * dt, -0.04, 0.20);
+  const normalForce = s.height > 0 ? 0 : SKIER_MASS_KG * s.normalAcceleration;
+  s.normalForceLeft = normalForce * s.load;
+  s.normalForceRight = normalForce * (1 - s.load);
+  s.yawRate = angleDiff(s.heading, previousHeading) / dt;
+  // Light inside ski follows a slightly wider direction; no independent
+  // fake steering is added by the renderer. Angles remain in radians.
+  const toe = 0.015 * Math.sin(s.edge);
+  s.skiYawLeft = s.heading + (s.edge < 0 ? toe : 0);
+  s.skiYawRight = s.heading + (s.edge > 0 ? toe : 0);
+  s.turnRadius = Math.abs(s.lateralAcceleration) > 0.01
+    ? (s.vx * s.vx + s.vz * s.vz) / Math.abs(s.lateralAcceleration) : 1e6;
   const bound = c.width / 2 - 0.7;
   const centre = courseCenterX(s.z, c);
   if (Math.abs(s.x - centre) > bound) {

@@ -4,7 +4,8 @@ import { clamp, type SkierState } from "./types";
  * The geometry follows each ski's previous and current edge orientation so
  * tracks no longer shear sideways whenever the athlete carves across the slope.
  */
-export type TrackSample = Pick<SkierState, "x" | "z" | "heading">;
+export interface SkiContactPoints { left: { x: number; z: number }; right: { x: number; z: number } }
+export type TrackSample = Pick<SkierState, "x" | "z" | "heading"> & { feet?: SkiContactPoints };
 export type HeightAt = (x: number, z: number) => number;
 
 export function skiTrackQuad(
@@ -14,10 +15,15 @@ export function skiTrackQuad(
   halfWidth: number,
   heightAt: HeightAt,
 ): number[] {
-  const ax = previous.x + Math.cos(previous.heading) * skiOffset;
-  const az = previous.z - Math.sin(previous.heading) * skiOffset;
-  const bx = current.x + Math.cos(current.heading) * skiOffset;
-  const bz = current.z - Math.sin(current.heading) * skiOffset;
+  const side = skiOffset < 0 ? "left" : "right";
+  const point = (s: TrackSample) => {
+    const foot = s.feet?.[side];
+    const offset = foot ? skiOffset - (side === "left" ? -.18 : .18) : skiOffset;
+    return {x: (foot?.x ?? s.x) + Math.cos(s.heading) * offset,
+      z: (foot?.z ?? s.z) - Math.sin(s.heading) * offset};
+  };
+  const a = point(previous), b = point(current);
+  const ax = a.x, az = a.z, bx = b.x, bz = b.z;
   const dx = bx - ax;
   const dz = bz - az;
   const length = Math.hypot(dx, dz);

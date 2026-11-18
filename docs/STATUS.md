@@ -1,3 +1,19 @@
+# État actif — V1.17, 18 novembre 2026
+
+Le lot `feat/force-driven-ski-contact` corrige les cibles IK bloquées au sol en vol, les skis mal orientés sur dévers, l’inclinaison excessive à basse vitesse et le côté d’appui inversé par le yaw du GLB. Les carres/directions/charges viennent du solveur 120 Hz ; les jambes gardent leurs longueurs, le bassin suit les forces et une suspension amortie. Personnage 25 os conservé. Traces sous les contacts réels, 42 portes reconstituées, branches volumétriques, coucher de soleil par défaut et ciel sans disque de clipping. Piquets flexibles, fanions physiques, seuil strict >45 %, chrono et contrôles préservés.
+
+**TERMINÉ ET TESTÉ localement** : 174 tests unitaires / 38 fichiers ; 7 tests Chromium en 4,5 min ; test ciblé supplémentaire après correction du ciel en 37,7 s ; TypeScript/Vite et audit du pack complet. Bundle de production lancé dans Chromium, sans API DEV ni erreur JS/HTTP, chrono et commandes actifs. Captures et mesures dans [le rapport](REALISM_2026_11_18.md) et [les références](references/2026-11-18/README.md). Suite complète couvrant course, replay, chargement des deux variantes du rig, contrôles clavier, portes et éclairages. Aucun test manette physique ni GPU joueur.
+
+**INTÉGRÉ MAIS NON VALIDÉ sur matériel cible** : calibrage biomécanique face à un athlète réel, FPS PC/mobile, coût GPU des branches/lumières/particules et rendu WebGPU. Le masquage des portes réduit les appels de rendu de 1 757 à 965 dans la scène Low mesurée ; les FPS logiciels ne permettent pas de conclure à un gain sur GPU.
+
+**NON COMMENCÉ dans ce lot** : DEM géoréférencé, montagnes photogrammétriques, nouvelles textures haute définition externes, mocap, ragdoll multicorps, nouvelles caméras TV. Les cinq vidéos nommées sont absentes : aucun visionnage revendiqué. La référence FIS compte 43 portes, le jeu en propose 42 selon la demande ; les coordonnées restent artistiques.
+
+**Publication** : consulter la PR de `feat/force-driven-ski-contact` et son workflow `Verify and publish` pour les SHA et résultats distants. La validation locale ci-dessus n’est pas une déclaration de publication. Le site cible reste https://raphtd38-oss.github.io/alpine-ski-pro/ .
+
+Les notes suivantes sont historiques, notamment les anciens tracés à 34 portes et le jour par défaut.
+
+---
+
 > **18 novembre 2026 — Super-G ressenti physique/biomécanique (branche feat/sg-physics-biomechanics-20261118)** : corrections du sens gauche/droite clavier/tactile/manette (droite = +X) ; budget d'adhérence réaliste pour des virages propres à haute vitesse (sans déclencher automatiquement du dérapage à chaque prise de carre), accélération latérale mesurée par le solveur 120 Hz et transmise au directeur du skieur 25 os. Plus de flexion du bassin, angle des skis et angulation du torse, transferts de charge plus visibles ; impulsions, sauts, collisions de fanions, 34 portes et chrono conservés. Replays enrichis en vitesse/accélération ; lecture des anciens replays compatible. **Vérification :** tests Vitest/Playwright et build à confirmer sur GitHub Actions ; la comparaison vidéos reste qualitative, sans garantie de similitude exacte ni mesure GPU réelle.
 
 

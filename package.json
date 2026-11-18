@@ -1,6 +1,6 @@
 {
   "name": "alpine-ski-pro",
-  "version": "1.16.0",
+  "version": "1.17.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -31,6 +31,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",
+    "@types/node": "^24.19.2",
     "prettier": "^3.10.1",
     "typescript": "^5.9.3",
     "vite": "8.3.8",

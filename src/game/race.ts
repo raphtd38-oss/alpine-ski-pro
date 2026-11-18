@@ -1,3 +1,4 @@
+import { skiTelemetry, interpolateSkiTelemetry } from "./ski-telemetry";
 import type {
   Course,
   Discipline,
@@ -123,6 +124,7 @@ export class Race {
     this.recordTimer += timedDt;
     if (this.recordTimer >= 1 / 30 || this.frames.length === 0) {
       this.frames.push({
+        ...skiTelemetry(s),
         t: this.time,
         x: s.x,
         z: s.z,
@@ -186,6 +188,7 @@ export function replayAt(frames: Frame[], time: number): Frame | null {
     a = frames[Math.max(0, lo - 1)];
   const u = Math.max(0, Math.min(1, (time - a.t) / Math.max(1e-9, b.t - a.t)));
   return {
+    ...interpolateSkiTelemetry(a, b, u),
     t: time,
     x: a.x + (b.x - a.x) * u,
     z: a.z + (b.z - a.z) * u,
@@ -198,8 +201,10 @@ export function replayAt(frames: Frame[], time: number): Frame | null {
     flex: (a.flex ?? 0) + ((b.flex ?? 0) - (a.flex ?? 0)) * u,
     load: (a.load ?? 0.5) + ((b.load ?? 0.5) - (a.load ?? 0.5)) * u,
     slip: (a.slip ?? 0) + ((b.slip ?? 0) - (a.slip ?? 0)) * u,
-    lateralAcceleration: (a.lateralAcceleration ?? 0) +
-      ((b.lateralAcceleration ?? 0) - (a.lateralAcceleration ?? 0)) * u,
+    lateralAcceleration: a.lateralAcceleration === undefined && b.lateralAcceleration === undefined
+      ? undefined : (a.lateralAcceleration ?? b.lateralAcceleration ?? 0) +
+        ((b.lateralAcceleration ?? a.lateralAcceleration ?? 0) -
+          (a.lateralAcceleration ?? b.lateralAcceleration ?? 0)) * u,
     chatter: (a.chatter ?? 0) + ((b.chatter ?? 0) - (a.chatter ?? 0)) * u,
     poleImpact: (a.poleImpact ?? 0) + ((b.poleImpact ?? 0) - (a.poleImpact ?? 0)) * u,
     poleImpactSide: b.poleImpactSide ?? a.poleImpactSide ?? 0,

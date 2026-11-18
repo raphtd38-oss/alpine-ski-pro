@@ -13,7 +13,7 @@ test("renders the Super-G, responds to keys, pauses, restarts and changes suit",
   expect(athlete.athleteHasAttachedSkis).toBe(true);
   expect(athlete.athleteSurfaces).toBeGreaterThanOrEqual(110);
   expect(athlete.athleteSurfaces).toBeGreaterThanOrEqual(40);
-  expect(athlete.flexiblePoleTips).toBe(68);
+  expect(athlete.flexiblePoleTips).toBe(84);
   expect(athlete.course).toBe("SG");
   await expect(page.locator("#course-name")).toContainText("Cortina");
   await expect(page.locator("#course-length")).toContainText("2105");

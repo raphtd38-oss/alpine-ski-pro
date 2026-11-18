@@ -86,3 +86,18 @@ it("keeps the game usable when browser storage is blocked", () => {
   expect(p.available).toBe(false);
   expect(readSettings().course).toBe("SG");
 });
+
+it('archives the old 34-gate Cortina times while carrying the career into 42 gates', () => {
+  const key='alpine-ski-pro:cortina-2026:v1';
+  const old=JSON.stringify({version:1,name:'Cortina racer',xp:500,completed:3,
+    records:{SG:[result(73)]},ghosts:{SG:{time:73,frames:[]}}});
+  map.set(key,old);
+  const current=new Progress();
+  expect(current.data.xp).toBe(500);
+  expect(current.data.name).toBe('Cortina racer');
+  expect(current.data.records.SG).toEqual([]);
+  expect(current.data.ghosts.SG).toBeUndefined();
+  current.record(result(90),[]);
+  expect(map.get(key)).toBe(old);
+  expect(new Progress().data.records.SG?.[0].time).toBe(90);
+});

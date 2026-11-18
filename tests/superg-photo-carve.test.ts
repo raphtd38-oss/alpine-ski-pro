@@ -22,12 +22,12 @@ describe("photo-inspired Super-G carve posture", () => {
     const right = runCarve(-1);
     expect(left.bankDeg).toBeLessThan(-30);
     expect(right.bankDeg).toBeGreaterThan(30);
-    expect(left.leftFoot.edgeRollDeg).toBeLessThan(-45);
-    expect(right.rightFoot.edgeRollDeg).toBeGreaterThan(45);
-    expect(left.outsideSide).toBe("L");
-    expect(right.outsideSide).toBe("R");
-    expect(left.leftFoot.outside).toBe(true);
-    expect(right.rightFoot.outside).toBe(true);
+    expect(left.leftFoot.edgeRollDeg).toBeGreaterThan(45);
+    expect(right.rightFoot.edgeRollDeg).toBeLessThan(-45);
+    expect(left.outsideSide).toBe("R");
+    expect(right.outsideSide).toBe("L");
+    expect(left.rightFoot.outside).toBe(true);
+    expect(right.leftFoot.outside).toBe(true);
   });
   it("keeps a lower centre of mass and bounded angles even on a hard edge", () => {
     const pose = runCarve(1);

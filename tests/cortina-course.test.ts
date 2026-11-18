@@ -22,7 +22,7 @@ describe("Cortina Olympia delle Tofane Super-G original schematic reconstruction
     expect(CORTINA_2026.finishElevationM).toBe(1560);
     expect(CORTINA_2026.officialGates).toBe(43);
     expect(CORTINA_2026.officialTurningGates).toBe(39);
-    expect(course.gates).toHaveLength(34); // deliberately playable original gates
+    expect(course.gates).toHaveLength(42); // deliberately playable original gates
   });
 
   it("follows the supplied 24 authored waypoints with continuous interpolation", () => {

@@ -40,19 +40,19 @@ describe("ultimate Super-G: physically informed, visual-only 25-bone pose", () =
       vx: 3, vz: 29, height: 0, fallen: 0, tuck: .4,
       load: .88, pressure: 1.3, skid: .15,
     }, 1 / 60);
-    expect(left!.outsideSide).toBe("L");
-    expect(left!.leftFoot.visualLoad).toBeGreaterThan(left!.rightFoot.visualLoad);
+    expect(left!.outsideSide).toBe("R");
+    expect(left!.rightFoot.visualLoad).toBeGreaterThan(left!.leftFoot.visualLoad);
     expect(left!.lateralG).toBeGreaterThan(0.1);
     for (let i = 0; i < 120; i++) right = pose.sample({
       t: (85 + i) / 60, z: 35 + i * .4, x: 0, heading: -.06, edge: -.95,
       vx: -3, vz: 29, height: 0, fallen: 0, tuck: .4,
       load: .12, pressure: 1.3, skid: .1,
     }, 1 / 60);
-    expect(right!.outsideSide).toBe("R");
-    expect(right!.rightFoot.visualLoad).toBeGreaterThan(right!.leftFoot.visualLoad);
-    expect(right!.rightFoot.edgeRollDeg).toBeGreaterThan(40);
-    expect(right!.leftFoot.edgeRollDeg).toBeGreaterThan(40);
-    expect(right!.pelvisShiftM).toBeLessThan(0);
+    expect(right!.outsideSide).toBe("L");
+    expect(right!.leftFoot.visualLoad).toBeGreaterThan(right!.rightFoot.visualLoad);
+    expect(right!.rightFoot.edgeRollDeg).toBeLessThan(-40);
+    expect(right!.leftFoot.edgeRollDeg).toBeLessThan(-40);
+    expect(right!.pelvisShiftM).toBeGreaterThan(0);
   });
 });
 
@@ -87,6 +87,6 @@ describe("physical spotlight safety budget and snow spraying from BOTH outside s
   });
   it("does not change the established banner crash rule or number of course gates", () => {
     expect(BANNER_CRASH_THRESHOLD).toBe(0.45);
-    expect(COURSES.SG.gates).toHaveLength(34);
+    expect(COURSES.SG.gates).toHaveLength(42);
   });
 });

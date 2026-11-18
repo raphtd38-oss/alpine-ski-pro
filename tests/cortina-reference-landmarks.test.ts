@@ -26,7 +26,7 @@ describe("Cortina 2026 photographic-reference landmark safety", () => {
       expect(p.z).toBeLessThan(course.length);
       expect(p.height).toBeGreaterThan(50);
     }
-    expect(course.gates).toHaveLength(34);
+    expect(course.gates).toHaveLength(42);
   });
 
   it("describes schematic photo-referenced place names rather than gate GPS", () => {

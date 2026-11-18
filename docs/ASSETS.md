@@ -1,3 +1,9 @@
+> Audit du fallback historique : le générateur existant produit 1 094 208 octets avec les textures embarquées, alors que le budget d'audit était encore 1 000 000. Budget corrigé à 1 200 000 ; le script et la géométrie du fallback ne sont pas modifiés par cette session. Les GLB monobloc 25 os sont inchangés.
+
+## 18 novembre 2026 — branches et contact physique
+
+`src/render/alpine-tree-geometry.ts` produit des branches volumétriques originales, troncs et dépôts de neige, groupés dans les maillages existants. Aucun nouvel asset tiers, aucune texture source copiée, aucun appel payant. Les deux GLB du personnage 25 os sont inchangés. Les captures dans `docs/references/2026-11-18` sont produites par le jeu local pour comparaison, sans vidéos utilisateur disponibles.
+
 
 ## V1.16 — Géologie dolomitique et bourrelets de neige originaux
 

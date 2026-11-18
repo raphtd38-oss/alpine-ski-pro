@@ -19,6 +19,7 @@ import {
   initialState,
   stepPhysics,
 } from "./game/physics";
+import { skiTelemetry } from "./game/ski-telemetry";
 import { Race, replayAt, formatTime } from "./game/race";
 import { PoleSimulation } from "./game/poles";
 import { Input } from "./game/input";
@@ -32,6 +33,7 @@ import { UI, type Settings } from "./ui/ui";
 import type { Frame, Controls } from "./game/types";
 
 async function boot() {
+  let inspecting = false;
   const settings = readSettings();
   const requestedQuality = new URLSearchParams(location.search).get("quality");
   if (
@@ -72,6 +74,7 @@ async function boot() {
   let lastFrames: Frame[] = [];
   let lastResult: ReturnType<typeof Object.assign> | null = null;
   const snapshot = (time: number): Frame => ({
+    ...skiTelemetry(state),
     t: time,
     x: state.x,
     z: state.z,
@@ -399,6 +402,7 @@ async function boot() {
       `${Math.min(100, Math.hypot(state.vx, state.vz) * 3.6)}%`;
   };
   renderer.app.on("update", (realDt: number) => {
+    if (import.meta.env.DEV && inspecting) return;
     const dt = Math.min(realDt, 0.1),
       control = input.sample();
     let alpha = 1;
@@ -413,6 +417,7 @@ async function boot() {
           const elapsed = Math.max(0.001, dt * replaySpeed);
           state = {
             ...state,
+            ...Object.fromEntries(Object.entries(skiTelemetry(f)).filter(([, v]) => v !== undefined)),
             x: f.x,
             z: f.z,
             heading: f.heading,
@@ -518,11 +523,23 @@ async function boot() {
     ui.toast("Rendu WebGL 2 activé après un problème WebGPU.");
   // Explicitly development-only observability. Never included in the production bundle.
   if (import.meta.env.DEV) {
+    // Controlled pose fixtures for visual QA; never exported in production.
+    let inspection: Frame | null = null;
+    renderer.app.on("update", () => {
+      if (!inspection) return;
+      renderer.athlete.update(inspection, race.course, 0.1);
+      const y = terrainHeight(inspection.x, inspection.z, race.course);
+      renderer.camera.setPosition(inspection.x + 3.4, y + inspection.height + 2.0, inspection.z - 4.2);
+      renderer.camera.lookAt(inspection.x, y + inspection.height + 0.7, inspection.z);
+      renderer.camera.camera!.fov = 35;
+      renderer.athlete.root.enabled = true;
+    });
     Object.assign(window, {
       __ski: {
         /** DEV ONLY: world-space contact diagnostics for animation regression.
          * Production builds never expose these graph/bone references.
          */
+        inspectPose: (frame: Frame | null) => { inspection = frame; inspecting = !!frame; paused = true; },
         getAthletePose: () => {
           const athlete = renderer.athlete;
           const groundClearance = (name: string) => {
@@ -552,6 +569,26 @@ async function boot() {
             competitionPose: athlete.getCompetitionDiagnostics(),
           };
         },
+        profilePhysics: (ticks = 12000) => {
+          const probe = { ...initialState(), vz: 27 };
+          const began = performance.now();
+          for (let i = 0; i < Math.min(120000, Math.max(1, ticks)); i++)
+            stepPhysics(probe, { steer: Math.sin(i / 180) * .7, tuck: true, brake: false, jump: false },
+              EQUIPMENT.SG, COURSES.SG, FIXED_DT);
+          const elapsedMs = performance.now() - began;
+          return { ticks, elapsedMs, msPerStep: elapsedMs / ticks };
+        },
+        getRenderMetrics: () => ({
+          frameMs: renderer.app.stats.frame.ms,
+          drawCalls: renderer.app.stats.drawCalls.total,
+          primitives: renderer.app.stats.primitiveCount,
+          gpuAllocatedBytes: ["tex", "vb", "ib", "ub", "sb"].reduce((sum, key) =>
+            sum + renderer.app.stats.vram[key as "tex" | "vb" | "ib" | "ub" | "sb"], 0),
+          renderScale: renderer.renderScale,
+          lights: renderer.world.getCortinaLightDiagnostics(),
+          particles: renderer.effects.particles.length,
+          renderer: renderer.app.graphicsDevice.deviceType,
+        }),
         getState: () => ({
           ...state,
           phase: race.phase,
@@ -562,6 +599,7 @@ async function boot() {
           course: race.course.id,
           fps: renderer.fps,
           cortinaSpotlights: renderer.world.getCortinaLightDiagnostics(),
+          visibleGateCount: renderer.world.gateEntities.filter(gate => gate.enabled).length,
           guideActive: Boolean(renderer.world.trainingGuide?.enabled),
           startArchVisible: Boolean(renderer.world.startArch?.enabled),
           startHouse: Boolean(renderer.world.startBooth),

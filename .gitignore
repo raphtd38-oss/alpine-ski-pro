@@ -4,3 +4,8 @@ playwright-report/
 test-results/
 *.local
 .DS_Store
+
+public/assets/alpine/
+public/audio/pole-hard.wav
+public/audio/pole-soft.wav
+public/audio/pole-return.wav

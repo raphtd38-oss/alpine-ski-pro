@@ -23,6 +23,7 @@ const FLAG_TOP = 1.76 / POLE_LENGTH;
 const PARTNER_DISTANCE = 1.03;
 const EXTRA_PANEL_Z = -0.08;
 const MAX_RENDER_DISTANCE = 190;
+const GATE_DRAW_RANGE: Record<Quality, number> = { low: 240, medium: 350, high: 500, ultra: 650 };
 const TWO_PI = Math.PI * 2;
 
 const clamp = (x: number, a: number, b: number) =>
@@ -619,13 +620,14 @@ class FlagPair {
 
 /**
  * Adaptateur prêt pour World.gates() et World.updateGates().
- * Le comptage des 34 portes, 68 fanions et 68 paires est conservé.
+ * Chaque porte conserve ses deux fanions et ses deux paires de piquets.
  */
 export class RealisticSuperGGate {
   readonly entity: pc.Entity;
   private readonly left: FlagPair;
   private readonly right: FlagPair;
   private readonly gateZ: number;
+  private readonly drawRange: number;
 
   constructor(
     device: pc.GraphicsDevice,
@@ -638,6 +640,7 @@ export class RealisticSuperGGate {
     quality: Quality,
   ) {
     this.gateZ = gate.z;
+    this.drawRange = GATE_DRAW_RANGE[quality];
     const baseY = terrainHeight(gate.x, gate.z, course);
     this.entity = new pc.Entity(`Gate ${gate.id + 1}`);
     this.entity.setLocalPosition(gate.x, baseY, gate.z);
@@ -659,8 +662,12 @@ export class RealisticSuperGGate {
     time: number,
     focusZ?: number,
   ): void {
-    if (Number.isFinite(focusZ) &&
-        Math.abs(this.gateZ - focusZ!) > MAX_RENDER_DISTANCE) return;
+    // Distant flags previously skipped simulation but still submitted every
+    // strap, rubber joint and cap to the GPU. Scoring/collisions are separate.
+    const distance = Number.isFinite(focusZ) ? Math.abs(this.gateZ - focusZ!) : 0;
+    const margin = this.entity.enabled ? 15 : -15;
+    this.entity.enabled = distance <= this.drawRange + margin;
+    if (!this.entity.enabled || distance > MAX_RENDER_DISTANCE) return;
     if (leftPole) this.left.update(leftPole, dt, time);
     if (rightPole) this.right.update(rightPole, dt, time);
   }

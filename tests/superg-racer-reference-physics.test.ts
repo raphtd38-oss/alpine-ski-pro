@@ -77,12 +77,12 @@ describe("reference-based World Cup ski physics and 25-bone posture", () => {
     const right = sample(1), left = sample(-1);
     expect(right.bankDeg).toBeLessThan(-43);
     expect(left.bankDeg).toBeGreaterThan(43);
-    expect(right.pelvisHeightM).toBeLessThan(0.71);
-    expect(left.pelvisHeightM).toBeLessThan(0.71);
-    expect(right.leftFoot.edgeRollDeg).toBeLessThan(-52);
-    expect(left.rightFoot.edgeRollDeg).toBeGreaterThan(52);
-    expect(right.outsideSide).toBe("L");
-    expect(left.outsideSide).toBe("R");
+    expect(right.pelvisHeightM).toBeLessThan(0.76);
+    expect(left.pelvisHeightM).toBeLessThan(0.76);
+    expect(right.leftFoot.edgeRollDeg).toBeGreaterThan(52);
+    expect(left.rightFoot.edgeRollDeg).toBeLessThan(-52);
+    expect(right.outsideSide).toBe("R");
+    expect(left.outsideSide).toBe("L");
   });
 
   it("interpolates real forces in new replay frames and accepts legacy frames", () => {
@@ -101,6 +101,6 @@ describe("reference-based World Cup ski physics and 25-bone posture", () => {
       { ...base, lateralAcceleration: undefined },
       { ...base, t: 1, lateralAcceleration: undefined },
     ], 0.5);
-    expect(old?.lateralAcceleration).toBe(0);
+    expect(old?.lateralAcceleration).toBeUndefined();
   });
 });

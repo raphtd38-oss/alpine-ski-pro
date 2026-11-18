@@ -1,3 +1,4 @@
+import { appendAlpineTree } from "./alpine-tree-geometry";
 import * as pc from "playcanvas";
 import { formatTime } from "../game/race";
 import { AlpineAssets } from "./alpine-assets";
@@ -386,35 +387,8 @@ export class World {
       const y = terrainHeight(x, z, this.course);
       const h = (section === "glacier" ? 3 : 4) +
         random() * (section === "canyon" ? 12 : 8);
-      for (let level = 0; level < 6; level++) {
-        const by = y + h * 0.12 + level * h * 0.135,
-          r = h * 0.26 * (1 - level / 7),
-          top = by + h * 0.38;
-        const start = p.length / 3;
-        const sides = 9;
-        p.push(x, top, z);
-        cols.push(0.73, 0.83, 0.85, 1);
-        for (let k = 0; k <= sides; k++) {
-          const a = (k / sides) * Math.PI * 2;
-          const radius = r * (0.85 + random() * 0.3);
-          p.push(
-            x + Math.cos(a) * radius,
-            by + (k % 2) * 0.25,
-            z + Math.sin(a) * radius,
-          );
-          // In the reference film the spruces remain dark evergreen with
-          // snow on branch tips, not almost entirely white/blue silhouettes.
-          const snowyBranch = k % 4 === 0 || (level > 3 && k % 4 === 1);
-          cols.push(
-            ...(snowyBranch
-              ? [0.74 + level * 0.027, 0.82 + level * 0.022,
-                 0.81 + level * 0.022, 1]
-              : [0.075 + level * 0.014, 0.19 + level * 0.012,
-                 0.17 + level * 0.012, 1]),
-          );
-          if (k > 0) idx.push(start, start + k + 1, start + k);
-        }
-      }
+      appendAlpineTree({p, i: idx, colors: cols}, x, y, z, h, random,
+        this.quality === "low" ? 2 : 4, t % 9 === 0);
     }
     const e = meshEntity(
       this.app.graphicsDevice,
