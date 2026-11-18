@@ -1,5 +1,8 @@
 # Feuille de route persistante
 
+> **18 novembre 2026 — refonte Cortina photo-référencée (branche PR #34) :** nouveau module de parois dolomitiques, neige sur strates, épicéas/mélèzes, éboulis et LOD de scène intégré à PlayCanvas. Les photos servent de direction artistique seulement. **Étape suivante prioritaire :** obtenir et licencier un DEM admissible (GLO-30 autorisé ou autre source), établir des points géodésiques de contrôle, produire une topographie de massifs avec relief continu et un corridor piste unique physique/rendu ; auditer l'alignement géographique des secteurs Schuss, Duca, Delta et Scarpadon. Ajouter seulement des assets PBR et photogrammétrie dont la provenance, la redistribution et les budgets WebGL2/iOS sont vérifiés. Pour chaque changement, comparer captures et retours de pilotes à la vidéo réelle, vérifier les 34 portes et mesurer les performances du GPU avant fusion.
+
+
 > **Après V1.15** : calibrer biomécanique sur des vidéos autorisées (squat, chargement ski extérieur, angles skis/sol), mesurer les performances GPU sur iPhone/PC, améliorer l'ombrage des arbres, asset LOD de montagne, la neige PBR et les ombres des spots sur tous les profils. Ne pas confondre rendu Chromium et vrai benchmark GPU. Voir docs/ULTIMATE_REALISM_V115.md.\n\n
 > **Décor visuel Cortina enrichi :** détails rapprochés de dommage neige, filets rouges et pylônes éclairés, plus montagnes, résineux et village en arrière-plan. À tester ensuite sur iPhone / PC : nombre de triangles visibles, lumière des pylônes, détails près du skieur, densité forêt, lisibilité des portes et comportement du ciel en caméra subjective. Les différences photo↔moteur restent importantes car il n'existe ni DEM officiel, ni textures/scans locaux de Cortina dans le projet.\n\n
 
