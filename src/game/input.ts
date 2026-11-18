@@ -1,4 +1,9 @@
 import type { Controls } from "./types";
+
+/** Player right is world +X, consistently for keyboard and analogue axes. */
+export function steeringFromDirections(left: boolean, right: boolean): number {
+  return (right ? 1 : 0) - (left ? 1 : 0);
+}
 export class Input {
   keys = new Set<string>();
   touchSteer = 0;
@@ -25,16 +30,17 @@ export class Input {
     this.touchBrake = false;
   }
   sample(): Controls {
-    let steer =
-      (this.keys.has("KeyD") || this.keys.has("ArrowRight") ? -1 : 0) +
-      (this.keys.has("KeyA") || this.keys.has("ArrowLeft") ? 1 : 0);
+    let steer = steeringFromDirections(
+      this.keys.has("KeyA") || this.keys.has("ArrowLeft"),
+      this.keys.has("KeyD") || this.keys.has("ArrowRight"),
+    );
     let tuck = this.keys.has("KeyW") || this.keys.has("ArrowUp"),
       brake =
         this.touchBrake || this.keys.has("KeyS") || this.keys.has("ArrowDown"),
       jump = this.keys.has("Space");
     const pad = navigator.getGamepads?.()[0];
     if (pad) {
-      if (Math.abs(pad.axes[0]) > 0.12) steer = -pad.axes[0];
+      if (Math.abs(pad.axes[0]) > 0.12) steer = pad.axes[0];
       tuck ||= !!pad.buttons[7]?.pressed;
       brake ||= !!pad.buttons[6]?.pressed;
       jump ||= !!pad.buttons[0]?.pressed;
