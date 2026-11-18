@@ -16,6 +16,7 @@ import { ALPINE_START_GATE } from "../game/start-gate";
 import { addCortinaScenery } from "./cortina-scenery";
 import { createCortinaAtmosphere } from "./cortina-atmosphere";
 import { addCortinaCinematicDetails } from "./cortina-cinematic-detail";
+import { addCortinaSnowShoulders } from "./cortina-snow-banks";
 import { createCortinaLightAccents } from "./cortina-light-accents";
 import type { Course, Quality, Weather } from "../game/types";
 import { material, meshEntity, shape, beam, rng, color } from "./geometry";
@@ -68,6 +69,9 @@ export class World {
     this.blueFlag = this.gateMaterial("blue", true);
     if (!this.alpineAssets?.applySnowMaterial(this.snow)) this.snowTexture();
     this.terrain();
+    this.materials.push(addCortinaSnowShoulders(
+      this.app, this.root, this.course, this.quality,
+    ));
     // The active Super-G is Cortina Olympia delle Tofane, not Glacier Express.
     // Snow, blue-dye and pole collision meshes keep their own unchanged code.
     this.materials.push(...addCortinaScenery(this.app, this.root, this.course, this.quality));
