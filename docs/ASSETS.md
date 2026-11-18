@@ -164,3 +164,11 @@ Les scripts de la nouvelle boîte à outils **n'ajoutent pas automatiquement de 
 
 - Référence visuelle : capture wireframe fournie par le propriétaire ; **aucune image externe, motion capture, texture ou modèle supplémentaire intégré au runtime**.
 - Nouveaux modules TypeScript du modèle mathématique et de l'IK 3D dérivés des sources originales transmises par le propriétaire `superg-carve-kinematics.ts` et `superg-race-pose-director.ts`. Les deux modèles de skieur GLB conservent leur provenance V1.13 ; aucune ressource CarveMania utilisée.
+
+
+## 18 novembre 2026 — géométrie originale des repères Cortina
+
+- Nouveau module `src/render/cortina-reference-landmarks.ts` : huit parois schématiques de calcaire stratifié et corniches de neige, peuplement détaillé d'épicéas/mélèzes et éboulis. Tous les vertex, couleurs et indices sont générés par le code original et ne nécessitent aucun fichier externe, compte ou téléchargement. Les positions suivent le système de coordonnées existant, non un GPS relevé.
+- Sources artistiques : six photos de Cortina fournies par le propriétaire, consultées comme références seulement ; aucune photographie, masque, photogrammétrie, marque, fichier de tiers ou photo dérivée n'est incorporé au bundle.
+- Densités `low / medium / high / ultra` de 3/5/7/8 faces rocheuses et 12/35/76/122 arbres rapprochés (en plus des peuplements existants). Les matériaux et mesh entities sont enregistrés dans `World` pour nettoyage. Collisions et physique de la piste non modifiées.
+- Provenance du code et des formes : création originale dans le dépôt, sans réutilisation du code ou des assets propriétaires de CarveMania. Aucune promesse d'exactitude topographique ou de photoréalisme sans vérification sur matériel réel.
