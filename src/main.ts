@@ -82,6 +82,7 @@ async function boot() {
     flex: state.flex,
     load: state.load,
     slip: state.slip,
+    lateralAcceleration: state.lateralAcceleration,
     chatter: state.chatter,
     poleImpact: state.poleImpact,
     poleImpactSide: state.poleImpactSide,
@@ -259,7 +260,7 @@ async function boot() {
     b.addEventListener("pointerdown", (e) => {
       b.setPointerCapture(e.pointerId);
       if (b.dataset.touch === "brake") input.touchBrake = true;
-      else input.touchSteer = b.dataset.touch === "left" ? 1 : -1;
+      else input.touchSteer = b.dataset.touch === "left" ? -1 : 1;
     });
     b.addEventListener("pointerup", clear);
     b.addEventListener("pointercancel", clear);
@@ -419,6 +420,7 @@ async function boot() {
             flex: f.flex ?? 0,
             load: f.load ?? 0.5,
             slip: f.slip ?? 0,
+            lateralAcceleration: f.lateralAcceleration ?? 0,
             chatter: f.chatter ?? 0,
             poleImpact: f.poleImpact ?? 0,
             poleImpactSide: f.poleImpactSide ?? 0,
