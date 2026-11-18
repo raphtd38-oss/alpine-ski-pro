@@ -57,6 +57,18 @@ export class Athlete {
       // Rotate the complete skinned hierarchy, without altering game physics.
       this.rig.setLocalEulerAngles(0, 180, 0);
     }
+    // Use the actual continuous racer for the primary directional silhouette
+    // shadow, instead of 100+ tiny boot/binding shadow draws per cascade.
+    // This gives the athlete a legible presence on the snow on desktop and
+    // mobile while keeping the linked ski/boot meshes intact.
+    if (this.isSeamless && !ghost) {
+      for (const component of this.rig.findComponents("render")) {
+        const render = component as pc.RenderComponent;
+        render.castShadows =
+          render.entity.name.includes("ONE seamless fused skinned athlete body");
+        render.receiveShadows = true;
+      }
+    }
     const seamlessBones: Record<string, string> = {
       Pelvis: "Hips", LHip: "LeftUpLeg", LKnee: "LeftLeg",
       LAnkle: "LeftAnkle", LShoulder: "LeftShoulder",
