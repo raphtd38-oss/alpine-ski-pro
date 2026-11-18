@@ -32,7 +32,22 @@ export interface Controls {
   brake: boolean;
   jump: boolean;
 }
-export interface SkierState {
+/** Authoritative contact telemetry. Left/right refer to the skier's transverse
+ * simulation axes (-X/+X at heading zero), not the imported GLB bone names. */
+export interface SkiContactTelemetry {
+  edgeLeft: number;
+  edgeRight: number;
+  skiYawLeft: number;
+  skiYawRight: number;
+  normalForceLeft: number;
+  normalForceRight: number;
+  yawRate: number;
+  suspension: number;
+  suspensionVelocity: number;
+  normalAcceleration: number;
+  turnRadius: number;
+}
+export interface SkierState extends SkiContactTelemetry {
   x: number;
   z: number;
   vx: number;
@@ -68,7 +83,7 @@ export interface SkierState {
   jumpHeld: boolean;
   distance: number;
 }
-export interface Frame {
+export interface Frame extends Partial<SkiContactTelemetry> {
   /** Optional render/replay kinematics; ignored by fixed-step physics. */
   vx?: number;
   vz?: number;

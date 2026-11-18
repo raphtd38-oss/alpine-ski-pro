@@ -1,3 +1,5 @@
+> **Mise à jour 18/11/2026 :** le parcours jouable comporte maintenant **42 portes**, à la demande du propriétaire, avec exclusion des zones de vol/réception. Les 34 portes mentionnées dans l'historique ci-dessous sont remplacées. La fiche FIS codex 5183 confirme **43 portes officielles** : le jeu ne prétend pas reproduire leurs coordonnées. Sunset par défaut ; détails et recherches dans [REALISM_2026_11_18.md](REALISM_2026_11_18.md).
+
 # Cortina d'Ampezzo — Olympia delle Tofane (Super-G 2026)
 
 **Course active depuis V1.14.** L'ancien tracé fictif « Glacier Express » (1 980 m, ~546 m de dénivelé) a été remplacé par la reconstitution **jouable** du pack original fourni : `Alpine_Ski_Pro_Cortina_SuperG_2026_3D_PACK (1).zip`.

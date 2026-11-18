@@ -18,10 +18,10 @@ function simulate(control: Controls, seconds = 12) {
 }
 
 describe("Super-G-only 120Hz simulation", () => {
-  it("has one live race with the original 34 gates and speed equipment", () => {
+  it("has one live race with the authored 42 gates and speed equipment", () => {
     expect(Object.keys(COURSES)).toEqual(["SG"]);
     expect(Object.keys(EQUIPMENT)).toEqual(["SG"]);
-    expect(sg.gates).toHaveLength(34);
+    expect(sg.gates).toHaveLength(42);
     expect(sg.length).toBe(2105);
     expect(gear.length).toBeGreaterThan(2);
   });
@@ -110,7 +110,7 @@ describe("Super-G-only 120Hz simulation", () => {
       race.update(prev,s,FIXED_DT,false);
     }
     expect(race.phase).toBe("finished");
-    expect(race.nextGate).toBe(34);
+    expect(race.nextGate).toBe(42);
     expect(race.frames.length).toBeGreaterThan(200);
   });
 

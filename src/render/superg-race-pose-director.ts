@@ -17,6 +17,7 @@
 import * as pc from "playcanvas";
 import type { Course, Equipment, Frame } from "../game/types";
 import { gradient, terrainHeight } from "../game/course";
+import { skiSurfaceRotation, minimumSoleClearance } from "./ski-contact-frame";
 import { PRO_POLE } from "./equipment-specs";
 import { gateCrashPose } from "./gate-crash-pose";
 import {
@@ -75,6 +76,13 @@ export interface SGDirectorDiagnostics {
   equivalentTurnRadiusM: number;
   outsideSkiLoad: number;
   insideSkiLoad: number;
+  leftKneeFlexionDeg: number;
+  rightKneeFlexionDeg: number;
+  leftLegLengthM: number;
+  rightLegLengthM: number;
+  pelvisWorld: number[];
+  leftFootWorld: number[];
+  rightFootWorld: number[];
 }
 
 const clone = (v: pc.Vec3) => v.clone();
@@ -118,8 +126,11 @@ export function solve25BoneLegKnee(
 
   const targetDirection = targetAnklePelvis.clone().sub(hipPelvis);
   const originalDistance = targetDirection.length();
-  const minReach = Math.abs(upper - lower) + 0.002;
-  const maxReach = upper + lower - 0.002;
+  // Knee flexion stays between 8° and 145°, constant bone lengths.
+  const minReach = Math.sqrt(upper * upper + lower * lower +
+    2 * upper * lower * Math.cos(145 / RAD));
+  const maxReach = Math.sqrt(upper * upper + lower * lower +
+    2 * upper * lower * Math.cos(8 / RAD));
   const reach = bounded(originalDistance, minReach, maxReach);
   const line = normalized(targetDirection, new pc.Vec3(0, -1, 0));
   const anklePelvis = hipPelvis.clone().add(line.clone().mulScalar(reach));
@@ -209,6 +220,10 @@ export class SuperGRacePoseDirector {
   private lastGripError: [number, number] = [0, 0];
   private lastBaseClearance: [number, number] = [0, 0];
   private lastDirectionError: [number, number] = [0, 0];
+  private readonly targets = {
+    L: { ankle: new pc.Vec3(), rotation: new pc.Quat() },
+    R: { ankle: new pc.Vec3(), rotation: new pc.Quat() },
+  };
   private readonly feetBySide: Record<SkiSide, pc.GraphNode>;
 
   constructor(private readonly actor: SGActor, readonly equipment: Equipment) {
@@ -286,67 +301,57 @@ export class SuperGRacePoseDirector {
     }
   }
 
-  private setFoot(
-    side: SkiSide,
-    footPose: SGFootPose,
-    pose: SGPose,
-    course: Course,
-    physicalGroundAtRoot: number,
-    gradePitchDeg: number,
-  ): void {
-    const bones = this.bones[side];
-    const heading = pose.headingDeg;
-    const T = this.model.tuning;
-    // Ignore the body's banking while choosing where the steel edge must be
-    // on the piste: both skis keep their physical side-to-side separation.
-    // Rig local x flips under its 180-degree yaw, so use that same axes frame.
-    const signedLocalX = side === "L" ? -T.stanceHalfWidthM :
-      T.stanceHalfWidthM;
-    const flatRigOrientation = new pc.Quat().setFromEulerAngles(
-      gradePitchDeg, heading + 180, 0);
-    const offset = flatRigOrientation.transformVector(new pc.Vec3(
-      signedLocalX, 0, footPose.foreAftM));
-    const rootPos = this.actor.root.getPosition();
-    const footX = rootPos.x + offset.x;
-    const footZ = rootPos.z + offset.z;
-    const snowY = terrainHeight(footX, footZ, course);
+  private prepareFoot(side: SkiSide, foot: SGFootPose, pose: SGPose,
+    course: Course, ground: number, flight: number): void {
+    const root = this.actor.root.getPosition();
+    const h = pose.headingDeg / RAD;
+    // Bone L is on +X in the simulator; use the exact same lateral spacing
+    // as snow tracks. Neither pelvis roll nor torso yaw moves the ski targets.
+    const lateral = (side === "L" ? 1 : -1) * this.model.tuning.stanceHalfWidthM;
+    const x = root.x + Math.cos(h) * lateral - Math.sin(h) * foot.foreAftM;
+    const z = root.z - Math.sin(h) * lateral - Math.cos(h) * foot.foreAftM;
+    const yaw = h + foot.yawOffsetDeg / RAD;
+    const target = this.targets[side];
+    target.rotation.copy(skiSurfaceRotation(yaw, x, z, course, foot.edgeRollDeg / RAD));
+    const p = new pc.Vec3(x, terrainHeight(x, z, course) + 0.125, z);
+    // Place the lowest steel edge, not the foot pivot, on the surface.
+    p.y += 0.008 - minimumSoleClearance(p, target.rotation, course);
+    if (flight > 0.005) {
+      // Airborne targets travel WITH the body. Surface-following height is
+      // only a reference; IK never reaches down to snow during flight.
+      const [gx, gz] = gradient(root.x, root.z, course);
+      p.y = ground + flight + gx * (x - root.x) + gz * (z - root.z) + 0.14;
+    }
+    target.ankle.copy(p).sub(target.rotation.transformVector(
+      this.bones[side].foot.getLocalPosition()));
+  }
 
-    // In the GLB rest pose, LeftFoot/RightFoot pivot is 0.125m above the
-    // ski base. A rolled ski can only touch snow on its *lower steel edge*:
-    // compensate its half-width so an edge doesn't tunnel through snow.
-    const solePivotHeight = 0.125 + footPose.snowClearanceM +
-      footPose.releaseLiftM;
-    const desiredFootWorld = new pc.Vec3(
-      footX, snowY + solePivotHeight, footZ);
-    const skiWorldRotation = new pc.Quat().setFromEulerAngles(
-      gradePitchDeg + footPose.bootPitchDeg * 0.12,
-      heading + 180 + footPose.yawOffsetDeg,
-      footPose.edgeRollDeg,
-    );
-    const footOffsetFromAnkle = bones.foot.getLocalPosition().clone();
-    const ankleWorld = desiredFootWorld.clone().sub(
-      skiWorldRotation.transformVector(footOffsetFromAnkle));
+  private constrainPelvis(): void {
+    // Project pelvis into both reach spheres before rotating bones. This
+    // prevents a strong bank from pulling the outside ski off its target.
+    for (let pass = 0; pass < 6; pass++) {
+      for (const side of ["L", "R"] as const) {
+        const b = this.bones[side];
+        const reach = b.knee.getLocalPosition().length() +
+          b.ankle.getLocalPosition().length() - 0.014;
+        const delta = this.targets[side].ankle.clone().sub(b.hip.getPosition());
+        const distance = delta.length();
+        if (distance > reach) this.pelvis.setPosition(
+          this.pelvis.getPosition().clone().add(delta.mulScalar((distance - reach) / distance)));
+      }
+    }
+  }
 
-    const solution = positionLeg(
-      this.pelvis, bones, ankleWorld, skiWorldRotation, side);
+  private setFoot(side: SkiSide, pose: SGPose, course: Course): void {
+    const bones = this.bones[side], target = this.targets[side];
+    const solution = positionLeg(this.pelvis, bones, target.ankle, target.rotation, side);
     const ix = side === "L" ? 0 : 1;
     this.lastLegError[ix] = solution.targetErrorM;
-
-    // Diagnostic: test actual transformed foot position, not the theoretical
-    // target (clamping an unreachable IK goal must be visible to the developer).
-    const actualFoot = bones.foot.getPosition();
-    this.lastBaseClearance[ix] = actualFoot.y -
-      terrainHeight(actualFoot.x, actualFoot.z, course) -
-      (0.125 + footPose.snowClearanceM);
-    const actualSkiForward = bones.foot.getRotation().transformVector(
-      localSkiForward.clone());
-    const intendedForward = new pc.Vec3(
-      Math.sin(pose.headingDeg / RAD), 0,
-      Math.cos(pose.headingDeg / RAD));
-    this.lastDirectionError[ix] = angleDegrees(
-      new pc.Vec3(actualSkiForward.x, 0, actualSkiForward.z),
-      intendedForward);
-    void physicalGroundAtRoot;
+    this.lastBaseClearance[ix] = minimumSoleClearance(
+      bones.foot.getPosition(), bones.foot.getRotation(), course);
+    const actual = bones.foot.getRotation().transformVector(localSkiForward);
+    const intended = target.rotation.transformVector(localSkiForward);
+    this.lastDirectionError[ix] = angleDegrees(actual, intended);
   }
 
   private setPoles(pose: SGPose, dt: number, c: Course): void {
@@ -437,15 +442,20 @@ export class SuperGRacePoseDirector {
     this.actor.rig.setLocalEulerAngles(
       0, 180, this.visualFall * 70);
 
-    this.pelvis.setLocalPosition(
-      pose.pelvisShiftM, pose.pelvisHeightM,
-      pose.pelvisForeAftM);
+    // Pelvis translation lives in the unbanked slope frame. Applying bank to
+    // its height as well used to double-collapse the hips into a seated pose.
+    const pelvisOffset = new pc.Quat().setFromEulerAngles(gradePitchDeg, pose.headingDeg, 0)
+      .transformVector(new pc.Vec3(-pose.pelvisShiftM, pose.pelvisHeightM, -pose.pelvisForeAftM));
+    this.pelvis.setPosition(root.getPosition().clone().add(pelvisOffset));
     this.pelvis.setLocalEulerAngles(
       0, pose.pelvisYawDeg, pose.pelvisRollDeg);
     this.setTorso(pose);
     this.setArms(pose);
-    this.setFoot("L", pose.leftFoot, pose, c, ground, gradePitchDeg);
-    this.setFoot("R", pose.rightFoot, pose, c, ground, gradePitchDeg);
+    this.prepareFoot("L", pose.leftFoot, pose, c, ground, flight);
+    this.prepareFoot("R", pose.rightFoot, pose, c, ground, flight);
+    this.constrainPelvis();
+    this.setFoot("L", pose, c);
+    this.setFoot("R", pose, c);
     this.setPoles(pose, dt, c);
     if (crash.active) {
       // 3-stage World-Cup-style fall with the EXISTING 25-bone racer, not a
@@ -495,7 +505,19 @@ export class SuperGRacePoseDirector {
   getDiagnostics(): SGDirectorDiagnostics | null {
     if (!this.lastPose) return null;
     const p = this.lastPose;
+    const leg = (side: SkiSide) => {
+      const b = this.bones[side];
+      const upper = b.knee.getPosition().clone().sub(b.hip.getPosition());
+      const lower = b.ankle.getPosition().clone().sub(b.knee.getPosition());
+      return { flex: angleDegrees(upper, lower), length: upper.length() + lower.length() };
+    };
+    const left = leg("L"), right = leg("R");
+    const xyz = (node: pc.GraphNode) => { const v = node.getPosition(); return [v.x, v.y, v.z]; };
     return {
+      leftKneeFlexionDeg: left.flex, rightKneeFlexionDeg: right.flex,
+      leftLegLengthM: left.length, rightLegLengthM: right.length,
+      pelvisWorld: xyz(this.pelvis), leftFootWorld: xyz(this.bones.L.foot),
+      rightFootWorld: xyz(this.bones.R.foot),
       phase: p.phase,
       pelvisHeightM: p.pelvisHeightM,
       pelvisOffsetM: p.pelvisShiftM,

@@ -29,6 +29,6 @@ describe("Cortina cinematic environment performance and safe placement", () => {
       expect(z).toBeGreaterThan(0);
       expect(z).toBeLessThan(sg.length);
     }
-    expect(sg.gates).toHaveLength(34);
+    expect(sg.gates).toHaveLength(42);
   });
 });

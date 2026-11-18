@@ -29,7 +29,7 @@ describe("V1.8 Super-G winding route, markers and FIS-inspired finish", () => {
 
   it("varies turning-gate separations, all beyond 25 metres", () => {
     const g = COURSES.SG.gates;
-    expect(g.length).toBe(34);
+    expect(g.length).toBe(42);
     const distances = g.slice(1).map((gate, i) =>
       Math.hypot(gate.z - g[i].z, gate.x - g[i].x));
     expect(Math.min(...distances)).toBeGreaterThan(25);

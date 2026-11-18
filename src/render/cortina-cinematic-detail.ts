@@ -1,3 +1,4 @@
+import { appendAlpineTree } from "./alpine-tree-geometry";
 import * as pc from "playcanvas";
 import type { Course, Quality } from "../game/types";
 import { courseCenterX, terrainHeight } from "../game/course";
@@ -148,11 +149,7 @@ function denseWoodland(
   mats: pc.StandardMaterial[],
 ) {
   const wood = group(), rand = rng(3427002);
-  const sides = quality === "low" ? 6 : 8;
   const count = CORTINA_SCENIC_BUDGET[quality].woodland;
-  const pine: [number, number, number] = [.075, .17, .135];
-  const bluePine: [number, number, number] = [.085, .20, .20];
-  const larch: [number, number, number] = [.32, .24, .15];
   for (let i = 0; i < count; i++) {
     const z = -24 + rand() * (course.length + 100);
     // The Schuss and high rocky chute are less wooded.
@@ -162,72 +159,7 @@ function denseWoodland(
     const x = courseCenterX(z, course) + sign * dist;
     const y = terrainHeight(x, z, course);
     const height = 7 + rand() * 14;
-    const radius = .23 * height;
-    const foliage = rand() < .12 ? larch : rand() < .38 ? bluePine : pine;
-    const snow = rand() < .73;
-    const leanX = (rand() - .5) * height * .12;
-    const leanZ = (rand() - .5) * height * .10;
-    // Four-sided larch/spruce trunk with subtle bending in alpine wind.
-    // Still part of the ONE batched woodland mesh, not per-tree draw calls.
-    if (quality !== "low") {
-      const trunkRadius = .075 + height * .009;
-      const t0 = wood.p.length / 3;
-      for (const sy of [0, height * .53])
-        for (const [dx, dz] of [[-1,-1],[1,-1],[1,1],[-1,1]]) {
-          const fraction = sy / height;
-          vert(wood,
-            x + dx * trunkRadius + leanX * fraction,
-            y + sy,
-            z + dz * trunkRadius + leanZ * fraction,
-            [.28 - fraction * .06, .20 - fraction * .03, .15]);
-        }
-      for (let j = 0; j < 4; j++) {
-        const n0 = t0 + j, n1 = t0 + (j + 1) % 4;
-        face(wood, n0, n0 + 4, n1);
-        face(wood, n1, n0 + 4, n1 + 4);
-      }
-    }
-    // Branch whorls make recognisable natural silhouettes, with white tips.
-    for (let tier = 0; tier < 6; tier++) {
-      const t = tier / 6;
-      const by = y + .7 + t * height * .85;
-      const r = radius * (1 - .77 * t) * (.78 + rand() * .35);
-      const tip = vert(wood,
-        x + leanX * (.2 + t * .72),
-        by + height * (.22 - .05 * t),
-        z + leanZ * (.2 + t * .72),
-        [foliage[0] * 1.35, foliage[1] * 1.25, foliage[2] * 1.25]);
-      const indices: number[] = [];
-      for (let j = 0; j < sides; j++) {
-        const a = (j / sides) * Math.PI * 2;
-        const tint = .77 + .23 * Math.max(0, Math.sin(a + .35));
-        indices.push(vert(wood,
-          x + leanX * t + r * Math.cos(a),
-          by - .07,
-          z + leanZ * t + r * Math.sin(a),
-          [foliage[0] * tint, foliage[1] * tint, foliage[2] * tint]));
-      }
-      for (let j = 0; j < sides; j++)
-        face(wood, tip, indices[j], indices[(j + 1) % sides]);
-      if (snow && (tier >= 3 || (i + tier) % 4 === 0)) {
-        const snowTip = vert(wood,
-          x + leanX * (.2 + t * .72),
-          by + height * (.22 - .05 * t) + .09,
-          z + leanZ * (.2 + t * .72),
-          [.80, .88, .90]);
-        for (let j = 0; j < sides; j += 2) {
-          const a = 2 * Math.PI * j / sides;
-          const b = 2 * Math.PI * (j + 1) / sides;
-          const v1 = vert(wood, x + leanX * t + r * .78 * Math.cos(a),
-            by + .06, z + leanZ * t + r * .78 * Math.sin(a),
-            [.69, .77, .79]);
-          const v2 = vert(wood, x + leanX * t + r * .78 * Math.cos(b),
-            by + .06, z + leanZ * t + r * .78 * Math.sin(b),
-            [.91, .95, .94]);
-          face(wood, snowTip, v1, v2);
-        }
-      }
-    }
+    appendAlpineTree(wood,x,y,z,height,rand,quality === "low" ? 2 : 4,rand()<.12);
   }
   const m = material("Cortina dense mixed winter conifer forest", "#ffffff", 0, .13);
   m.diffuseVertexColor = true;

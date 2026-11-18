@@ -1,7 +1,8 @@
 import type { Discipline, Frame, Result } from "./types";
 // Cortina is a different course: old Glacier Express ghosts must not race here.
 // Keep the old key untouched so previous performances remain recoverable.
-const KEY = "alpine-ski-pro:cortina-2026:v1";
+const KEY = "alpine-ski-pro:cortina-2026:42g-v2";
+const PREVIOUS_CORTINA_KEY = "alpine-ski-pro:cortina-2026:v1";
 const LEGACY_KEY = "alpine-ski-pro:v1";
 export interface Save {
   version: 1;
@@ -36,7 +37,7 @@ export class Progress {
     try {
       const raw = localStorage.getItem(KEY);
       const fromOldCourse = !raw;
-      const source = raw ?? localStorage.getItem(LEGACY_KEY);
+      const source = raw ?? localStorage.getItem(PREVIOUS_CORTINA_KEY) ?? localStorage.getItem(LEGACY_KEY);
       if (source) {
         const d = JSON.parse(source);
         if (d.version === 1) {

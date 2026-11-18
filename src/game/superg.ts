@@ -128,12 +128,22 @@ export function shouldLaunchAtCrest(
 export const SUPER_G_LANDING_CLEARANCE = 80;
 export const SUPER_G_TAKEOFF_CLEARANCE = 18;
 export const SUPER_G_MIN_GATE_SPACING = 36;
-function nominalSuperGGateZ(index: number): number {
-  let z = 55;
-  for (let i = 0; i < index; i++)
-    z += 52 + 12 * Math.sin(i * 0.81 + 0.3) + 7 * Math.sin(i * 0.26 - 0.4);
-  return z;
-}
+/** 42 authored playable gates requested by the owner. These are NOT the
+ * official 43 gates in the 2026 result sheet. Leave all roller landing zones
+ * clear and vary spacing within each section; no gate is placed in flight. */
+export const SUPER_G_GATE_COUNT = 42;
+const GATE_SECTIONS = [
+  [55, 296, 7], [397, 656, 8], [756, 1066, 9],
+  [1166, 1396, 7], [1496, 1666, 5], [1766, 1968, 6],
+] as const;
+export const SUPER_G_GATE_STATIONS: readonly number[] = GATE_SECTIONS.flatMap(([start,end,count]) => {
+  const weights = Array.from({length: count - 1}, (_, i) =>
+    0.15 + Math.pow(0.5 + 0.5 * Math.sin(start * .01 + i * 1.7), 2));
+  const sum = weights.reduce((a,b) => a+b, 0);
+  const extra = end - start - (count - 1) * SUPER_G_MIN_GATE_SPACING;
+  let z = start;
+  return [z, ...weights.map(w => (z += SUPER_G_MIN_GATE_SPACING + extra * w / sum))];
+});
 /** Authored Super-G race line: alternating wide turns, with a restrained
  * lead into the slope's natural bends. Official gate GPS is unavailable. */
 export function superGGateRacingOffset(index: number, z: number): number {
@@ -151,22 +161,8 @@ export function superGGateRacingOffset(index: number, z: number): number {
 }
 
 export function superGGateZ(index: number): number {
-  const count = Math.max(0, Math.floor(Number.isFinite(index) ? index : 0));
-  let last = -SUPER_G_MIN_GATE_SPACING;
-  for (let i = 0; i <= count; i++) {
-    let z = Math.max(nominalSuperGGateZ(i), last + SUPER_G_MIN_GATE_SPACING);
-    for (let attempt = 0; attempt <= SUPER_G_ROLLERS.length; attempt++) {
-      const before = z;
-      for (const roller of SUPER_G_ROLLERS)
-        if (z >= roller.z - SUPER_G_TAKEOFF_CLEARANCE &&
-            z <= roller.z + SUPER_G_LANDING_CLEARANCE)
-          z = roller.z + SUPER_G_LANDING_CLEARANCE + 0.5;
-      z = Math.max(z, last + SUPER_G_MIN_GATE_SPACING);
-      if (z === before) break;
-    }
-    last = z;
-  }
-  return last;
+  return SUPER_G_GATE_STATIONS[Math.max(0, Math.min(SUPER_G_GATE_COUNT - 1,
+    Math.floor(Number.isFinite(index) ? index : 0)))];
 }
 export type SuperGSector = "spruce" | "glacier" | "canyon" | "finish";
 export function superGSector(z: number): SuperGSector {

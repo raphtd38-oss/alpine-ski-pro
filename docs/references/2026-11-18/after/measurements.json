@@ -1,0 +1,276 @@
+{
+  "fixture": "Controlled render fixtures, not a recorded race or athlete measurements",
+  "samples": {
+    "neutral": {
+      "seamless": true,
+      "edge": 0,
+      "crouch": 0.11836322496445784,
+      "tuck": 0.44977479685495175,
+      "leftBoot": 0.1498236137679605,
+      "rightBoot": 0.1498248020359867,
+      "pelvis": 1.0274370819591674,
+      "poleGripError": [
+        0.000002646366042154437,
+        0.000002646366042154437
+      ],
+      "competitionPose": {
+        "leftKneeFlexionDeg": 78.39974334847057,
+        "rightKneeFlexionDeg": 76.72981959070077,
+        "leftLegLengthM": 0.7598538019863676,
+        "rightLegLengthM": 0.7598554640020415,
+        "pelvisWorld": [
+          3.5491415057035287e-22,
+          -23.840442657470703,
+          100.4741439819336
+        ],
+        "leftFootWorld": [
+          0.18000000715255737,
+          -24.458873748779297,
+          100
+        ],
+        "rightFootWorld": [
+          -0.17999999225139618,
+          -24.467405319213867,
+          100
+        ],
+        "phase": "flat",
+        "pelvisHeightM": 0.8916367750355422,
+        "pelvisOffsetM": 0,
+        "bodyBankDeg": 0,
+        "edgeDegLeft": 0,
+        "edgeDegRight": 0,
+        "leftSkiDirectionErrorDeg": 0,
+        "rightSkiDirectionErrorDeg": 0,
+        "leftSkiBaseClearanceM": 0.007999659434318573,
+        "rightSkiBaseClearanceM": 0.00800194724874359,
+        "leftAnkleTargetErrorM": 0,
+        "rightAnkleTargetErrorM": 0,
+        "leftHandGripErrorM": 0.000002646366042154437,
+        "rightHandGripErrorM": 0.000002646366042154437,
+        "outsideSide": null,
+        "visualCarvePressure": 0,
+        "lateralG": 0,
+        "equivalentTurnRadiusM": 784000,
+        "outsideSkiLoad": 0.5,
+        "insideSkiLoad": 0.5
+      }
+    },
+    "right": {
+      "seamless": true,
+      "edge": 0.9395743424480864,
+      "crouch": 0.2861307275006679,
+      "tuck": 0.3537978627772818,
+      "leftBoot": 0.11959716328173542,
+      "rightBoot": 0.0993773422941473,
+      "pelvis": 0.8285469509819485,
+      "poleGripError": [
+        0.0000036359398686282574,
+        0.0000037494253683116698
+      ],
+      "competitionPose": {
+        "leftKneeFlexionDeg": 103.65361988000812,
+        "rightKneeFlexionDeg": 52.441288090110525,
+        "leftLegLengthM": 0.7598520418028605,
+        "rightLegLengthM": 0.7598528857482097,
+        "pelvisWorld": [
+          0.3501235842704773,
+          -23.98628807067871,
+          100.39111328125
+        ],
+        "leftFootWorld": [
+          0.17999982833862305,
+          -24.508920669555664,
+          100.0369873046875
+        ],
+        "rightFootWorld": [
+          -0.1800001710653305,
+          -24.517852783203125,
+          100
+        ],
+        "phase": "loaded",
+        "pelvisHeightM": 0.7238692724993321,
+        "pelvisOffsetM": -0.35012363593876383,
+        "bodyBankDeg": -54.1244041249385,
+        "edgeDegLeft": 62.61,
+        "edgeDegRight": 73,
+        "leftSkiDirectionErrorDeg": 0.0000017075472925031877,
+        "rightSkiDirectionErrorDeg": 0,
+        "leftSkiBaseClearanceM": 0.00799808882456432,
+        "rightSkiBaseClearanceM": 0.008001333233401908,
+        "leftAnkleTargetErrorM": 0,
+        "rightAnkleTargetErrorM": 1.1188630228279524e-16,
+        "leftHandGripErrorM": 0.0000036359398686282574,
+        "rightHandGripErrorM": 0.0000037494253683116698,
+        "outsideSide": "R",
+        "visualCarvePressure": 0.9734615384615385,
+        "lateralG": 1.7329255861365953,
+        "equivalentTurnRadiusM": 46.11764705882353,
+        "outsideSkiLoad": 0.8505550506856764,
+        "insideSkiLoad": 0.14944494931432362
+      }
+    },
+    "left": {
+      "seamless": true,
+      "edge": -0.9391486849252265,
+      "crouch": 0.28605751841886906,
+      "tuck": 0.3538255900073264,
+      "leftBoot": 0.09938020352563015,
+      "rightBoot": 0.11959961627967175,
+      "pelvis": 0.845195673584076,
+      "poleGripError": [
+        0.000003013576121180156,
+        0.000002947392146868319
+      ],
+      "competitionPose": {
+        "leftKneeFlexionDeg": 53.43448904680107,
+        "rightKneeFlexionDeg": 101.68917618326506,
+        "leftLegLengthM": 0.759850082372268,
+        "rightLegLengthM": 0.7598567560632054,
+        "pelvisWorld": [
+          -0.3495672941207886,
+          -23.986225128173828,
+          100.39115142822266
+        ],
+        "leftFootWorld": [
+          0.1800014227628708,
+          -24.509321212768555,
+          100.00000762939453
+        ],
+        "rightFootWorld": [
+          -0.17999859154224396,
+          -24.517454147338867,
+          100.03699493408203
+        ],
+        "phase": "loaded",
+        "pelvisHeightM": 0.723942481581131,
+        "pelvisOffsetM": 0.3495676779974673,
+        "bodyBankDeg": 54.07500402495815,
+        "edgeDegLeft": -73,
+        "edgeDegRight": -62.61,
+        "leftSkiDirectionErrorDeg": 0,
+        "rightSkiDirectionErrorDeg": 0.0000012074182697257333,
+        "leftSkiBaseClearanceM": 0.008002461968477093,
+        "rightSkiBaseClearanceM": 0.008000103290743965,
+        "leftAnkleTargetErrorM": 1.1123893155135927e-16,
+        "rightAnkleTargetErrorM": 2.7755575615628914e-17,
+        "leftHandGripErrorM": 0.000003013576121180156,
+        "rightHandGripErrorM": 0.000002947392146868319,
+        "outsideSide": "L",
+        "visualCarvePressure": 0.9734615384615385,
+        "lateralG": 1.7329255861365953,
+        "equivalentTurnRadiusM": 46.11764705882353,
+        "outsideSkiLoad": 0.8505576670272302,
+        "insideSkiLoad": 0.14944233297276976
+      }
+    },
+    "slow": {
+      "seamless": true,
+      "edge": 0.9391486849542802,
+      "crouch": 0.11769140128613698,
+      "tuck": 0.44987529173419727,
+      "leftBoot": 0.15560124565719846,
+      "rightBoot": 0.15673131178935407,
+      "pelvis": 1.0282087982471637,
+      "poleGripError": [
+        0.000002085188309797793,
+        0.000002091294549033823
+      ],
+      "competitionPose": {
+        "leftKneeFlexionDeg": 78.69788802113514,
+        "rightKneeFlexionDeg": 77.86325665803658,
+        "leftLegLengthM": 0.7598500974317628,
+        "rightLegLengthM": 0.7598525166716238,
+        "pelvisWorld": [
+          -0.00022519429330714047,
+          -23.839853286743164,
+          100.47447204589844
+        ],
+        "leftFootWorld": [
+          0.17999999225139618,
+          -24.453100204467773,
+          100.00000762939453
+        ],
+        "rightFootWorld": [
+          -0.18000000715255737,
+          -24.460498809814453,
+          100
+        ],
+        "phase": "engage",
+        "pelvisHeightM": 0.892308598713863,
+        "pelvisOffsetM": 0.00022519389423950167,
+        "bodyBankDeg": -0.04802265794610845,
+        "edgeDegLeft": 7.799999999999999,
+        "edgeDegRight": 10,
+        "leftSkiDirectionErrorDeg": 0,
+        "rightSkiDirectionErrorDeg": 8.537736462515939e-7,
+        "leftSkiBaseClearanceM": 0.0080068451958617,
+        "rightSkiBaseClearanceM": 0.008000914814495275,
+        "leftAnkleTargetErrorM": 2.7755575615628914e-17,
+        "rightAnkleTargetErrorM": 0,
+        "leftHandGripErrorM": 0.000002085188309797793,
+        "rightHandGripErrorM": 0.000002091294549033823,
+        "outsideSide": "R",
+        "visualCarvePressure": 0,
+        "lateralG": 0.002038735983690112,
+        "equivalentTurnRadiusM": 50,
+        "outsideSkiLoad": 0.7908975717750646,
+        "insideSkiLoad": 0.2091024282249354
+      }
+    },
+    "flight": {
+      "seamless": true,
+      "edge": 0.7001086784657854,
+      "crouch": 0.11847101426155116,
+      "tuck": 0.44999999991923956,
+      "leftBoot": 1.4400079076445031,
+      "rightBoot": 1.4400050086887681,
+      "pelvis": 2.3273165538112934,
+      "poleGripError": [
+        0.0000015702624843837914,
+        0.0000015784621747075465
+      ],
+      "competitionPose": {
+        "leftKneeFlexionDeg": 76.02802952733549,
+        "rightKneeFlexionDeg": 74.94938911466353,
+        "leftLegLengthM": 0.7598550555800514,
+        "rightLegLengthM": 0.7598533499344777,
+        "pelvisWorld": [
+          -3.173146814750005e-11,
+          -22.540542602539062,
+          100.47410583496094
+        ],
+        "leftFootWorld": [
+          0.17999999225139618,
+          -23.16869354248047,
+          100.00000762939453
+        ],
+        "rightFootWorld": [
+          -0.18000000715255737,
+          -23.17722511291504,
+          100
+        ],
+        "phase": "airborne",
+        "pelvisHeightM": 0.8915289857384489,
+        "pelvisOffsetM": 3.254007287204933e-11,
+        "bodyBankDeg": -0.0000889039871539148,
+        "edgeDegLeft": 7.799999999999999,
+        "edgeDegRight": 10,
+        "leftSkiDirectionErrorDeg": 0,
+        "rightSkiDirectionErrorDeg": 8.537736462515939e-7,
+        "leftSkiBaseClearanceM": 1.2924135071509433,
+        "rightSkiBaseClearanceM": 1.2912746119107226,
+        "leftAnkleTargetErrorM": 0,
+        "rightAnkleTargetErrorM": 0,
+        "leftHandGripErrorM": 0.0000015702624843837914,
+        "rightHandGripErrorM": 0.0000015784621747075465,
+        "outsideSide": "R",
+        "visualCarvePressure": 0,
+        "lateralG": 0,
+        "equivalentTurnRadiusM": 784000,
+        "outsideSkiLoad": 0.6554432626204324,
+        "insideSkiLoad": 0.3445567373795676
+      }
+    }
+  },
+  "errors": []
+}

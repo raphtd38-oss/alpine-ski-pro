@@ -11,7 +11,7 @@ test("World-Cup-style Super-G start house, four-pole flags and terrain crest", a
   const cortina = await page.evaluate(() => (window as any).__ski.getCourse());
   expect(cortina.name).toContain("Cortina");
   expect(cortina.length).toBe(2105);
-  expect(cortina.gates).toHaveLength(34);
+  expect(cortina.gates).toHaveLength(42);
   expect(setup.startHouse).toBe(true);
   expect(setup.blueBorderDye).toBe(true);
   expect(setup.sprayedBlueDye).toBe(true);
@@ -21,8 +21,10 @@ test("World-Cup-style Super-G start house, four-pole flags and terrain crest", a
   expect(setup.athleteTexturedSurfaces).toBeGreaterThan(10);
   expect(setup.raceSkiTextureCount).toBe(1);
   expect(setup.timingWands).toBe(1);
-  expect(setup.pairedGatePoles).toBe(68);
-  expect(setup.gateFlagCount).toBe(68);
+  expect(setup.pairedGatePoles).toBe(84);
+  expect(setup.gateFlagCount).toBe(84);
+  expect(setup.visibleGateCount).toBeGreaterThanOrEqual(4);
+  expect(setup.visibleGateCount).toBeLessThan(12);
   await page.screenshot({ path: "test-results/superg-start-house.png" });
 
   await page.locator("#play").click();
@@ -121,7 +123,7 @@ test("World-Cup-style Super-G start house, four-pole flags and terrain crest", a
     return api.getState();
   });
   expect(finish.phase).toBe("finished");
-  expect(finish.gate).toBe(34);
+  expect(finish.gate).toBe(42);
   expect(finish.finishBeamTime).not.toBeNull();
   expect(finish.finishBeamTriggeredBy).toBe("hand");
   await page.waitForFunction(
@@ -133,7 +135,7 @@ test("World-Cup-style Super-G start house, four-pole flags and terrain crest", a
   // Preserve the SG records and replay workflow after removing other courses.
   if (finish.missed === 0) {
     const records = await page.evaluate(() =>
-      JSON.parse(localStorage.getItem("alpine-ski-pro:cortina-2026:v1") ?? "null")?.records?.SG ?? []);
+      JSON.parse(localStorage.getItem("alpine-ski-pro:cortina-2026:42g-v2") ?? "null")?.records?.SG ?? []);
     expect(records.length).toBeGreaterThan(0);
   }
   await page.locator("#replay").click();

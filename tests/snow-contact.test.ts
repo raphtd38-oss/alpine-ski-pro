@@ -55,11 +55,11 @@ describe("competition ski-to-snow contact", () => {
         pressure:1.25, load:.8, startPhase:9,
       },1/60);
     }
-    expect(pose!.leftFoot.outside).toBe(true);
-    expect(pose!.leftFoot.visualLoad).toBeGreaterThan(pose!.rightFoot.visualLoad);
+    expect(pose!.rightFoot.outside).toBe(true);
+    expect(pose!.rightFoot.visualLoad).toBeGreaterThan(pose!.leftFoot.visualLoad);
     expect(Math.abs(pose!.leftFoot.yawOffsetDeg)).toBeLessThanOrEqual(6);
     expect(Math.abs(pose!.rightFoot.yawOffsetDeg)).toBeLessThanOrEqual(6);
-    expect(pose!.rightFoot.foreAftM).toBeLessThan(0);
-    expect(pose!.rightFoot.releaseLiftM).toBeGreaterThanOrEqual(0);
+    expect(pose!.leftFoot.foreAftM).toBeLessThan(0);
+    expect(pose!.leftFoot.releaseLiftM).toBeGreaterThanOrEqual(0);
   });
 });

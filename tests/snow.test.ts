@@ -45,3 +45,12 @@ describe("snow effects geometry", () => {
     expect(b.z).toBeLessThan(0);
   });
 });
+
+it('places both grooves on actual independent rendered ski contact points',()=>{
+  const a={x:0,z:0,heading:0,feet:{left:{x:-.3,z:.1},right:{x:.2,z:0}}};
+  const b={...a,z:2,feet:{left:{x:-.4,z:2.15},right:{x:.25,z:2}}};
+  const left=skiTrackQuad(a,b,-.18,.02,()=>0);
+  const right=skiTrackQuad(a,b,.18,.02,()=>0);
+  expect((left[6]+left[9])/2).toBeCloseTo(-.4);
+  expect((right[6]+right[9])/2).toBeCloseTo(.25);
+});

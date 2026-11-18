@@ -1,7 +1,7 @@
 import * as pc from "playcanvas";
 import type { Course, SkierState, Quality } from "../game/types";
 import { terrainHeight } from "../game/course";
-import { skiTrackQuad, snowSprayVelocity, snowPlumeIntensity, type TrackSample } from "../game/snow";
+import { skiTrackQuad, snowSprayVelocity, snowPlumeIntensity, type TrackSample, type SkiContactPoints } from "../game/snow";
 import { skiSnowMark, snowPlumeSource, crashSnowEnergy } from "../game/snow-contact";
 import { sampleSnowSurface } from "../game/surface";
 import { material, meshEntity, rng } from "./geometry";
@@ -115,10 +115,10 @@ export class SnowEffects {
     this.spray.enabled = false;
   }
 
-  update(s: SkierState, dt: number, active: boolean, cameraPosition: pc.Vec3) {
+  update(s: SkierState, dt: number, active: boolean, cameraPosition: pc.Vec3, feet?: SkiContactPoints) {
     dt = Math.min(0.1, Math.max(0, dt));
     const speed = Math.hypot(s.vx, s.vz);
-    const grounded = s.height < 0.05;
+    const grounded = s.height <= 0.005;
     if (!active || !grounded) {
       // Do not connect tracks across a jump or a restart.
       this.lastSample = null;
@@ -127,7 +127,7 @@ export class SnowEffects {
       (!this.lastSample ||
         Math.hypot(s.x - this.lastSample.x, s.z - this.lastSample.z) > 0.34)
     ) {
-      const current: TrackSample = { x: s.x, z: s.z, heading: s.heading };
+      const current: TrackSample = { x: s.x, z: s.z, heading: s.heading, feet };
       if (this.lastSample) {
         const ground = (x: number, z: number) => terrainHeight(x, z, this.c);
         for (const skiSide of [-1, 1] as const) {
@@ -194,8 +194,10 @@ export class SnowEffects {
             v.y += crashEnergy * 0.85;
           }
           const lateral = source.xOffsetM + (this.random() - .5) * .09;
-          const x = s.x + Math.cos(s.heading) * lateral;
-          const z = s.z - Math.sin(s.heading) * lateral;
+          const contact = feet?.[source.skiSide < 0 ? "left" : "right"];
+          const spread = contact ? lateral - source.skiSide * .18 : lateral;
+          const x = (contact?.x ?? s.x) + Math.cos(s.heading) * spread;
+          const z = (contact?.z ?? s.z) - Math.sin(s.heading) * spread;
           this.particles.push({
             x, y: terrainHeight(x, z, this.c) + .05,
             z,

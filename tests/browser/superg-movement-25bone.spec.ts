@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-test("Super-G 25-joint skier: grounded feet, attached grips and fluid low edge", async ({ page }) => {
+test("Super-G 25-joint skier: early start stays balanced with grounded feet and attached grips", async ({ page }) => {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/?quality=low&racer=mobile&renderer=webgl2");
@@ -34,7 +34,16 @@ test("Super-G 25-joint skier: grounded feet, attached grips and fluid low edge",
     (window as any).__ski.getAthletePose());
   expect(Number.isFinite(loaded.edge)).toBe(true);
   expect(Number.isFinite(loaded.crouch)).toBe(true);
-  expect(loaded.crouch).toBeGreaterThan(0.07);
+  // This fixture is only ~1.2s after GO. A deep high-speed crouch here was
+  // the bug: steering alone should not collapse the pelvis at walking speed.
+  const contact = loaded.competitionPose;
+  expect(contact.leftAnkleTargetErrorM).toBeLessThan(0.005);
+  expect(contact.rightAnkleTargetErrorM).toBeLessThan(0.005);
+  expect(contact.leftSkiBaseClearanceM).toBeCloseTo(0.008, 2);
+  expect(contact.rightSkiBaseClearanceM).toBeCloseTo(0.008, 2);
+  expect(Math.abs(contact.bodyBankDeg)).toBeLessThan(18);
+  expect(contact.leftKneeFlexionDeg).toBeGreaterThan(8);
+  expect(contact.rightKneeFlexionDeg).toBeGreaterThan(8);
   // Foot bones are centred inside boots, not at the metal edge. The edge
   // and terrain slope can affect a boot's apparent clearance by centimetres.
   expect(loaded.leftBoot).toBeGreaterThan(-0.20);

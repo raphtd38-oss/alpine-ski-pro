@@ -202,3 +202,12 @@ Le but est un simulateur de ski de grande qualité, amélioré sur le même dép
 - Capturer de vrais plans côte à côte du jeu publié et de la référence (départ, carving à haute vitesse, arbres et roches, arrivée) ; calibrer caméra, pose, proportions et textures par observation, pas seulement par réglage de chiffres.
 - Remplacer progressivement les volumes de roche et sapins trop géométriques par des modèles et matériaux PBR contrôlés, avec LOD/instancing. Ne pas copier les assets de la vidéo et ne pas supprimer les ressources CC0 existantes.
 - Mesurer le rendu des ombres sur GPU mobile et GPU PC, vérifier les creux de neige, dépister artefacts de transparence / z-fighting et comparer coucher de soleil/jour.
+
+## Suite de la mission du 18 novembre 2026
+
+- Lire `REALISM_2026_11_18.md` et les preuves `references/2026-11-18` : les cinq vidéos prioritaires étaient absentes. Refaire une analyse image par image dès qu'elles sont accessibles ; ne pas reprendre une description historique comme preuve visuelle.
+- Le rig actuel utilise les carres physiques, la pente/dévers, des cibles aériennes et une suspension amortie. Calibrer maintenant rayon/adhérence/angulation par rapport aux vidéos, particulièrement à haute vitesse et sur glace.
+- Préserver les 42 portes reconstituées, les fanions souples, le seuil >45 %, les chronos par révision et les deux GLB du skieur. Les 43 portes FIS ne fournissent pas leurs coordonnées exactes.
+- Cartographier le relief avec un DEM réellement disponible/licencié avant de promettre un Cortina exact. La géométrie actuelle reste schématique ; parois et matières doivent encore gagner en variété.
+- Mesurer Low/Medium/High/Ultra sur GPU PC et mobile, puis décider des LOD/instancing. Les nouvelles branches sont batched, pas une preuve de gain de FPS.
+- Réceptions, contact des semelles, genoux et skis doivent rester vérifiés via le véritable GLB et dans Chromium ; la validation par compilation seule est insuffisante.

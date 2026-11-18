@@ -1,6 +1,6 @@
 import type { Course, Discipline, Equipment } from "./types";
 import {
-  CORTINA_2026, superGRelief, superGCenterX,
+  CORTINA_2026, SUPER_G_GATE_COUNT, superGRelief, superGCenterX,
   superGGateZ, superGGateRacingOffset, cortinaReferenceElevation,
 } from "./superg";
 
@@ -24,9 +24,9 @@ export const COURSES: Record<Discipline, Course> = {
     length: CORTINA_2026.officialCourseLengthM,
     grade: CORTINA_2026.verticalDropM / CORTINA_2026.officialCourseLengthM,
     width: 62,
-    // 34 playable gate groups, realigned to wide Super-G turns.
+    // 42 authored playable groups; exact reference gate coordinates unavailable.
     // Official 43 gate coordinates are not surveyed here.
-    gates: Array.from({ length: 34 }, (_, i) => {
+    gates: Array.from({ length: SUPER_G_GATE_COUNT }, (_, i) => {
       const z = superGGateZ(i);
       return {
         id: i,

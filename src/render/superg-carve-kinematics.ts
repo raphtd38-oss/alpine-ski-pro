@@ -65,7 +65,7 @@ export const SG_RACE_DEFAULTS: Readonly<SGAnimationTuning> = Object.freeze({
   maxSkiEdgeDeg: 73,
   maxInsideDivergenceDeg: 2.3,
   maxSnowSkidYawDeg: 4,
-  maxPelvisShiftM: 0.33,
+  maxPelvisShiftM: 0.36,
   minPelvisHeightM: 0.53,
   maxPelvisHeightM: 1.01,
   stanceHalfWidthM: 0.18,
@@ -269,10 +269,10 @@ export class SuperGCompetitionPose {
     const edge = a.edge, sideSign = Math.sign(edge);
     const edgeAbs = Math.abs(edge);
     const skid = sat(safe(frame.skid));
-    const flight = sat(safe(frame.height) * 2.5);
+    const flight = safe(frame.height) > 0.005 ? 1 : 0;
     const contact = 1 - flight;
     const landing = sat(safe(frame.landingShock));
-    const pressure = clamp(safe(frame.pressure, 1), 0.5, 1.55);
+    const pressure = clamp(safe(frame.pressure, 1), 0, 2.8);
     const flex = clamp(safe(frame.flex), 0, 1.4);
 
     const vx = safe(frame.vx), vz = safe(frame.vz);
@@ -288,13 +288,17 @@ export class SuperGCompetitionPose {
     const slipAngleDeg = clamp(angleDiff(heading, velocityHeading) * RAD, -25, 25);
 
     const grip = 1 - 0.38 * skid;
-    const engagement = smoothstep(0.10, 0.86, edgeAbs) *
+    const edgeEngagement = smoothstep(0.10, 0.86, edgeAbs) *
       (0.77 + 0.23 * sat(pressure / 1.3)) * grip * contact;
     const loadTransfer = estimateRaceLoad({
-      speedMps: speed, edge, engagement, pressure, skid,
+      speedMps: speed, edge, engagement: edgeEngagement, pressure, skid,
       physicsLoad: frame.load,
       lateralAccelerationMps2: frame.lateralAcceleration,
     });
+    // Real force gates the body commitment: the same input at walking speed
+    // must not drop the hips into a 60-degree race carve.
+    const forceCommitment = smoothstep(0.08, 1.20, loadTransfer.lateralG);
+    const engagement = edgeEngagement * forceCommitment;
     // Load transfer is fast on initiation, slower on release. It must remain
     // continuous through a sign reversal even if a race replay seeks.
     a.load = smooth(a.load, loadTransfer.outsideLoad,
@@ -333,9 +337,7 @@ export class SuperGCompetitionPose {
     // at the pelvis/rib cage. Rotating the whole body 66 degrees would look
     // like a rigid board instead of an athlete controlling edge pressure.
     const desiredBank = -sign * contact * Math.min(T.maxBankDeg,
-      9 * smoothstep(0.06, 0.32, edgeAbs) +
-      30 * engagement + 0.46 * loadTransfer.equilibriumLeanDeg *
-      loadTransfer.gripCommitment);
+      loadTransfer.equilibriumLeanDeg * 0.96 * (1 - skid * 0.2));
     a.bank = smooth(a.bank, desiredBank * (1 - 0.92 * finishReach),
       T.bankResponseHz, sDt);
     const edgeRoll = -sign * Math.min(T.maxSkiEdgeDeg,
@@ -345,19 +347,20 @@ export class SuperGCompetitionPose {
       (1 - 0.22 * engagement), finishReach * 0.92);
     a.tuck = smooth(a.tuck, tuckTarget, 9.5, sDt);
     const targetY = clamp(1.01 - (
-      0.060 + 0.18 * a.tuck + 0.300 * engagement +
-      0.054 * flex + 0.060 * a.start + 0.064 * a.pole -
+      0.060 + 0.13 * a.tuck + 0.160 * engagement +
+      0.035 * flex * forceCommitment + safe(frame.suspension) + 0.060 * a.start + 0.064 * a.pole -
       0.095 * extension + 0.060 * landing + 0.065 * finishReach
     ), T.minPelvisHeightM, T.maxPelvisHeightM) +
       0.035 * smoothstep(0.55, 1.7, Math.abs(a.edgeRate)) * (1 - engagement);
     a.pelvisY = smooth(a.pelvisY, targetY,
       T.heightResponseHz, sDt);
-    const targetX = sign * engagement * T.maxPelvisShiftM +
-      loadTransfer.pelvisShiftM;
+    // Rig yaw is 180°: negative local X moves hips into a +X turn.
+    const targetX = -sign * engagement * T.maxPelvisShiftM;
     a.pelvisX = smooth(a.pelvisX, targetX, T.heightResponseHz, sDt);
 
     const outsideSide: SkiSide | null = edgeAbs < 0.07 ? null :
-      edge > 0 ? "L" : "R";
+      // Donated rig's LeftFoot is on +X after its 180° yaw.
+      edge > 0 ? "R" : "L";
     const showOutside = outsideSide !== null;
     const loadBalance = clamp(a.load, 0.5, 0.93);
     const release = phase === "release" || phase === "transition";
@@ -382,13 +385,19 @@ export class SuperGCompetitionPose {
       const skidYaw = cornerPitch + steerTowardVelocity +
         carveLead + (inside ? toe : 0) + skiHeadingDelta;
       const foreAftM = inside ? -T.innerSkiStaggerM * engagement : 0;
-      const footEdge = edgeRoll * (outside ? 1 : (0.87 - 0.06 * skid)) +
+      const legacyFootEdge = edgeRoll * (outside ? 1 : (0.87 - 0.06 * skid)) +
         (inside ? sign * 0.9 : 0);
+      const physicalEdge = side === "L" ? frame.edgeRight : frame.edgeLeft;
+      const physicalYaw = side === "L" ? frame.skiYawRight : frame.skiYawLeft;
+      const footEdge = Number.isFinite(physicalEdge) ? physicalEdge! * RAD :
+        -legacyFootEdge; // roll about the rig's -Z forward axis
+      const yawOffset = Number.isFinite(physicalYaw)
+        ? angleDiff(physicalYaw!, heading) * RAD : skidYaw;
       const metalClearance = T.skiHalfWidthM *
         Math.abs(Math.sin(footEdge / RAD));
       return {
         side, outside,
-        yawOffsetDeg: clamp(skidYaw, -11, 11),
+        yawOffsetDeg: clamp(yawOffset, -11, 11),
         edgeRollDeg: footEdge,
         foreAftM,
         snowClearanceM: T.slopeContactClearanceM + metalClearance,

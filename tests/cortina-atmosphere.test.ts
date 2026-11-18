@@ -15,7 +15,7 @@ describe("Cortina race environment layout", () => {
 
   it("positions every race gate on alternating playable Super-G turns", () => {
     const course = COURSES.SG;
-    expect(course.gates).toHaveLength(34);
+    expect(course.gates).toHaveLength(42);
     for (const gate of course.gates) {
       const offset = gate.x - superGCenterX(gate.z);
       expect(Number.isFinite(offset)).toBe(true);

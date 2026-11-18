@@ -73,7 +73,7 @@ describe("Cortina V1.16 wind sculpted snow does not break the race", () => {
   });
   it("never moves a race gate, changes FIS-inspired course or banner threshold", () => {
     expect(COURSES.SG.length).toBe(2105);
-    expect(COURSES.SG.gates).toHaveLength(34);
+    expect(COURSES.SG.gates).toHaveLength(42);
     expect(BANNER_CRASH_THRESHOLD).toBe(.45);
     expect(Number.isFinite(courseCenterX(500,COURSES.SG))).toBe(true);
   });

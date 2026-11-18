@@ -73,7 +73,10 @@ export class Renderer {
     this.app.scene.fog.end = 2250;
     this.camera.addComponent("camera", {
       clearColor: color(cortinaHorizonHex(lightingMode)),
-      farClip: 2400,
+      // The fixed 1,650 m sky dome is centred halfway down the 2.1 km
+      // course. From the start its far side lies ~2.8 km away; clipping at
+      // 2.4 km exposed the clear colour as a huge hard-edged disc.
+      farClip: 3200,
       nearClip: 0.08,
       fov: 58,
     });
@@ -221,7 +224,7 @@ export class Renderer {
       this.world.startArch.enabled = this.menu || f.z < 7;
     this.ghost.root.enabled = ghostFrame !== null;
     if (ghostFrame) this.ghost.update(ghostFrame, this.course, dt);
-    this.effects.update(s, dt, active, this.camera.getPosition());
+    this.effects.update(s, dt, active, this.camera.getPosition(), this.athlete.getSkiContacts());
     const y = terrainHeight(f.x, f.z, this.course) + f.height;
     const speed = Math.hypot(s.vx, s.vz);
     const forward = new pc.Vec3(

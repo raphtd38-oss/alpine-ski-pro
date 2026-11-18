@@ -1,3 +1,9 @@
+## Mission active du 18 novembre 2026
+
+Lire `docs/REALISM_2026_11_18.md` et `docs/references/2026-11-18/README.md` avant toute reprise. Priorité permanente : modifier réellement la physique et les mouvements, préserver le personnage 25 os, les portes élastiques et le seuil strict >45 %, tester les effets en jeu avant publication. Ne jamais assimiler un rapport historique au visionnage des vidéos : les cinq fichiers nommés n'étaient pas accessibles dans cette session.
+
+Le tracé demandé comporte désormais **42 portes reconstituées**, distinctes des **43 portes officielles** du SG 2026. Les mentions 34 portes ci-dessous décrivent l'historique. Nouvelle clé de records `alpine-ski-pro:cortina-2026:42g-v2`, anciennes sauvegardes conservées. Le sunset redevient le défaut ; jour via `?lighting=daylight`. Ne pas réintroduire un angle de ski calculé indépendamment dans le rendu : utiliser les carres et directions physiques, en tenant compte du yaw 180° du GLB.
+
 # Alpine Ski Pro — instructions de reprise
 
 ## Périmètre actif depuis V1.12

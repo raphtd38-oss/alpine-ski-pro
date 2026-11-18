@@ -45,14 +45,14 @@ export function estimateRaceLoad(input: RaceLoadInput): RaceLoadTransfer {
     ? Math.abs(input.lateralAccelerationMps2!) : null;
   const equivalentRadiusM = measuredForce === null
     ? clamp(58 + 0.32 * speed - 32 * strength * (1 - skid * 0.62), 25, 95)
-    : clamp(speed * speed / Math.max(0.1, measuredForce), 25, 140);
+    : Math.min(1e6, speed * speed / Math.max(0.001, measuredForce));
   // New gameplay frames use actual lateral snow contact acceleration.
   // Legacy replay files keep their previous visual estimate unchanged.
   const lateralG = measuredForce === null
     ? clamp(((speed * speed) / (9.81 * equivalentRadiusM)) *
         edgeAmount * (1 - skid * .74) * Math.min(1.15, pressure), 0, 2.8)
-    : clamp(measuredForce / 9.81 * Math.min(1.15, pressure), 0, 2.8);
-  const equilibriumLeanDeg = Math.atan2(lateralG, 1) * 180 / Math.PI;
+    : clamp(measuredForce / 9.81, 0, 2.8);
+  const equilibriumLeanDeg = Math.atan2(lateralG, Math.max(0.3, pressure)) * 180 / Math.PI;
   const gripCommitment = strength * (1 - .55 * skid);
   const modelOutside = .5 + gripCommitment * (.24 + .11 * sat(lateralG / 1.8));
   // The actual fixed-step model already knows where the outside load is.

@@ -83,3 +83,9 @@
 - Quatre tracés, équipements, caméras, météo/qualité, interface, chronos, DQ, records, fantôme et replay.
 - Profil et XP local, son ElevenLabs (musique, impacts, public) et synthèse neige/vent.
 - GitHub Actions, documentation et PR #1. Tests Cloud et GitHub réussis ; Pages bloqué par l'activation propriétaire.
+
+## 1.17 — 18 novembre 2026, contact et forces Super-G
+
+Carres et directions de skis transmises par le solveur 120 Hz ; pression normale directionnelle, suppression des forces de neige en vol, suspension amortie, IK de semelles sur pente/dévers et pieds libres en vol. Correction du côté extérieur du rig après yaw 180°, pose à faible vitesse, hauteur du bassin et traces depuis les contacts réels. 42 portes reconstituées, archives de records préservées, sunset par défaut, branches volumétriques à la place de trois couches de cônes. Tests du squelette réel et navigateur ajoutés ; preuves/limites dans REALISM_2026_11_18.md.
+
+- Validation visuelle V1.17 : correction du plan de clipping trop court qui coupait le dôme du ciel et affichait un grand disque rose à l’horizon.
