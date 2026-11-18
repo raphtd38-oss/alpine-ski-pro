@@ -1,5 +1,9 @@
 # Feuille de route persistante
 
+
+> **Référence vidéo novembre 2026 :** l'enregistrement du SUPER-G olympique masculin de Bormio est une référence biomécanique et télévisuelle, **PAS** une référence géographique pour placer les portes de Cortina. La course féminine de Cortina comptait 43 portes dont 39 directionnelles, différente des 46/42 de Bormio. Priorités : 1) réaliser capture comparable du skieur sur les deux carres ; 2) calibrer l'amplitude de tuck/carving avec des images légales en suivant les transitions (0:10–0:23, 0:28–0:40, 0:53–1:03) ; 3) établir le véritable placement des portes et reliefs de Cortina depuis une vidéo DE CORTINA avant toute modification du générateur de gates. Voir `docs/VIDEO_REVIEW_BORMIO_SG_2026.md`.
+
+
 > **18 novembre 2026 — refonte Cortina photo-référencée (branche PR #34) :** nouveau module de parois dolomitiques, neige sur strates, épicéas/mélèzes, éboulis et LOD de scène intégré à PlayCanvas. Les photos servent de direction artistique seulement. **Étape suivante prioritaire :** obtenir et licencier un DEM admissible (GLO-30 autorisé ou autre source), établir des points géodésiques de contrôle, produire une topographie de massifs avec relief continu et un corridor piste unique physique/rendu ; auditer l'alignement géographique des secteurs Schuss, Duca, Delta et Scarpadon. Ajouter seulement des assets PBR et photogrammétrie dont la provenance, la redistribution et les budgets WebGL2/iOS sont vérifiés. Pour chaque changement, comparer captures et retours de pilotes à la vidéo réelle, vérifier les 34 portes et mesurer les performances du GPU avant fusion.
 
 
