@@ -16,6 +16,7 @@ import { ALPINE_START_GATE } from "../game/start-gate";
 import { addCortinaScenery } from "./cortina-scenery";
 import { createCortinaAtmosphere } from "./cortina-atmosphere";
 import { addCortinaCinematicDetails } from "./cortina-cinematic-detail";
+import { addCortinaReferenceLandmarks } from "./cortina-reference-landmarks";
 import { createCortinaLightAccents } from "./cortina-light-accents";
 import type { Course, Quality, Weather } from "../game/types";
 import { material, meshEntity, shape, beam, rng, color } from "./geometry";
@@ -80,6 +81,11 @@ export class World {
     );
     this.materials.push(...cinematic.materials);
     this.resources.push(...cinematic.textures);
+    // 2026 owner photo references: stratified Schuss, near spruce/larch and scree.
+    // Purely decorative; race gates, collision heights and timing are untouched.
+    this.materials.push(...addCortinaReferenceLandmarks(
+      this.app, this.root, this.course, this.quality,
+    ));
     // Original warm sunset, 15 LED floodlight towers and nearby light pools.
     const atmosphere = createCortinaAtmosphere(
       this.app, this.root, this.course, this.quality,
