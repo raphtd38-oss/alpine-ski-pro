@@ -83,3 +83,8 @@ Les cinq captures obsolètes de `docs/screenshots/` et l'ancien générateur `sc
 - Matériau calcaire PBR doté de micro-normales UV, gerbe de neige dépendante de la pression réelle sur chaque ski (correction du virage à droite).
 - Les règles des portes flexibles et le seuil de chute strict **>45%**, la physique 120 Hz et le chrono restent inchangés.
 - Voir [l'audit, les preuves et les limites de V1.15](docs/ULTIMATE_REALISM_V115.md). Aucun FPS réel ni rendu photo-identique n'est revendiqué.
+
+
+### Extension visuelle Cortina 2026 — repères photographiques
+
+Un nouveau module original de décor (`src/render/cortina-reference-landmarks.ts`) ajoute des falaises continues à strates, corniches enneigées, conifères et mélèzes hivernaux détaillés en premier plan, et éboulis le long de la piste de Super-G. La géométrie est regroupée et plafonnée selon la qualité graphique. Les images de référence fournies ne sont **pas** intégrées comme textures. Cette extension préserve les 34 portes, la physique à 120 Hz et la piste active ; il ne s'agit pas encore d'un terrain topographiquement exact. Voir `docs/CORTINA_2026.md`.
