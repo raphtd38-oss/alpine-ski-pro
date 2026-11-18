@@ -32,8 +32,11 @@ export function cortinaSkyRGB(height: number, mode: CortinaLightMode): [number,n
     if (safe <= b.y) {
       const t = Math.max(0,Math.min(1,(safe-a.y)/(b.y-a.y)));
       const smooth = t*t*(3-2*t);
-      return [0,1,2].map(channel => a.rgb[channel] + (b.rgb[channel]-a.rgb[channel])*smooth)
-        as [number,number,number];
+      return [
+        a.rgb[0] + (b.rgb[0]-a.rgb[0])*smooth,
+        a.rgb[1] + (b.rgb[1]-a.rgb[1])*smooth,
+        a.rgb[2] + (b.rgb[2]-a.rgb[2])*smooth,
+      ];
     }
   }
   return [...ramp[ramp.length-1].rgb];
