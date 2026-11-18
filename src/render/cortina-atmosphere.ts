@@ -2,6 +2,7 @@ import * as pc from "playcanvas";
 import type { Course, Quality } from "../game/types";
 import { courseCenterX, terrainHeight } from "../game/course";
 import { beam, color, material, meshEntity, shape } from "./geometry";
+import { cortinaLightingMode, cortinaSkyRGB, type CortinaLightMode } from "./cortina-sky-profile";
 
 /**
  * Cortina sunset set dressing, all original procedural geometry.
@@ -14,32 +15,7 @@ export const CORTINA_LIGHT_STATIONS = [
   1210, 1350, 1480, 1625, 1760, 1895, 2040,
 ] as const;
 
-const SKY_RAMP = [
-  { y: -1, rgb: [0.43, 0.38, 0.48] },
-  { y: -0.16, rgb: [0.79, 0.50, 0.51] },
-  { y: 0.02, rgb: [0.99, 0.61, 0.43] },
-  { y: 0.17, rgb: [0.91, 0.56, 0.55] },
-  { y: 0.48, rgb: [0.53, 0.47, 0.67] },
-  { y: 1, rgb: [0.21, 0.34, 0.58] },
-] as const;
-
-function skyColor(height: number): [number, number, number] {
-  for (let i = 1; i < SKY_RAMP.length; i++) {
-    const b = SKY_RAMP[i], a = SKY_RAMP[i - 1];
-    if (height <= b.y) {
-      const t = Math.max(0, Math.min(1, (height - a.y) / (b.y - a.y)));
-      const smooth = t * t * (3 - 2 * t);
-      return [
-        a.rgb[0] + (b.rgb[0] - a.rgb[0]) * smooth,
-        a.rgb[1] + (b.rgb[1] - a.rgb[1]) * smooth,
-        a.rgb[2] + (b.rgb[2] - a.rgb[2]) * smooth,
-      ];
-    }
-  }
-  return [...SKY_RAMP[SKY_RAMP.length - 1].rgb];
-}
-
-function sunsetSky(app: pc.Application, root: pc.Entity, course: Course) {
+function olympicSky(app: pc.Application, root: pc.Entity, course: Course, mode: CortinaLightMode) {
   const p: number[] = [], colors: number[] = [], idx: number[] = [];
   const latitude = 24, longitude = 56, radius = 1650;
   // A common centre keeps the skier inside the dome for the full 2.1 km run.
@@ -47,15 +23,16 @@ function sunsetSky(app: pc.Application, root: pc.Entity, course: Course) {
   for (let j = 0; j <= latitude; j++) {
     const phi = -Math.PI / 2 + (j / latitude) * Math.PI;
     const v = Math.sin(phi), cosPhi = Math.cos(phi);
-    const rgb = skyColor(v);
+    const rgb = cortinaSkyRGB(v, mode);
     for (let i = 0; i <= longitude; i++) {
       const theta = (i / longitude) * Math.PI * 2;
       p.push(cx + radius * cosPhi * Math.cos(theta),
         cy + radius * v,
         cz + radius * cosPhi * Math.sin(theta));
       // Subtle horizontal bands evoke the warm violet Dolomite afterglow.
-      const gold = Math.pow(Math.max(0, Math.sin(theta + 0.75)), 6) *
-        Math.max(0, 1 - Math.abs(v - 0.10) * 2.5) * 0.085;
+      const gold = mode === "sunset"
+        ? Math.pow(Math.max(0, Math.sin(theta + 0.75)), 6) *
+          Math.max(0, 1 - Math.abs(v - 0.10) * 2.5) * 0.085 : 0;
       // Sunset cirrus streaks fade toward the zenith and horizon; this is
       // still a single static sky mesh, not particles or a video texture.
       const lowClouds = Math.exp(-Math.pow((v - 0.16) / 0.31, 2));
@@ -63,7 +40,7 @@ function sunsetSky(app: pc.Application, root: pc.Entity, course: Course) {
         Math.pow(Math.max(0,
           0.64 * Math.sin(theta * 11.5 + v * 33.1) +
           0.36 * Math.cos(theta * 21.7 - v * 17.2)
-        ), 5) * lowClouds * 0.18;
+        ), 5) * lowClouds * (mode === "sunset" ? 0.18 : 0.045);
       colors.push(Math.min(1, rgb[0] + gold + filament),
         Math.min(1, rgb[1] + gold * 0.28 + filament * 0.37),
         Math.min(1, rgb[2] + filament * 0.16), 1);
@@ -119,7 +96,8 @@ export function createCortinaAtmosphere(
     closestDistanceM: number; spotlights: boolean;
   };
 } {
-  const sky = sunsetSky(app, root, course);
+  const lightingMode = cortinaLightingMode(typeof window === "undefined" ? "" : window.location.search);
+  const sky = olympicSky(app, root, course, lightingMode);
   const steel = material("Floodlight steel lattice", "#6f757c", 0.48, 0.40);
   const joint = material("Floodlight electrical box", "#4a515b", 0.14, 0.27);
   const white = material("Floodlight illuminated LED front", "#fff4da", 0.02, 0.12);
@@ -212,7 +190,8 @@ export function createCortinaAtmosphere(
     const nearest = new Set(nearestIds);
     // Gradual switch-on: intensities rise as the run descends into dusk.
     // Sunset remains artistic (not a simulated astronomical clock).
-    const dusk = Math.max(0, Math.min(1, (skierZ - 80) / 900));
+    const dusk = lightingMode === "sunset"
+      ? Math.max(0, Math.min(1, (skierZ - 80) / 900)) : 0.16;
     lamps.forEach((item, index) => {
       const active = nearest.has(index);
       item.light.enabled = active;

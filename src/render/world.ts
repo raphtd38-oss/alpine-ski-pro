@@ -21,6 +21,7 @@ import { addCortinaSnowShoulders } from "./cortina-snow-banks";
 import { createCortinaLightAccents } from "./cortina-light-accents";
 import type { Course, Quality, Weather } from "../game/types";
 import { material, meshEntity, shape, beam, rng, color } from "./geometry";
+import { cortinaLightingMode, cortinaHorizonHex } from "./cortina-sky-profile";
 export class World {
   root = new pc.Entity("Alpine world");
   gateEntities: pc.Entity[] = [];
@@ -1529,7 +1530,11 @@ export function configureWeather(
   weather: Weather,
 ) {
   const clear = weather === "clear";
-  const sky = clear ? "#dfadbb" : weather === "snow" ? "#bcccd6" : "#a8bbc9";
+  const lightingMode = cortinaLightingMode(
+    typeof window === "undefined" ? "" : window.location.search
+  );
+  const sky = clear ? cortinaHorizonHex(lightingMode) :
+    weather === "snow" ? "#bcccd6" : "#a8bbc9";
   camera.camera!.clearColor = color(sky);
   app.scene.fog.type = pc.FOG_LINEAR;
   app.scene.fog.color = color(sky);

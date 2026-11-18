@@ -172,3 +172,9 @@ Les scripts de la nouvelle boîte à outils **n'ajoutent pas automatiquement de 
 - Sources artistiques : six photos de Cortina fournies par le propriétaire, consultées comme références seulement ; aucune photographie, masque, photogrammétrie, marque, fichier de tiers ou photo dérivée n'est incorporé au bundle.
 - Densités `low / medium / high / ultra` de 3/5/7/8 faces rocheuses et 12/35/76/122 arbres rapprochés (en plus des peuplements existants). Les matériaux et mesh entities sont enregistrés dans `World` pour nettoyage. Collisions et physique de la piste non modifiées.
 - Provenance du code et des formes : création originale dans le dépôt, sans réutilisation du code ou des assets propriétaires de CarveMania. Aucune promesse d'exactitude topographique ou de photoréalisme sans vérification sur matériel réel.
+
+
+## 18 novembre 2026 — profil d'éclairage hivernal original
+
+- `src/render/cortina-sky-profile.ts` : palettes de gradients diurnes/sunset et couleurs d'horizon entièrement originales. Les surfaces et intensités déjà présentes dans PlayCanvas sont réutilisées ; aucun fichier de paysage, ciel photographique, HDRI ni texture tierce téléchargé.
+- Mode par défaut `daylight` inspiré des photos transmises ; ancien `sunset` disponible avec `?lighting=sunset`. Aucun changement des données de terrain, collision, interface de course ou skieur.

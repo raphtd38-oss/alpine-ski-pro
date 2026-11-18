@@ -97,3 +97,8 @@ Les cinq captures obsolètes de `docs/screenshots/` et l'ancien générateur `sc
 ### Extension visuelle Cortina 2026 — repères photographiques
 
 Un nouveau module original de décor (`src/render/cortina-reference-landmarks.ts`) ajoute des falaises continues à strates, corniches enneigées, conifères et mélèzes hivernaux détaillés en premier plan, et éboulis le long de la piste de Super-G. La géométrie est regroupée et plafonnée selon la qualité graphique. Les images de référence fournies ne sont **pas** intégrées comme textures. Cette extension préserve les 34 portes, la physique à 120 Hz et la piste active ; il ne s'agit pas encore d'un terrain topographiquement exact. Voir `docs/CORTINA_2026.md`.
+
+
+### Ambiance JO 2026 — ciel de jour fidèle aux photographies
+
+Depuis cette extension, le rendu par défaut privilégie un ciel bleu diurne, un soleil neutre d'hiver, un brouillard d'horizon bleu et un éclairage ambiant naturel correspondant mieux aux photographies de Cortina lors des compétitions. L'ancien ciel rose de crépuscule et son éclairage ne sont pas supprimés : ajouter `?lighting=sunset` à l'URL pour les retrouver. Le profil de ciel est procédural (sans image ni HDRI copié) et les spots, les filets, les portes, la physique et le skieur restent en place. Ceci n'est pas une simulation de météo ou d'éphéméride exacte du 12 février 2026.
