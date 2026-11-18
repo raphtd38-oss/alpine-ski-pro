@@ -1,4 +1,7 @@
 
+> **18 novembre 2026 — ciel olympique de jour (PR visuelle indépendante)** : éclairage hivernal bleu/parois de dolomie mieux comparables aux photographies du propriétaire ; ancien coucher de soleil disponible en `?lighting=sunset`, sans perte des projecteurs et des conditions météo. Nouveau module `src/render/cortina-sky-profile.ts` et tests Vitest. Aucun changement des 34 portes, de la physique ou des replays. À valider en CI et mesurer sur vrai GPU, aucune fidélité photo garantie.
+
+
 > **18 novembre 2026 — branche `feat/cortina-reference-landmarks-v116` :** ajout visuel dans `World` de parois Schuss/Duca/Delta/Gran Curvone/Scarpadon/Rumerlo plus sculptées, corniches de neige, épicéas/mélèzes hivernaux de premier plan, éboulis. Maillages regroupés et budgets par qualité ; aucune modification des hauteurs physiques, des collisions, des 34 portes, du skieur, des records ni du moteur à 120 Hz. Références : six photos utilisateur, non diffusées dans le bundle. Modules : `src/render/cortina-reference-landmarks.ts`, tests : `tests/cortina-reference-landmarks.test.ts`. Ce n'est **pas** une reconstruction géoréférencée. Résultats CI à contrôler après PR ; pas de benchmark réel iPhone/PC.
 
 # État de reprise — 17 novembre 2026
