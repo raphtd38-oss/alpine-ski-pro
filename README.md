@@ -102,3 +102,8 @@ Un nouveau module original de décor (`src/render/cortina-reference-landmarks.ts
 ### Ambiance JO 2026 — ciel de jour fidèle aux photographies
 
 Depuis cette extension, le rendu par défaut privilégie un ciel bleu diurne, un soleil neutre d'hiver, un brouillard d'horizon bleu et un éclairage ambiant naturel correspondant mieux aux photographies de Cortina lors des compétitions. L'ancien ciel rose de crépuscule et son éclairage ne sont pas supprimés : ajouter `?lighting=sunset` à l'URL pour les retrouver. Le profil de ciel est procédural (sans image ni HDRI copié) et les spots, les filets, les portes, la physique et le skieur restent en place. Ceci n'est pas une simulation de météo ou d'éphéméride exacte du 12 février 2026.
+
+
+### Référence vidéo Super-G : animations et caméras
+
+Une vidéo de compétition olympique fournie par le joueur (Super-G **masculin à Bormio**, pas la piste féminine de Cortina) a guidé une nouvelle caméra TV à neuf plans et une transition de tuck plus naturelle à vitesse élevée, uniquement visuelle. **Aucune porte, bosse ou coordonnée de Bormio n'est transférée** dans le Super-G de Cortina. Ambiance de coucher de soleil par défaut, avec `?lighting=daylight` pour afficher la lumière diurne. Lire `docs/VIDEO_REVIEW_BORMIO_SG_2026.md` pour la méthode et les limites.

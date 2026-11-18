@@ -1,4 +1,7 @@
 
+> **18 novembre 2026 — analyse vidéo Super-G transmis par le propriétaire** : séquence de 82,5 s identifiée comme Super-G **hommes Bormio/Stelvio**, et non course féminine de Cortina ; 46 portes/42 directionnelles à Bormio contre 43/39 à Cortina. Module de plans TV `superg-broadcast-shot.ts` avec 9 changements et cadrage de vol, tuck visuel modulé par vitesse/prise de carre, et retour au sunset par défaut, option `?lighting=daylight`. Aucun changement d'altimétrie, portes, physique 120 Hz, collisions ou records. Tests à confirmer via CI avant diffusion. Voir `docs/VIDEO_REVIEW_BORMIO_SG_2026.md`.
+
+
 > **18 novembre 2026 — ciel olympique de jour (PR visuelle indépendante)** : éclairage hivernal bleu/parois de dolomie mieux comparables aux photographies du propriétaire ; ancien coucher de soleil disponible en `?lighting=sunset`, sans perte des projecteurs et des conditions météo. Nouveau module `src/render/cortina-sky-profile.ts` et tests Vitest. Aucun changement des 34 portes, de la physique ou des replays. À valider en CI et mesurer sur vrai GPU, aucune fidélité photo garantie.
 
 

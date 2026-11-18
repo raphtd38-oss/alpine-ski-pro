@@ -56,6 +56,29 @@ export interface SGAnimationTuning {
 }
 
 /** Tuning for a race-like silhouette, bounded for browser robustness. */
+/**
+ * Video reference (Bormio men's SG, 39-43 s): racers recover a compact speed
+ * tuck between wide turns. This is VISUAL ONLY; player-controlled tuck still
+ * determines aerodynamic drag in the 120 Hz physics solver.
+ *
+ * A low-speed, loaded carve or airborne athlete must NOT inherit a full
+ * straight-line tuck, and bad replay values must remain bounded.
+ */
+export function superGVideoSpeedTuck(
+  speedMps: number, engagement: number,
+  airborne: number, landingShock: number,
+): number {
+  const speed = Number.isFinite(speedMps) ? Math.max(0, speedMps) : 0;
+  const load = Number.isFinite(engagement) ? engagement : 0;
+  const flight = Number.isFinite(airborne) ? airborne : 0;
+  const landing = Number.isFinite(landingShock) ? landingShock : 0;
+  const raceSpeed = smoothstep(22, 35, speed);
+  return 0.70 * raceSpeed *
+    (1 - 0.63 * clamp(load, 0, 1)) *
+    (1 - 0.78 * clamp(flight, 0, 1)) *
+    (1 - 0.58 * clamp(landing, 0, 1));
+}
+
 export const SG_RACE_DEFAULTS: Readonly<SGAnimationTuning> = Object.freeze({
   edgeResponseHz: 9.5,
   heightResponseHz: 8.0,
@@ -340,8 +363,12 @@ export class SuperGCompetitionPose {
     const edgeRoll = -sign * Math.min(T.maxSkiEdgeDeg,
       8 * smoothstep(0.08, 0.34, edgeAbs) + 64 * engagement);
 
+    // TV reference: between gates, speed naturally draws the visual torso
+    // into a compact aerodynamic shape. Carves/flight release that posture;
+    // this does NOT grant free in-game air-drag reduction.
+    const speedTuck = superGVideoSpeedTuck(speed, engagement, flight, landing);
     const tuckTarget = Math.max(sat(safe(frame.tuck)) *
-      (1 - 0.22 * engagement), finishReach * 0.92);
+      (1 - 0.22 * engagement), speedTuck, finishReach * 0.92);
     a.tuck = smooth(a.tuck, tuckTarget, 9.5, sDt);
     const targetY = clamp(1.01 - (
       0.045 + 0.20 * a.tuck + 0.240 * engagement +
