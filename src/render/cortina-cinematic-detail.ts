@@ -40,9 +40,10 @@ function face(g: Points, a: number, b: number, c: number) {
 function buildDolomiteNormalMap(
   app: pc.Application, quality: Quality,
 ): pc.Texture | null {
-  if (quality === "low") return null;
+  // Even mobile gets an inexpensive normal map: plain flat cliff
+  // triangles were too smooth to resemble limestone in real race views.
   const size = quality === "ultra" ? 384 :
-    quality === "high" ? 256 : 128;
+    quality === "high" ? 256 : quality === "medium" ? 128 : 96;
   const canvas = document.createElement("canvas");
   canvas.width = canvas.height = size;
   const context = canvas.getContext("2d")!;
