@@ -1,5 +1,7 @@
 # Feuille de route persistante
 
+> **Après V1.16** : comparer plusieurs captures de la piste réel/jeu, améliorer l'axe topographique par DEM ouvert sous licence compatible, remplacer/compléter les surfaces rocheuses par PBR photo haute résolution et LOD, mesurer l'impact GPU de la forêt et des montagnes sur iPhone et PC, corriger l'ambiance de ciel trop uniforme aux endroits où des visuels antérieurs montrent une arche rose artificielle. Priorité à la fidélité des vrais virages et à la fluidité.\n\n
+
 > **Après V1.15** : calibrer biomécanique sur des vidéos autorisées (squat, chargement ski extérieur, angles skis/sol), mesurer les performances GPU sur iPhone/PC, améliorer l'ombrage des arbres, asset LOD de montagne, la neige PBR et les ombres des spots sur tous les profils. Ne pas confondre rendu Chromium et vrai benchmark GPU. Voir docs/ULTIMATE_REALISM_V115.md.\n\n
 > **Décor visuel Cortina enrichi :** détails rapprochés de dommage neige, filets rouges et pylônes éclairés, plus montagnes, résineux et village en arrière-plan. À tester ensuite sur iPhone / PC : nombre de triangles visibles, lumière des pylônes, détails près du skieur, densité forêt, lisibilité des portes et comportement du ciel en caméra subjective. Les différences photo↔moteur restent importantes car il n'existe ni DEM officiel, ni textures/scans locaux de Cortina dans le projet.\n\n
 
