@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { cortinaLightingMode, cortinaSkyRGB, DAYLIGHT_RAMP, SUNSET_RAMP } from "../src/render/cortina-sky-profile";
 
-describe("Cortina photo-matched olympic daylight, reversible sunset", () => {
-  it("uses daylight by default without removing the old sunset option", () => {
-    expect(cortinaLightingMode("")).toBe("daylight");
+describe("Cortina sunset default with reversible daylight", () => {
+  it("uses requested sunset by default without removing the Olympic daylight option", () => {
+    expect(cortinaLightingMode("")).toBe("sunset");
     expect(cortinaLightingMode("?lighting=daylight")).toBe("daylight");
     expect(cortinaLightingMode("?lighting=sunset")).toBe("sunset");
     expect(cortinaLightingMode("?racer=full&lighting=sunset")).toBe("sunset");
