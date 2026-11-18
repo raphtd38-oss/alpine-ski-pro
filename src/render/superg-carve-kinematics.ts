@@ -57,22 +57,22 @@ export interface SGAnimationTuning {
 
 /** Tuning for a race-like silhouette, bounded for browser robustness. */
 export const SG_RACE_DEFAULTS: Readonly<SGAnimationTuning> = Object.freeze({
-  edgeResponseHz: 9.5,
-  heightResponseHz: 8.0,
-  bankResponseHz: 8.5,
+  edgeResponseHz: 11.0,
+  heightResponseHz: 10.5,
+  bankResponseHz: 10.0,
   armResponseHz: 9.5,
-  maxBankDeg: 46,
-  maxSkiEdgeDeg: 68,
+  maxBankDeg: 59,
+  maxSkiEdgeDeg: 73,
   maxInsideDivergenceDeg: 2.3,
   maxSnowSkidYawDeg: 4,
-  maxPelvisShiftM: 0.29,
-  minPelvisHeightM: 0.55,
+  maxPelvisShiftM: 0.33,
+  minPelvisHeightM: 0.53,
   maxPelvisHeightM: 1.01,
   stanceHalfWidthM: 0.18,
   innerSkiStaggerM: 0.038,
   slopeContactClearanceM: 0.008,
   skiHalfWidthM: 0.046,
-  chestCounterRollDeg: 15,
+  chestCounterRollDeg: 19,
 });
 
 export interface SGFootPose {
@@ -287,12 +287,13 @@ export class SuperGCompetitionPose {
     // the line changes or when a replay omits velocity channels.
     const slipAngleDeg = clamp(angleDiff(heading, velocityHeading) * RAD, -25, 25);
 
-    const grip = 1 - 0.52 * skid;
+    const grip = 1 - 0.38 * skid;
     const engagement = smoothstep(0.10, 0.86, edgeAbs) *
       (0.77 + 0.23 * sat(pressure / 1.3)) * grip * contact;
     const loadTransfer = estimateRaceLoad({
       speedMps: speed, edge, engagement, pressure, skid,
       physicsLoad: frame.load,
+      lateralAccelerationMps2: frame.lateralAcceleration,
     });
     // Load transfer is fast on initiation, slower on release. It must remain
     // continuous through a sign reversal even if a race replay seeks.
@@ -332,22 +333,23 @@ export class SuperGCompetitionPose {
     // at the pelvis/rib cage. Rotating the whole body 66 degrees would look
     // like a rigid board instead of an athlete controlling edge pressure.
     const desiredBank = -sign * contact * Math.min(T.maxBankDeg,
-      7 * smoothstep(0.06, 0.32, edgeAbs) +
-      25 * engagement + 0.30 * loadTransfer.equilibriumLeanDeg *
+      9 * smoothstep(0.06, 0.32, edgeAbs) +
+      30 * engagement + 0.46 * loadTransfer.equilibriumLeanDeg *
       loadTransfer.gripCommitment);
     a.bank = smooth(a.bank, desiredBank * (1 - 0.92 * finishReach),
       T.bankResponseHz, sDt);
     const edgeRoll = -sign * Math.min(T.maxSkiEdgeDeg,
-      8 * smoothstep(0.08, 0.34, edgeAbs) + 64 * engagement);
+      10 * smoothstep(0.08, 0.34, edgeAbs) + 67 * engagement);
 
     const tuckTarget = Math.max(sat(safe(frame.tuck)) *
       (1 - 0.22 * engagement), finishReach * 0.92);
     a.tuck = smooth(a.tuck, tuckTarget, 9.5, sDt);
     const targetY = clamp(1.01 - (
-      0.045 + 0.20 * a.tuck + 0.240 * engagement +
-      0.048 * flex + 0.060 * a.start + 0.064 * a.pole -
+      0.060 + 0.18 * a.tuck + 0.300 * engagement +
+      0.054 * flex + 0.060 * a.start + 0.064 * a.pole -
       0.095 * extension + 0.060 * landing + 0.065 * finishReach
-    ), T.minPelvisHeightM, T.maxPelvisHeightM);
+    ), T.minPelvisHeightM, T.maxPelvisHeightM) +
+      0.035 * smoothstep(0.55, 1.7, Math.abs(a.edgeRate)) * (1 - engagement);
     a.pelvisY = smooth(a.pelvisY, targetY,
       T.heightResponseHz, sDt);
     const targetX = sign * engagement * T.maxPelvisShiftM +
