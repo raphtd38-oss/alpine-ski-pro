@@ -131,6 +131,7 @@ export class Race {
         flex: s.flex,
         load: s.load,
         slip: s.slip,
+        lateralAcceleration: s.lateralAcceleration,
         chatter: s.chatter,
         poleImpact: s.poleImpact,
         poleImpactSide: s.poleImpactSide,
@@ -191,6 +192,8 @@ export function replayAt(frames: Frame[], time: number): Frame | null {
     flex: (a.flex ?? 0) + ((b.flex ?? 0) - (a.flex ?? 0)) * u,
     load: (a.load ?? 0.5) + ((b.load ?? 0.5) - (a.load ?? 0.5)) * u,
     slip: (a.slip ?? 0) + ((b.slip ?? 0) - (a.slip ?? 0)) * u,
+    lateralAcceleration: (a.lateralAcceleration ?? 0) +
+      ((b.lateralAcceleration ?? 0) - (a.lateralAcceleration ?? 0)) * u,
     chatter: (a.chatter ?? 0) + ((b.chatter ?? 0) - (a.chatter ?? 0)) * u,
     poleImpact: (a.poleImpact ?? 0) + ((b.poleImpact ?? 0) - (a.poleImpact ?? 0)) * u,
     poleImpactSide: b.poleImpactSide ?? a.poleImpactSide ?? 0,
