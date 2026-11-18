@@ -67,10 +67,10 @@ export class Renderer {
     // Atmospheric perspective softens the distant procedural cliffs and
     // creates photographic depth without blurring nearby race gates.
     // The sky dome itself is un-fogged; track and meshes share one horizon.
-    this.app.scene.fog = pc.FOG_LINEAR;
-    this.app.scene.fogColor = color(cortinaHorizonHex(lightingMode));
-    this.app.scene.fogStart = 880;
-    this.app.scene.fogEnd = 2250;
+    this.app.scene.fog.type = pc.FOG_LINEAR;
+    this.app.scene.fog.color = color(cortinaHorizonHex(lightingMode));
+    this.app.scene.fog.start = 880;
+    this.app.scene.fog.end = 2250;
     this.camera.addComponent("camera", {
       clearColor: color(cortinaHorizonHex(lightingMode)),
       farClip: 2400,
