@@ -61,9 +61,16 @@ export class Renderer {
     device.maxPixelRatio = Math.min(window.devicePixelRatio, 1.5);
     const lightingMode = cortinaLightingMode(window.location.search);
     this.app.scene.ambientLight = color(
-      lightingMode === "daylight" ? "#b9c8d8" : "#8f8fa7"
+      lightingMode === "daylight" ? "#afc0d2" : "#898da6"
     );
-    this.app.scene.exposure = 1.12;
+    this.app.scene.exposure = 1.10;
+    // Atmospheric perspective softens the distant procedural cliffs and
+    // creates photographic depth without blurring nearby race gates.
+    // The sky dome itself is un-fogged; track and meshes share one horizon.
+    this.app.scene.fog = pc.FOG_LINEAR;
+    this.app.scene.fogColor = color(cortinaHorizonHex(lightingMode));
+    this.app.scene.fogStart = 880;
+    this.app.scene.fogEnd = 2250;
     this.camera.addComponent("camera", {
       clearColor: color(cortinaHorizonHex(lightingMode)),
       farClip: 2400,
@@ -77,10 +84,10 @@ export class Renderer {
       color: color(lightingMode === "daylight" ? "#fff2d8" : "#ffd5ad"),
       intensity: 1.7,
       castShadows: true,
-      shadowDistance: 100,
+      shadowDistance: 155,
       shadowResolution: 2048,
-      shadowBias: 0.2,
-      normalOffsetBias: 0.12,
+      shadowBias: 0.08,
+      normalOffsetBias: 0.045,
       numCascades: 3,
     });
     // Real Olympic photographs show a blue daytime sky; keep original dusk
