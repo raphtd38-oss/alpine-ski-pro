@@ -13,6 +13,7 @@ export interface RaceLoadInput {
   pressure: number;            // physical normal force / resting load
   skid: number;                // 0 gripping, 1 fully sliding
   physicsLoad?: number;        // signed L/R distribution, existing sim frame
+  lateralAccelerationMps2?: number; // measured 120Hz snow force; older frames omit
 }
 
 export interface RaceLoadTransfer {
@@ -40,13 +41,17 @@ export function estimateRaceLoad(input: RaceLoadInput): RaceLoadTransfer {
   const edgeAmount = sat(Math.abs(edge) / 1.1);
   // Effective course/turn radius, never equal to a ski's sidecut radius.
   // At high speed the line opens; at an engaged edge it tightens.
-  const equivalentRadiusM = clamp(
-    58 + 0.32 * speed - 32 * strength * (1 - skid * 0.62), 25, 95);
-  // Both the speed and the available snow grip limit lateral force.
-  const lateralG = clamp(
-    ((speed * speed) / (9.81 * equivalentRadiusM)) *
-      edgeAmount * (1 - skid * .74) * Math.min(1.15, pressure),
-    0, 2.8);
+  const measuredForce = Number.isFinite(input.lateralAccelerationMps2)
+    ? Math.abs(input.lateralAccelerationMps2!) : null;
+  const equivalentRadiusM = measuredForce === null
+    ? clamp(58 + 0.32 * speed - 32 * strength * (1 - skid * 0.62), 25, 95)
+    : clamp(speed * speed / Math.max(0.1, measuredForce), 25, 140);
+  // New gameplay frames use actual lateral snow contact acceleration.
+  // Legacy replay files keep their previous visual estimate unchanged.
+  const lateralG = measuredForce === null
+    ? clamp(((speed * speed) / (9.81 * equivalentRadiusM)) *
+        edgeAmount * (1 - skid * .74) * Math.min(1.15, pressure), 0, 2.8)
+    : clamp(measuredForce / 9.81 * Math.min(1.15, pressure), 0, 2.8);
   const equilibriumLeanDeg = Math.atan2(lateralG, 1) * 180 / Math.PI;
   const gripCommitment = strength * (1 - .55 * skid);
   const modelOutside = .5 + gripCommitment * (.24 + .11 * sat(lateralG / 1.8));

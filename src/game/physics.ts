@@ -33,6 +33,7 @@ export const initialState = (): SkierState => ({
   poleImpactSide: 0,
   skid: 0,
   pressure: 1,
+  lateralAcceleration: 0,
   balance: 1,
   height: 0,
   verticalSpeed: 0,
@@ -119,6 +120,7 @@ export function stepPhysics(
     az -= s.vz * 1.8;
     s.balance = smooth(s.balance, 1, 1, dt);
     s.skid = smooth(s.skid, 0, 4, dt);
+    s.lateralAcceleration = smooth(s.lateralAcceleration, 0, 12, dt);
   } else {
     const desiredCurvature =
       (Math.sin(s.edge) *
@@ -126,17 +128,21 @@ export function stepPhysics(
         (0.82 + outsideLoad * 0.22)) /
       Math.max(4, (e.radius * Math.cos(s.edge)) / (1 + s.flex * 0.12));
     const baseGrip =
-      (9.81 * 1.3 * e.grip * snowGrip * lengthFactor *
+      (9.81 * 1.62 * e.grip * snowGrip * lengthFactor *
         (0.94 + outsideLoad * 0.095)) /
       Math.sqrt(1 + gx * gx + gz * gz);
-    const lateralDemand = speed * speed * desiredCurvature;
+    const rawSidecutDemand = speed * speed * desiredCurvature;
     const gripLimit = baseGrip *
       tiltGripFactor(s.edge) *
       skidGripFactor(s.skid) *
       pressureGripFactor(s.pressure) *
       softSnowGripFactor(depth);
-    s.skid = nextSkid(s.skid, lateralDemand, gripLimit, dt);
-    const lateral = clamp(lateralDemand, -gripLimit, gripLimit);
+    // At race speed the effective radius grows with available snow grip.
+    // A full edge must not automatically create impossible 3-4g forces.
+    // Keep reserve grip for correcting the actual ski-heading slip angle.
+    const carveBudget = gripLimit * (0.82 + 0.13 *
+      Math.min(1, Math.abs(s.edge)));
+    const lateral = clamp(rawSidecutDemand, -carveBudget, carveBudget);
     const contact = s.height < 0.005 ? 1 : 0.03;
     s.heading = clamp(
       s.heading + ((contact * lateral) / Math.max(3, speed)) * dt,
@@ -148,6 +154,14 @@ export function stepPhysics(
     const nx = Math.cos(s.heading),
       nz = -Math.sin(s.heading);
     const sideVelocity = s.vx * nx + s.vz * nz;
+    const excessiveDemand = Math.max(0,
+      Math.abs(rawSidecutDemand) / Math.max(1, gripLimit) - 1.65);
+    // A clean pressured edge tracks. Skid follows actual lateral slip,
+    // overload on ice and braking, not the unachievable sidecut estimate.
+    s.skid = nextSkid(s.skid,
+      Math.abs(sideVelocity) * 2.1 + excessiveDemand * gripLimit * 0.26 +
+      (input.brake ? gripLimit * 1.35 : 0),
+      gripLimit, dt);
     const edgeGrip = (input.brake ? 0.5 : 1) * e.grip * snowGrip;
     const alignment = clamp(
       -sideVelocity * (2.4 * edgeGrip),
@@ -157,10 +171,13 @@ export function stepPhysics(
     const totalLateral = clamp(lateral + alignment, -gripLimit, gripLimit);
     ax += nx * totalLateral * contact;
     az += nz * totalLateral * contact;
+    s.lateralAcceleration = smooth(
+      s.lateralAcceleration, totalLateral * contact, 17, dt);
     // When edge demand exceeds grip, part of the intended carve becomes a
     // controlled lateral skid. It costs speed and is audible/visible to players.
     // The grip budget caps lateral force rather than rotating the velocity.
-    const gripOverflow = Math.max(0, Math.abs(lateralDemand) - gripLimit) /
+    const gripOverflow = Math.max(0,
+      Math.abs(rawSidecutDemand) - gripLimit * 1.65) /
       Math.max(1, gripLimit);
     const skidSpeed = Math.abs(sideVelocity) +
       Math.min(12, gripOverflow * speed * 0.13) +
@@ -179,8 +196,10 @@ export function stepPhysics(
       softSnowDrag(depth, speed);
     ax -= s.vx * (drag + friction);
     az -= s.vz * (drag + friction);
-    const stress =
-      Math.max(0, Math.abs(lateralDemand) - gripLimit * 1.3) / gripLimit;
+    // Balance responds to actual lateral control loss, not raw geometry.
+    const stress = Math.max(0,
+      Math.abs(sideVelocity) * 2.4 * edgeGrip / Math.max(1, gripLimit) - 0.72) +
+      s.skid * 0.42;
     s.balance = clamp(
       s.balance + (0.22 - stress * (1 - e.stability * 0.6) * 0.55) * dt,
       0,
@@ -212,6 +231,7 @@ export function stepPhysics(
   }
   s.jumpHeld = input.jump;
   if (s.height > 0) {
+    s.lateralAcceleration = smooth(s.lateralAcceleration, 0, 16, dt);
     // No invisible snow-particle acceleration while airborne.
     ax = -s.vx * 0.01;
     az = -s.vz * 0.01;

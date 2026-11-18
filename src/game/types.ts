@@ -51,6 +51,8 @@ export interface SkierState {
   skid: number;
   /** Normal force relative to level ground (crests/compressions). */
   pressure: number;
+  /** Signed lateral snow contact acceleration in m/s² (120Hz signal). */
+  lateralAcceleration: number;
   balance: number;
   height: number;
   verticalSpeed: number;
@@ -76,6 +78,8 @@ export interface Frame {
   /** Optional for backwards-compatible saved replays. */
   load?: number;
   slip?: number;
+  /** Optional so archived replays continue to load without force telemetry. */
+  lateralAcceleration?: number;
   chatter?: number;
   poleImpact?: number;
   poleImpactSide?: number;
