@@ -114,7 +114,8 @@ function mountainSpurs(
       entry.side * (entry.dist + (rand() - 0.5) * 25);
     appendDolomiteRidge(ridge, {
       x, z,
-      height: entry.h * (.77 + rand() * .41),
+      height: entry.h * (quality === "low" ? .66 : .79) *
+        (.77 + rand() * .41),
       radius: entry.w * (.85 + rand() * .31),
       seed: 600 + n * 23,
       ground: (xx, zz) => terrainHeight(xx, zz, course) - 10,
