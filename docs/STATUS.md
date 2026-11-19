@@ -8,7 +8,9 @@ Le lot `feat/force-driven-ski-contact` corrige les cibles IK bloquées au sol en
 
 **NON COMMENCÉ dans ce lot** : DEM géoréférencé, montagnes photogrammétriques, nouvelles textures haute définition externes, mocap, ragdoll multicorps, nouvelles caméras TV. Les cinq vidéos nommées sont absentes : aucun visionnage revendiqué. La référence FIS compte 43 portes, le jeu en propose 42 selon la demande ; les coordonnées restent artistiques.
 
-**Publication** : consulter la PR de `feat/force-driven-ski-contact` et son workflow `Verify and publish` pour les SHA et résultats distants. La validation locale ci-dessus n’est pas une déclaration de publication. Le site cible reste https://raphtd38-oss.github.io/alpine-ski-pro/ .
+**Validation distante** : [PR #42](https://github.com/raphtd38-oss/alpine-ski-pro/pull/42), commit `ea77f3b`, fusion `16dbb39`. Le [workflow PR 44404489208](https://github.com/raphtd38-oss/alpine-ski-pro/actions/runs/44404489208) a réussi : 174 tests unitaires, 7 tests navigateur (2,7 min), build et audit. Le workflow main contrôle à nouveau avant Pages ; consulter son résultat pour la publication. Site : https://raphtd38-oss.github.io/alpine-ski-pro/ .
+
+**Banc de test IK** : les nœuds du véritable GLB sont maintenant des `GraphNode`, sans construction d’`Entity` hors application. Cela supprime les assertions `Could not find current application` du test headless. Les 9 régressions ciblées passent ; compilation réussie et bundle JS strictement identique (SHA-256 `2008be8b3203783657bb4cff545d9376524d6d04a698c6cbd5b1bf48e588790c`). Aucun changement de comportement du jeu dans ce correctif de test.
 
 Les notes suivantes sont historiques, notamment les anciens tracés à 34 portes et le jour par défaut.
 

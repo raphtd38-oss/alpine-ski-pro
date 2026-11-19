@@ -30,10 +30,11 @@ import {
 } from "./superg-carve-kinematics";
 
 export interface SGActor {
-  root: pc.Entity;
-  rig: pc.Entity;
+  // The director only transforms nodes; it never creates engine components.
+  root: pc.GraphNode;
+  rig: pc.GraphNode;
   joints: Record<string, pc.GraphNode>;
-  poles: pc.Entity[];
+  poles: pc.GraphNode[];
   isSeamless: boolean;
   visualBank: number;
   visualCrouch: number;
