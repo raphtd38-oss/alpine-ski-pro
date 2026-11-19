@@ -3,7 +3,14 @@ test("renders the Super-G, responds to keys, pauses, restarts and changes suit",
   page,
 }) => {
   const errors: string[] = [];
+  const audioResponses: { url: string; status: number; type: string }[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
+  page.on("response", (response) => {
+    if (new URL(response.url()).pathname.includes("/audio/")) {
+      audioResponses.push({ url: response.url(), status: response.status(),
+        type: response.headers()["content-type"] ?? "" });
+    }
+  });
   await page.goto("/?quality=low");
   await expect(page.locator("#loading")).toHaveCount(0, { timeout: 45000 });
   const athlete = await page.evaluate(() => (window as any).__ski.getState());
@@ -25,6 +32,8 @@ test("renders the Super-G, responds to keys, pauses, restarts and changes suit",
   await page.screenshot({ path: "test-results/menu.png" });
   await page.locator("#play").click();
   await expect(page.locator("#hud")).toBeVisible();
+  // A 200 HTML fallback from Vite must not hide missing production audio.
+  await expect.poll(() => audioResponses.length).toBeGreaterThanOrEqual(6);
   await page.waitForFunction(
     () => (window as any).__ski.getState().z > 4,
     {},
@@ -68,6 +77,8 @@ test("renders the Super-G, responds to keys, pauses, restarts and changes suit",
   await page.locator("#play").click();
   await page.waitForTimeout(600);
   expect(errors).toEqual([]);
+  expect(audioResponses.filter(r => r.status !== 200 || !r.type.startsWith("audio/")))
+    .toEqual([]);
 });
 test("training mode has a guide and regular racing can toggle its dashed trajectory with G", async ({ page }) => {
   await page.goto("/?quality=low");

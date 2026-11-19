@@ -98,7 +98,7 @@ Pour intégrer ultérieurement des générations correctement autorisées et té
 - `public/audio/wind.mp3` (vent à vitesse élevée) ;
 - `public/audio/crowd-long.mp3` (ambiance extérieure plus longue remplaçant l'actuel public de 2 s).
 
-Le code charge ces fichiers seulement s'ils existent ; sinon, les trois premiers effets sont synthétisés localement par Web Audio et la boucle actuelle de `crowd.mp3` reste en service. **Aucun de ces quatre fichiers optionnels n'est présent actuellement.** Vérifier les conditions et droits ElevenLabs à chaque génération avant redistribution commerciale.
+Après ajout des fichiers, les inscrire dans `PACKAGED_SOUNDS` dans `src/game/audio.ts`. Seuls les sons réellement livrés sont demandés par le navigateur. Sans ces enregistrements, les trois premiers effets sont synthétisés localement par Web Audio et la boucle actuelle de `crowd.mp3` reste en service. La V1.17.1 corrige les quatre sondages HTTP 404 autrefois émis sur GitHub Pages ; le serveur Vite masquait ces fichiers manquants par un repli HTML. **Aucun de ces quatre fichiers optionnels n'est présent actuellement.** Vérifier les conditions et droits ElevenLabs à chaque génération avant redistribution commerciale.
 
 ## Nouveau matériau neige de la mise à jour V1
 

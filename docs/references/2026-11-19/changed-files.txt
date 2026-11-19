@@ -1,0 +1,16 @@
+README.md
+docs/ASSETS.md
+docs/CHANGELOG.md
+docs/ROADMAP.md
+docs/STATUS.md
+docs/references/2026-11-19/README.md
+docs/references/2026-11-19/changed-files.txt
+docs/references/2026-11-19/public-before-audio-fix.json
+docs/references/2026-11-19/public-before-audio-fix.png
+docs/references/2026-11-19/static-after-audio-fix.json
+docs/references/2026-11-19/static-after-audio-fix.png
+package-lock.json
+package.json
+scripts/verify-production.mjs
+src/game/audio.ts
+tests/browser/game.spec.ts

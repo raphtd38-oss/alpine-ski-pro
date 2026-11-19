@@ -1,3 +1,13 @@
+# Reprise du 19 novembre 2026
+
+V1.17 a été publiée : [workflow 44405241026](https://github.com/raphtd38-oss/alpine-ski-pro/actions/runs/44405241026), fusion `16dbb39`. Le JavaScript servi a été vérifié par SHA-256 contre le build local. La PR #43 (test `0abfbcc`, fusion `83e2636`) est également validée : 174 tests unitaires, 7 tests navigateur en 3,0 min, zéro assertion PlayCanvas dans le journal.
+
+Le contrôle du **site public** a toutefois détecté quatre fichiers MP3 optionnels absents, demandés par l’ancien chargeur audio. Les sons procéduraux fonctionnaient déjà en repli, mais quatre HTTP 404 polluaient la console. La V1.17.1 limite les demandes aux six fichiers livrés. Le test navigateur vérifie désormais le type MIME audio et détecte le repli HTML de Vite qui avait masqué ces fichiers manquants. Voir `references/2026-11-19` pour la preuve publique initiale et la validation du correctif.
+
+Les limites de réalisme, références vidéo absentes, topographie artistique et mesures GPU restent celles décrites ci-dessous. Aucun asset payant ajouté.
+
+---
+
 # État actif — V1.17, 18 novembre 2026
 
 Le lot `feat/force-driven-ski-contact` corrige les cibles IK bloquées au sol en vol, les skis mal orientés sur dévers, l’inclinaison excessive à basse vitesse et le côté d’appui inversé par le yaw du GLB. Les carres/directions/charges viennent du solveur 120 Hz ; les jambes gardent leurs longueurs, le bassin suit les forces et une suspension amortie. Personnage 25 os conservé. Traces sous les contacts réels, 42 portes reconstituées, branches volumétriques, coucher de soleil par défaut et ciel sans disque de clipping. Piquets flexibles, fanions physiques, seuil strict >45 %, chrono et contrôles préservés.

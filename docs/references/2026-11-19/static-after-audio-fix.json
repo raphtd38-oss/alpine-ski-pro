@@ -1,0 +1,17 @@
+{
+  "url": "http://127.0.0.1:4174/?quality=low&racer=mobile&renderer=webgl2",
+  "devApi": "undefined",
+  "hud": {
+    "time": "00:01.88",
+    "speed": "27",
+    "gates": "0 / 42",
+    "edge-label": "CARRES 11°",
+    "renderer-info": "WEBGL2 / PLAYCANVAS / AMMO.JS"
+  },
+  "errors": [],
+  "failed": [],
+  "scripts": [
+    "http://127.0.0.1:4174/assets/index-DIJkDk2a.js",
+    "https://developer.playcanvas.com/assets/modules/ammo/ammo.wasm.js"
+  ]
+}

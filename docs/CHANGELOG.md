@@ -1,3 +1,9 @@
+## V1.17.1 — 19 novembre 2026
+
+- Suppression de quatre requêtes audio vers des MP3 optionnels absents (`carving`, `ice`, `wind`, `crowd-long`). Les six fichiers réellement livrés, les synthèses Web Audio et les ambiances existantes restent actifs.
+- Régression navigateur : vérifier le type MIME audio en plus du statut HTTP pour détecter les fichiers manquants masqués par le repli HTML de Vite.
+- V1.17 a été publiée après CI (PR #42, workflow 44405241026). Le correctif du banc IK de la PR #43 passe 174 tests unitaires et 7 tests navigateur sans assertions PlayCanvas ; fusion `83e2636`.
+
 ## 1.10.0 — 17 novembre 2026 — Studio Kit 3D / PBR / LOD
 
 - Analyse de l'archive utilisateur Studio Kit 2026 (11 GLB, 42 cartes PBR, scripts et rapports). Réutilisation **sélective** ; aucun remplacement aveugle de modèles au rendu inférieur ou du terrain physique.
