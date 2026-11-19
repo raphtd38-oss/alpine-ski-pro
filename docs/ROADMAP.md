@@ -211,3 +211,8 @@ Le but est un simulateur de ski de grande qualité, amélioré sur le même dép
 - Cartographier le relief avec un DEM réellement disponible/licencié avant de promettre un Cortina exact. La géométrie actuelle reste schématique ; parois et matières doivent encore gagner en variété.
 - Mesurer Low/Medium/High/Ultra sur GPU PC et mobile, puis décider des LOD/instancing. Les nouvelles branches sont batched, pas une preuve de gain de FPS.
 - Réceptions, contact des semelles, genoux et skis doivent rester vérifiés via le véritable GLB et dans Chromium ; la validation par compilation seule est insuffisante.
+
+## Vérification de publication du 19 novembre
+
+- Contrôler les assets sur un serveur statique sans fallback HTML, puis sur GitHub Pages : Vite dev/preview peut masquer des fichiers manquants. Les sons doivent provenir de `PACKAGED_SOUNDS` et avoir un type MIME audio.
+- Les quatre MP3 optionnels non générés restent remplacés par les synthèses existantes ; ne pas introduire de requêtes spéculatives vers des assets absents.

@@ -1,0 +1,39 @@
+{
+  "url": "https://raphtd38-oss.github.io/alpine-ski-pro/?quality=low&racer=mobile&renderer=webgl2",
+  "devApi": "undefined",
+  "hud": {
+    "time": "00:01.88",
+    "speed": "27",
+    "gates": "0 / 42",
+    "edge-label": "CARRES 11°",
+    "renderer-info": "WEBGL2 / PLAYCANVAS / AMMO.JS"
+  },
+  "errors": [
+    "Failed to load resource: the server responded with a status of 404 ()",
+    "Failed to load resource: the server responded with a status of 404 ()",
+    "Failed to load resource: the server responded with a status of 404 ()",
+    "Failed to load resource: the server responded with a status of 404 ()"
+  ],
+  "failed": [
+    {
+      "url": "https://raphtd38-oss.github.io/alpine-ski-pro/audio/ice.mp3",
+      "status": 404
+    },
+    {
+      "url": "https://raphtd38-oss.github.io/alpine-ski-pro/audio/crowd-long.mp3",
+      "status": 404
+    },
+    {
+      "url": "https://raphtd38-oss.github.io/alpine-ski-pro/audio/carving.mp3",
+      "status": 404
+    },
+    {
+      "url": "https://raphtd38-oss.github.io/alpine-ski-pro/audio/wind.mp3",
+      "status": 404
+    }
+  ],
+  "scripts": [
+    "https://raphtd38-oss.github.io/alpine-ski-pro/assets/index-DTz1kM9T.js",
+    "https://developer.playcanvas.com/assets/modules/ammo/ammo.wasm.js"
+  ]
+}

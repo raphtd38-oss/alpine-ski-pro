@@ -1,3 +1,5 @@
+> V1.17.1 : correctif de chargement des sons optionnels absents, suite au contrôle de la version publique. Le lot physique V1.17 est décrit ci-dessous.
+
 > **V1.17 — contact et forces (18 novembre 2026)** : carres issues du solveur, jambes indépendantes sur pente/dévers, pieds libérés du sol en vol, réception amortie, posture liée aux forces et traces sous les vrais skis. **42 portes reconstituées**, sunset par défaut, branches volumétriques et culling des portes lointaines. Les notes V1.15/V1.16 ci-dessous sont historiques. Voir [rapport, preuves et limites](docs/REALISM_2026_11_18.md). Les cinq vidéos utilisateur citées étaient absentes ; aucune fidélité à ces vidéos ni performance GPU joueur n'est revendiquée.
 
 # Alpine Ski Pro — Super-G
