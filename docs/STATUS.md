@@ -1,8 +1,10 @@
-# V1.18 — chantier graphique, 20 novembre 2026
+# V1.18 — publiée et vérifiée, 20 novembre 2026
 
-Base publiée `d4737c9` (V1.17.1). Nouvelle branche `feat/cortina-visual-depth-v118` : roche photographique CC0, reliefs plus détaillés, rameaux proches, neige damée, éclairage PBR ciel/neige, normales des bordures corrigées et halos de projecteurs transparents. Personnage 25 os, solveur 120 Hz, 42 portes et seuil strict >45 % conservés.
+Base `d4737c9` (V1.17.1), commit `04b24ec`, [PR #45](https://github.com/raphtd38-oss/alpine-ski-pro/pull/45), fusion `5e8f1fe` : roche photographique CC0, reliefs plus détaillés, rameaux proches, neige damée, éclairage PBR ciel/neige, normales des bordures corrigées et halos de projecteurs transparents. Personnage 25 os, solveur 120 Hz, 42 portes et seuil strict >45 % conservés.
 
-**TERMINÉ ET TESTÉ localement** : 176 tests unitaires / 39 fichiers, 7 tests Chromium en 5,2 min, TypeScript/Vite et audit complet des assets. Captures Medium/High/Ultra inspectées, sans erreur console/HTTP. Bundle de production contrôlé sans erreur JS/HTTP, sans API DEV, chrono/clavier actifs et 42 portes. **EN COURS** : validation distante avant publication. Mesure Low SwiftShader : 2,26 → 1,26 FPS, 965 appels dans les deux versions, 97,7 → 119,6 MiB alloués. Le détail supplémentaire coûte davantage ; aucun gain de FPS sur matériel joueur n’est établi. [Rapport et preuves](references/graphics-v118/README.md).
+**TERMINÉ ET TESTÉ** : 176 tests unitaires / 39 fichiers, 7 tests Chromium en 5,2 min localement et 3,6 min sur main, TypeScript/Vite et audit complet des assets. Captures Medium/High/Ultra inspectées, sans erreur console/HTTP. [CI et déploiement Pages réussis](https://github.com/raphtd38-oss/alpine-ski-pro/actions/runs/44838876703). Le site public charge sans erreur JS/HTTP, sans API DEV, avec chrono/clavier actifs et 42 portes. Son JavaScript correspond exactement au build testé (SHA-256), les trois nouvelles textures aux empreintes du manifeste. [Jouer à la V1.18](https://raphtd38-oss.github.io/alpine-ski-pro/?v=1.18.0).
+
+Mesure Low SwiftShader : 2,26 → 1,26 FPS, 965 appels dans les deux versions, 97,7 → 119,6 MiB alloués. Le détail supplémentaire coûte davantage ; aucun gain de FPS sur matériel joueur n’est établi. [Rapport, captures et preuves de publication](references/graphics-v118/README.md).
 
 **INTÉGRÉ MAIS NON VALIDÉ sur appareils cibles** : rendu et FPS GPU PC/mobile, WebGPU et Safari. **NON COMMENCÉ dans ce lot** : terrain géoréférencé/DEM, photogrammétrie locale et mocap. Les cinq vidéos utilisateur ne sont toujours pas disponibles. Aucun achat ni nouveau logiciel Blender exécuté.
 

@@ -1,6 +1,6 @@
 # Après le lot graphique V1.18 — 20 novembre 2026
 
-- Vérifier la publication et ses performances réelles sur GPU PC/mobile ; le cloud utilise SwiftShader.
+- Publication V1.18 vérifiée sur le site public (PR #45, fusion `5e8f1fe`). Mesurer ensuite les performances réelles sur GPU PC/mobile ; le cloud utilise SwiftShader et son banc révèle un coût de rendu supérieur.
 - Les cartes roche photo-PBR, l’éclairage d’environnement, la neige damée et les erreurs de normales/halos sont traités dans [ce lot](references/graphics-v118/README.md).
 - Poursuivre la géométrie naturelle des massifs et les silhouettes de végétation ; établir un terrain géoréférencé uniquement avec données et licence vérifiées. Découper les grands lots de décor en secteurs/LOD et mesurer le bénéfice.
 - Comparer les mouvements aux vidéos utilisateur lorsqu’elles sont accessibles, en préservant le contact des skis, le coureur et les 42 portes.

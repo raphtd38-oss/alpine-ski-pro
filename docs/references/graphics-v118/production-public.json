@@ -1,0 +1,17 @@
+{
+  "url": "https://raphtd38-oss.github.io/alpine-ski-pro/?v=1.18.0&quality=low&racer=mobile&renderer=webgl2",
+  "devApi": "undefined",
+  "hud": {
+    "time": "00:01.38",
+    "speed": "25",
+    "gates": "0 / 42",
+    "edge-label": "CARRES 10°",
+    "renderer-info": "WEBGL2 / PLAYCANVAS / AMMO.JS"
+  },
+  "errors": [],
+  "failed": [],
+  "scripts": [
+    "https://raphtd38-oss.github.io/alpine-ski-pro/assets/index-CrDC7YZS.js",
+    "https://developer.playcanvas.com/assets/modules/ammo/ammo.wasm.js"
+  ]
+}

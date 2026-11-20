@@ -34,7 +34,18 @@ Les premiers fichiers de référence comportent des HTTP 403 de polices, dus au 
 
 **TERMINÉ ET TESTÉ localement** : 176 tests unitaires / 39 fichiers ; 7 tests Chromium en 5,2 min ; TypeScript/Vite et audit du pack complet. Captures Medium (trois secteurs), High et Ultra (un secteur chacun) inspectées, sans erreur JS/HTTP. Régressions : commandes, chronométrage, départ, entraînement, rig Full/mobile et fallback, prises de carre, envol/réception, fanions et vrais spots. Journaux : `unit-tests.log`, `browser-tests.log`, `build.log`, `asset-audit.log`.
 
-**TERMINÉ ET TESTÉ** : vrai bundle de production dans Chromium (`production-local.json/png`), zéro erreur JS/HTTP, API DEV absente, chronomètre et clavier actifs, 42 portes. **EN COURS** : validation distante avant publication. La suite complète finale a été relancée après le réglage Low ; un essai intermédiaire a été interrompu volontairement pour appliquer ce réglage et ne compte pas comme une validation.
+**TERMINÉ ET TESTÉ** : vrai bundle de production dans Chromium (`production-local.json/png`), zéro erreur JS/HTTP, API DEV absente, chronomètre et clavier actifs, 42 portes. La suite complète finale a été relancée après le réglage Low ; un essai intermédiaire a été interrompu volontairement pour appliquer ce réglage et ne compte pas comme une validation.
+
+## Publication vérifiée
+
+[V1.18 jouable](https://raphtd38-oss.github.io/alpine-ski-pro/?v=1.18.0), contrôlée le 20 novembre 2026. Commit de code `04b24ec0797e6252772409b2c11046c37b46a2c6`, [PR #45](https://github.com/raphtd38-oss/alpine-ski-pro/pull/45), fusion `5e8f1fe06f5c61fec3bc1e450d3fc829983d3555`. [Fichiers réellement modifiés](changed-files.txt).
+
+- [CI de la PR](https://github.com/raphtd38-oss/alpine-ski-pro/actions/runs/44838316534) : 176 tests unitaires, 7 tests navigateur en 2,8 min, build et audit réussis.
+- [CI de main et déploiement Pages](https://github.com/raphtd38-oss/alpine-ski-pro/actions/runs/44838876703) : mêmes 176 tests unitaires, 7 tests navigateur en 3,6 min, build, audit et déploiement réussis. L’arbre source de la fusion est identique à celui du commit testé.
+- Contrôle indépendant du site public dans Chromium : aucune erreur JS/HTTP, API DEV absente, chronomètre et touches actifs, compteur de 42 portes. [Relevé](production-public.json) et [capture publique](production-public.png). Le relevé HUD précède la capture, ce qui explique leur différence de chronomètre.
+- JavaScript public `index-CrDC7YZS.js` identique au build local, SHA-256 `459dcc0e4ce102500f3c1cf48840c87717921007395b57173826812e2beab498`. Les trois cartes de roche publiques ont les tailles et MD5 du manifeste, avec type MIME `image/jpeg` : [contrôle des fichiers servis](bundle-verification.json).
+
+[Reçu de publication](release.json). La mise à jour finale de ces preuves ne modifie que la documentation ; le jeu publié est celui de la fusion `5e8f1fe` validée ci-dessus.
 
 ## Mesures réellement obtenues
 

@@ -21,9 +21,12 @@ docs/references/graphics-v118/before-medium/metrics.json
 docs/references/graphics-v118/before-medium/schuss.png
 docs/references/graphics-v118/browser-tests.log
 docs/references/graphics-v118/build.log
+docs/references/graphics-v118/bundle-verification.json
 docs/references/graphics-v118/changed-files.txt
 docs/references/graphics-v118/production-local.json
 docs/references/graphics-v118/production-local.png
+docs/references/graphics-v118/production-public.json
+docs/references/graphics-v118/production-public.png
 docs/references/graphics-v118/profile-after.json
 docs/references/graphics-v118/profile-before-19nov.json
 docs/references/graphics-v118/profile-before-footings.json
@@ -33,6 +36,7 @@ docs/references/graphics-v118/rejected-dark-ambient/finish.png
 docs/references/graphics-v118/rejected-dark-ambient/forest.png
 docs/references/graphics-v118/rejected-dark-ambient/metrics.json
 docs/references/graphics-v118/rejected-dark-ambient/schuss.png
+docs/references/graphics-v118/release.json
 docs/references/graphics-v118/unit-tests.log
 package-lock.json
 package.json

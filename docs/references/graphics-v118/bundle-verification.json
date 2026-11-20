@@ -1,0 +1,31 @@
+{
+  "version": "1.18.0",
+  "merge_commit": "5e8f1fe06f5c61fec3bc1e450d3fc829983d3555",
+  "main_workflow": 44838876703,
+  "script_url": "https://raphtd38-oss.github.io/alpine-ski-pro/assets/index-CrDC7YZS.js",
+  "sha256": "459dcc0e4ce102500f3c1cf48840c87717921007395b57173826812e2beab498",
+  "matches_local_build": true,
+  "textures": [
+    {
+      "key": "rock-diffuse",
+      "bytes": 927082,
+      "md5": "e4c34abb1aad5befe12754fad507147a",
+      "matches_manifest": true,
+      "content_type": "image/jpeg"
+    },
+    {
+      "key": "rock-normal",
+      "bytes": 1146788,
+      "md5": "cbd30858439ece391480c5e67e09de89",
+      "matches_manifest": true,
+      "content_type": "image/jpeg"
+    },
+    {
+      "key": "rock-arm",
+      "bytes": 793241,
+      "md5": "351c58daba868568fb5a191194aa5302",
+      "matches_manifest": true,
+      "content_type": "image/jpeg"
+    }
+  ]
+}

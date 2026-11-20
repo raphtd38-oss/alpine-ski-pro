@@ -1,0 +1,29 @@
+{
+  "version": "1.18.0",
+  "commit": "04b24ec0797e6252772409b2c11046c37b46a2c6",
+  "pr": "https://github.com/raphtd38-oss/alpine-ski-pro/pull/45",
+  "pr_workflow": 44838316534,
+  "local_bundle": "index-CrDC7YZS.js",
+  "local_sha256": "459dcc0e4ce102500f3c1cf48840c87717921007395b57173826812e2beab498",
+  "local_tests": {
+    "unit": 176,
+    "unit_files": 39,
+    "browser": 7,
+    "browser_duration_minutes": 5.2
+  },
+  "production_status": "published and verified",
+  "merge_commit": "5e8f1fe06f5c61fec3bc1e450d3fc829983d3555",
+  "pr_ci_status": "success",
+  "pr_ci_browser_duration_minutes": 2.8,
+  "main_workflow": 44838876703,
+  "verified_tree": "ec83a9a2b181ee87bd538b12b25cd0890a2681f1",
+  "main_ci_status": "success",
+  "pages_deployment_status": "success",
+  "main_ci_browser_duration_minutes": 3.6,
+  "public_browser_status": "passed",
+  "public_js_http_errors": 0,
+  "public_bundle_matches_local": true,
+  "public_rock_textures_match_manifest": true,
+  "verified_date_utc": "2026-11-20",
+  "public_url": "https://raphtd38-oss.github.io/alpine-ski-pro/?v=1.18.0"
+}
