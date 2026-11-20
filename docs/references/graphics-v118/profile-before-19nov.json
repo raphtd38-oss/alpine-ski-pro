@@ -1,0 +1,57 @@
+{
+  "environment": "Linux cloud Chromium, software SwiftShader; NOT a PC/mobile GPU benchmark",
+  "quality": "low",
+  "viewport": [
+    1100,
+    720
+  ],
+  "loadMs": 7732,
+  "samples": 35,
+  "averageMs": 481.5485714285701,
+  "p50Ms": 484.89999999990687,
+  "p95Ms": 578.8999999999069,
+  "fps": 2.0766337174116893,
+  "frameMs": 416.59999999999854,
+  "drawCalls": 965,
+  "primitives": 419513,
+  "gpuAllocatedBytes": 102409944,
+  "renderScale": 1,
+  "lights": {
+    "total": 15,
+    "active": 1,
+    "shadows": 0,
+    "closestDistanceM": 38,
+    "spotlights": true
+  },
+  "particles": 0,
+  "renderer": "webgl2",
+  "physics": [
+    {
+      "ticks": 12000,
+      "elapsedMs": 48.699999999953434,
+      "msPerStep": 0.0040583333333294525
+    },
+    {
+      "ticks": 12000,
+      "elapsedMs": 31.800000000046566,
+      "msPerStep": 0.0026500000000038806
+    },
+    {
+      "ticks": 12000,
+      "elapsedMs": 34.199999999953434,
+      "msPerStep": 0.0028499999999961195
+    },
+    {
+      "ticks": 12000,
+      "elapsedMs": 29.800000000046566,
+      "msPerStep": 0.0024833333333372136
+    },
+    {
+      "ticks": 12000,
+      "elapsedMs": 29.100000000093132,
+      "msPerStep": 0.0024250000000077612
+    }
+  ],
+  "device": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+  "errors": []
+}

@@ -1,3 +1,13 @@
+## V1.18 — roche photographique et éclairage, 19 novembre 2026
+
+- **Rock Face 03**, [Poly Haven](https://polyhaven.com/a/rock_face_03), photographie **Dario Barresi**, traitement **Rico Cilliers**. [Licence CC0](https://polyhaven.com/license) consultée le 19/11/2026. Recherche et métadonnées via l’API publique Poly Haven avec User-Agent identifié ; aucun achat ni compte créé.
+- Trois JPG distribués par le fournisseur sous le palier 1K : couleur, normale OpenGL (+Y) et ARM (R = AO, G = rugosité, B = métal). Total **2 867 111 octets** ; URLs, tailles et empreintes MD5 du fournisseur dans `scripts/alpine-pack.json`. Audit local/CI de taille et de contenu. Téléchargement à la construction, fichiers servis localement au joueur.
+- Les trois familles de falaises partagent ces cartes, avec UV, mipmaps et anisotropie 8. Matériaux non métalliques ; canal vert ARM inversé pour la brillance PlayCanvas. Ce matériau n’est pas un relevé géologique des Tofane.
+- `cortina-environment-light.ts` : panorama synthétique ciel/neige original, préfiltré une seule fois en atlas d’éclairage PBR 256 × 256. Pas de HDRI photographique ni de seconde scène de rendu.
+- Neige : le damage original devient la base, Snow 02 reste le détail d’albédo et de normales en Medium/High/Ultra, et couvre les bordures/terrains lointains dans tous les profils. La carte originale de rugosité du damage remplace la rugosité Snow 02 sur la piste. Corniches et rameaux supplémentaires : géométrie originale ; aucun remplacement du coureur.
+
+Les mentions ci-dessous décrivant un décor entièrement procédural sont historiques ; la V1.18 ajoute les trois cartes Rock Face 03 ci-dessus.
+
 > Audit du fallback historique : le générateur existant produit 1 094 208 octets avec les textures embarquées, alors que le budget d'audit était encore 1 000 000. Budget corrigé à 1 200 000 ; le script et la géométrie du fallback ne sont pas modifiés par cette session. Les GLB monobloc 25 os sont inchangés.
 
 ## 18 novembre 2026 — branches et contact physique

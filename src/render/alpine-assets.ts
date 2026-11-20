@@ -93,6 +93,28 @@ export class AlpineAssets {
     return true;
   }
 
+  /** Shared photographed rock maps; ARM packs AO/Roughness/Metallic in RGB. */
+  applyRockMaterial(material: pc.StandardMaterial): boolean {
+    const albedo = this.textures.get("rock-diffuse");
+    const normal = this.textures.get("rock-normal");
+    const arm = this.textures.get("rock-arm");
+    if (!albedo || !normal || !arm) return false;
+    material.diffuse.set(1, 1, 1);
+    material.diffuseMap = albedo;
+    material.normalMap = normal;
+    material.bumpiness = 0.65;
+    material.aoMap = arm;
+    material.aoMapUv = 0;
+    material.aoMapChannel = "r";
+    material.glossMap = arm;
+    material.glossMapChannel = "g";
+    material.glossInvert = true;
+    material.gloss = 1;
+    material.metalness = 0;
+    material.update();
+    return true;
+  }
+
   private place(
     parent: pc.Entity,
     course: Course,

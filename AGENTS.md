@@ -1,3 +1,7 @@
+## Lot graphique V1.18 — 19–20 novembre 2026
+
+Lire `docs/references/graphics-v118/README.md` pour les preuves et le statut de publication. Les trois familles de falaises utilisent Rock Face 03 CC0 (manifestes/empreintes dans `scripts/alpine-pack.json`). Conserver l’orientation vers le ciel des deux bordures, le terrain raccordé sous les massifs à partir de 220 m de l’axe et les halos avec alpha. L’atlas d’éclairage ne doit pas réactiver le passage Skybox, qui masque le dôme. En Low, conserver les cartes PBR, les lumières directes et le remplissage ambiant uniforme ; les détails photo supplémentaires de la piste et l’IBL sont réservés à Medium/High/Ultra. Le terrain physique, le personnage et les portes ne sont pas remplacés.
+
 ## Mission active du 18 novembre 2026
 
 Lire `docs/REALISM_2026_11_18.md` et `docs/references/2026-11-18/README.md` avant toute reprise. Priorité permanente : modifier réellement la physique et les mouvements, préserver le personnage 25 os, les portes élastiques et le seuil strict >45 %, tester les effets en jeu avant publication. Ne jamais assimiler un rapport historique au visionnage des vidéos : les cinq fichiers nommés n'étaient pas accessibles dans cette session.

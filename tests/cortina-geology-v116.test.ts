@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { appendDolomiteRidge, newRockBatch } from "../src/render/cortina-geology";
-import { snowShoulderLift } from "../src/render/cortina-snow-banks";
+import { buildCortinaSnowShoulders, snowShoulderLift } from "../src/render/cortina-snow-banks";
 import { COURSES, courseCenterX } from "../src/game/course";
 import { BANNER_CRASH_THRESHOLD } from "../src/game/banner-contact";
 
@@ -58,6 +58,18 @@ describe("Cortina V1.16 fractured Dolomites geometry", () => {
 });
 
 describe("Cortina V1.16 wind sculpted snow does not break the race", () => {
+  it("orients both snow banks toward the sky rather than the ground", () => {
+    for (const quality of ["low", "medium", "high", "ultra"] as const) {
+      const {positions: p, indices} = buildCortinaSnowShoulders(COURSES.SG, quality);
+      expect(p.every(Number.isFinite)).toBe(true);
+      for (let i = 0; i < indices.length; i += 3) {
+        const a = indices[i] * 3, b = indices[i + 1] * 3, c = indices[i + 2] * 3;
+        const normalY = (p[b + 2] - p[a + 2]) * (p[c] - p[a]) -
+          (p[b] - p[a]) * (p[c + 2] - p[a + 2]);
+        expect(normalY).toBeGreaterThan(0);
+      }
+    }
+  });
   it("has gentle continuous snow banks and fixed near-race edge clearance", () => {
     for (const side of [-1,1]) {
       for (const z of [0,85,360,1000,2000]) {

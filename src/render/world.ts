@@ -1,4 +1,5 @@
 import { appendAlpineTree } from "./alpine-tree-geometry";
+import { addCortinaBackcountry } from "./cortina-backcountry";
 import * as pc from "playcanvas";
 import { formatTime } from "../game/race";
 import { AlpineAssets } from "./alpine-assets";
@@ -70,11 +71,33 @@ export class World {
     this.bluePole = this.gateMaterial("blue", false);
     this.redFlag = this.gateMaterial("red", true);
     this.blueFlag = this.gateMaterial("blue", true);
-    if (!this.alpineAssets?.applySnowMaterial(this.snow)) this.snowTexture();
+    const photoSnow = this.alpineAssets?.applySnowMaterial(this.snow);
+    const photoAlbedo = this.snow.diffuseMap, photoNormal = this.snow.normalMap;
+    this.snowTexture();
+    if (photoSnow && this.quality !== "low") {
+      // A prepared race lane has fine combed ridges, not the coarse rubble
+      // appearance of using the photographed snow albedo alone at this scale.
+      this.snow.diffuseDetailMap = photoAlbedo;
+      this.snow.diffuseDetailMode = pc.DETAILMODE_OVERLAY;
+      this.snow.diffuseDetailMapTiling.set(.65, .65);
+      this.snow.normalDetailMap = photoNormal;
+      this.snow.normalDetailMapBumpiness = .18;
+      this.snow.normalDetailMapTiling.set(1.5, 1.5);
+      this.snow.update();
+    }
+    // Low keeps the groomed PBR maps and direct lights, but avoids the extra
+    // detail/IBL samples on snow, which covers most pixels during a race.
+    this.snow.useSkybox = this.quality !== "low";
+    this.snow.update();
     this.terrain();
-    this.materials.push(addCortinaSnowShoulders(
+    const shoulderSnow = addCortinaSnowShoulders(
       this.app, this.root, this.course, this.quality,
-    ));
+    );
+    this.alpineAssets?.applySnowMaterial(shoulderSnow);
+    shoulderSnow.useSkybox = this.quality !== "low";
+    shoulderSnow.update();
+    this.materials.push(shoulderSnow);
+    addCortinaBackcountry(this.app, this.root, this.course, this.quality, shoulderSnow);
     // The active Super-G is Cortina Olympia delle Tofane, not Glacier Express.
     // Snow, blue-dye and pole collision meshes keep their own unchanged code.
     const nearCortina = addCortinaScenery(
@@ -85,7 +108,8 @@ export class World {
     // even in Low. Flat untextured polygons overwhelmed the old screenshots.
     const schussLimestone = nearCortina.find(m =>
       m.name === "Cortina pale stratified dolomite");
-    if (schussLimestone) this.studioRockPbr(schussLimestone);
+    if (schussLimestone && !this.alpineAssets?.applyRockMaterial(schussLimestone))
+      this.studioRockPbr(schussLimestone);
     this.buildTrainingGuide();
     // Legacy smooth high mountains made giant flat polygon walls that obscured
     // the Schuss in screenshots. The new fractured ridge groups below replace
@@ -102,6 +126,11 @@ export class World {
     this.materials.push(...addCortinaReferenceLandmarks(
       this.app, this.root, this.course, this.quality,
     ));
+    for (const m of this.materials) {
+      if (m.name === "Tofane continuous fractured limestone ridges" ||
+          m.name === "Cortina 2026 limestone fracture faces")
+        this.alpineAssets?.applyRockMaterial(m);
+    }
     // Original warm sunset, 15 LED floodlight towers and nearby light pools.
     const atmosphere = createCortinaAtmosphere(
       this.app, this.root, this.course, this.quality,
@@ -1516,6 +1545,6 @@ export function configureWeather(
   camera.camera!.clearColor = color(sky);
   app.scene.fog.type = pc.FOG_LINEAR;
   app.scene.fog.color = color(sky);
-  app.scene.fog.start = clear ? 290 : 35;
-  app.scene.fog.end = clear ? 1580 : weather === "snow" ? 260 : 600;
+  app.scene.fog.start = clear ? 360 : 35;
+  app.scene.fog.end = clear ? 2400 : weather === "snow" ? 260 : 600;
 }

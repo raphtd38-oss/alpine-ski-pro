@@ -47,8 +47,8 @@ function valueNoise(a: number, b: number, seed: number): number {
 
 /** Pure mesh generator: does not alter the race track, snow, or physics. */
 export function appendDolomiteRidge(batch: RockBatch, ridge: DolomiteRidge): void {
-  const lengthSamples = Math.max(8, Math.min(64, Math.round(ridge.segments ?? 22)));
-  const depthSamples = Math.max(6, Math.min(36, Math.round(ridge.strata ?? 14)));
+  const lengthSamples = Math.max(8, Math.min(96, Math.round(ridge.segments ?? 22)));
+  const depthSamples = Math.max(6, Math.min(48, Math.round(ridge.strata ?? 14)));
   const r = Math.max(2, ridge.radius);
   const halfLength = r * Math.max(1.3, ridge.elongation ?? 1.95);
   const halfDepth = r * 1.42;
@@ -66,18 +66,18 @@ export function appendDolomiteRidge(batch: RockBatch, ridge: DolomiteRidge): voi
       .13 * Math.sin(12.7 * zRel - phase * 1.2) +
       .08 * Math.cos(20.3 * zRel + phase * .63);
     const ridgeHeight = ridge.height * Math.max(.24, crest) * endFade;
-    const peakX = -.16 + .16 * Math.sin(zRel * 5 + phase * .6);
 
     for (let k = 0; k <= depthSamples; k++) {
       const across = k / depthSamples;
       const xRel = across * 2 - 1;
       const x = ridge.x + xRel * halfDepth;
-      // Asymmetric broad limestone wall. A steeper front face and an
-      // irregular rear slope prevent the old conical/pyramid silhouette.
-      const normalized = xRel < peakX
-        ? (peakX - xRel) / (peakX + 1)
-        : (xRel - peakX) / (1 - peakX);
-      const faceProfile = Math.pow(Math.max(0, 1 - normalized), xRel < peakX ? .26 : 1.26);
+      // A broad erosion platform, a steep inner wall and a broken talus foot.
+      // Mirroring the profile keeps both valley-facing walls correctly oriented.
+      const inward = ridge.x >= 0 ? across : 1 - across;
+      const shoulder = .38 + .045 * Math.sin(zRel * 6 + phase);
+      const front = Math.min(1, inward / shoulder);
+      const rear = Math.max(0, (inward - .68) / .32);
+      const faceProfile = Math.pow(front, .36) * Math.pow(1 - rear, 1.25);
       // Vertical gullies scar the cliff; ledges remain nearly horizontal.
       const coarse = valueNoise(6 * across, 7 * longitudinal, ridge.seed) - .5;
       const fine = valueNoise(23 * across, 27 * longitudinal, ridge.seed + 21) - .5;
@@ -85,27 +85,27 @@ export function appendDolomiteRidge(batch: RockBatch, ridge: DolomiteRidge): voi
         xRel * 3.7 + phase)), 12);
       const pocket = 1 - gully * .23;
       const shelf = Math.sin(across * 24 + longitudinal * 2.1 + phase);
-      const stratum = (shelf > .79 ? -.042 : shelf < -.72 ? .024 : 0);
+      const stratum = -.022 * Math.pow(Math.max(0, shelf), 8);
       const sculpt = sat(faceProfile * pocket * (1 + coarse * .19 + fine * .065 + stratum));
       const height = Math.max(0, ridgeHeight * sculpt);
       const y = ridge.ground(x, z) + height;
       batch.positions.push(x, y, z);
-      batch.uvs.push(x * .035 + z * .012, y * .032);
+      batch.uvs.push(z / 6 + x / 60, y / 6);
       // Orange sunlit faces, bluish shadowed fissures and small isolated
       // snow deposits in the highest north-facing gullies.
       const illum = .77 + .13 * Math.sin(zRel * 4.4 + 1.7) - .17 * gully +
         .12 * coarse;
       const altitude = height / Math.max(1, ridge.height);
-      const snow = altitude > .69 && (
+      const snow = altitude > .82 && (
         (fine > .13 && gully < .44) ||
         (altitude > .83 && (k + 3 * j + ridge.seed) % 7 < 4)
       );
       const rgb: [number, number, number] = snow
         ? [.81 + altitude * .13, .86 + altitude * .09, .87 + altitude * .07]
         : [
-          sat(.92 * illum + .08 * altitude),
-          sat(.75 * illum + .08 * altitude),
-          sat(.64 * illum + .13 * altitude),
+          sat(.91 * illum + .08 * altitude),
+          sat(.89 * illum + .08 * altitude),
+          sat(.86 * illum + .10 * altitude),
         ];
       batch.colors.push(rgb[0], rgb[1], rgb[2], 1);
     }

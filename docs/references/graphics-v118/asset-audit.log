@@ -1,0 +1,23 @@
+
+> alpine-ski-pro@1.18.0 assets:audit
+> node scripts/asset_audit.mjs --require-pack
+
+public/assets/alpine/boulder.glb | 15 KiB | CC0-1.0 | 290 tris / 0 skins / 0 animations
+public/assets/alpine/chalet.glb | 464 KiB | CC0-1.0 | 9772 tris / 0 skins / 0 animations
+public/assets/alpine/fir.glb | 144 KiB | CC0-1.0 | 3028 tris / 0 skins / 0 animations
+public/assets/alpine/glacial-rock.glb | 12 KiB | CC0-1.0 | 228 tris / 0 skins / 0 animations
+public/assets/alpine/guesthouse.glb | 513 KiB | CC0-1.0 | 10808 tris / 0 skins / 0 animations
+public/assets/alpine/outcrop.glb | 26 KiB | CC0-1.0 | 510 tris / 0 skins / 0 animations
+public/assets/alpine/pine.glb | 46 KiB | CC0-1.0 | 936 tris / 0 skins / 0 animations
+public/assets/alpine/rock-arm.jpg | 775 KiB | CC0-1.0
+public/assets/alpine/rock-diffuse.jpg | 905 KiB | CC0-1.0
+public/assets/alpine/rock-normal.jpg | 1120 KiB | CC0-1.0
+public/assets/alpine/sapling.glb | 19 KiB | CC0-1.0 | 364 tris / 0 skins / 0 animations
+public/assets/alpine/snow-diffuse.jpg | 318 KiB | CC0-1.0
+public/assets/alpine/snow-normal.jpg | 1057 KiB | CC0-1.0
+public/assets/alpine/snow-roughness.jpg | 143 KiB | CC0-1.0
+public/assets/alpine/wayfinding.glb | 18 KiB | CC0-1.0 | 300 tris / 0 skins / 0 animations
+public/assets/racer/seamless-full.glb | 16855 KiB | original, user-supplied CC0-style grant | 66752 tris / 1 skins / 9 animations
+public/assets/racer/seamless-mobile.glb | 5409 KiB | original, user-supplied CC0-style grant | 38764 tris / 1 skins / 9 animations
+public/assets/skier.glb | 585 KiB | original | 14358 tris / 1 skins / 0 animations
+Asset audit: OK

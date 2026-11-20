@@ -1,3 +1,12 @@
+## V1.18 — 20 novembre 2026
+
+- Roche photographique CC0 Rock Face 03 : albédo, normale OpenGL et ARM sur les trois familles de falaises ; provenance, tailles et empreintes contrôlées.
+- Crêtes plus larges et détaillées, fractures, corniches de neige et orientation des faces corrigée. Rameaux secondaires en volume pour la forêt proche.
+- Neige damée avec détail Snow 02 ; normales des deux bordures corrigées et cartes de poudreuse partagées. Régression testée dans les quatre profils.
+- Éclairage d’environnement ciel/neige préfiltré, lumière du soir et profondeur de brume. Correction du skybox automatique surpeignant le ciel.
+- Halos respectant leur transparence, sans grands rectangles blancs ; suppression des faux aplats lumineux sur la piste, éclairée par les spots 3D existants.
+- [Preuves, tests et mesures](references/graphics-v118/README.md). Relief artistique, mesures GPU joueur non disponibles. Coureur, simulation, 42 portes, seuil strict >45 %, chrono et contrôles conservés.
+
 ## V1.17.1 — 19 novembre 2026
 
 - Suppression de quatre requêtes audio vers des MP3 optionnels absents (`carving`, `ice`, `wind`, `crowd-long`). Les six fichiers réellement livrés, les synthèses Web Audio et les ambiances existantes restent actifs.

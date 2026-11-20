@@ -29,7 +29,7 @@ function taperedCliff(
     x, z, radius, height, seed: noiseSeed,
     ground: (xx, zz) => y +
       terrainHeight(xx, zz, course) - terrainHeight(x, z, course),
-    segments: 22, strata: 14, elongation: 1.55,
+    segments: 50, strata: 28, elongation: 1.55,
   });
 }
 
@@ -95,9 +95,9 @@ export function addCortinaScenery(
     colors: number[] = [], uv: number[] = [];
   const shoulders = [
     { z: 75, side: -1, offset: 70, r: 22, h: 85 },
-    { z: 96, side: 1, offset: 69, r: 19, h: 91 },
+    { z: 96, side: 1, offset: 76, r: 24, h: 58 },
     { z: 155, side: -1, offset: 67, r: 19, h: 69 },
-    { z: 172, side: 1, offset: 77, r: 24, h: 98 },
+    { z: 172, side: 1, offset: 91, r: 29, h: 69 },
     { z: 265, side: -1, offset: 73, r: 18, h: 54 },
     { z: 326, side: 1, offset: 83, r: 28, h: 65 },
     { z: 905, side: -1, offset: 93, r: 17, h: 35 },

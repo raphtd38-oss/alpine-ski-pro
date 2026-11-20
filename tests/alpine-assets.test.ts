@@ -16,14 +16,22 @@ describe("licensed alpine world pack", () => {
     }
   });
 
-  it("has a bounded scenery download and the three required snow PBR maps", () => {
+  it("has a bounded scenery download and separate snow and rock PBR sources", () => {
     expect(pack.models.reduce((n, m) => n + m.bytes, 0)).toBeLessThan(1_500_000);
     expect(pack.textures.map((t) => t.key).sort()).toEqual(
-      ["snow-diffuse", "snow-normal", "snow-roughness"],
+      ["rock-arm", "rock-diffuse", "rock-normal", "snow-diffuse", "snow-normal", "snow-roughness"],
     );
     for (const texture of pack.textures) {
       expect(texture.url).toMatch(/^https:\/\/dl\.polyhaven\.org\//);
-      expect(texture.url).toContain("/1k/snow_02/");
+      expect(texture.url).toContain(texture.key.startsWith("snow-") ? "/1k/snow_02/" : "/1k/rock_face_03/");
+    }
+    const rocks = pack.textures.filter(t => t.key.startsWith("rock-"));
+    expect(rocks.reduce((sum, t) => sum + (t.bytes ?? 0), 0)).toBeLessThan(3_000_000);
+    for (const texture of rocks) {
+      expect(texture.source).toBe("https://polyhaven.com/a/rock_face_03");
+      expect(texture.license).toBe("CC0-1.0");
+      expect(texture.md5).toMatch(/^[0-9a-f]{32}$/);
+      expect(texture.author).toContain("Dario Barresi");
     }
   });
 });

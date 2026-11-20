@@ -62,6 +62,33 @@
     {
       "key": "snow-roughness",
       "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/snow_02/snow_02_rough_1k.jpg"
+    },
+    {
+      "key": "rock-diffuse",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/rock_face_03/rock_face_03_diff_1k.jpg",
+      "md5": "e4c34abb1aad5befe12754fad507147a",
+      "bytes": 927082,
+      "source": "https://polyhaven.com/a/rock_face_03",
+      "license": "CC0-1.0",
+      "author": "Dario Barresi (photography), Rico Cilliers (processing)"
+    },
+    {
+      "key": "rock-normal",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/rock_face_03/rock_face_03_nor_gl_1k.jpg",
+      "md5": "cbd30858439ece391480c5e67e09de89",
+      "bytes": 1146788,
+      "source": "https://polyhaven.com/a/rock_face_03",
+      "license": "CC0-1.0",
+      "author": "Dario Barresi (photography), Rico Cilliers (processing)"
+    },
+    {
+      "key": "rock-arm",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/rock_face_03/rock_face_03_arm_1k.jpg",
+      "md5": "351c58daba868568fb5a191194aa5302",
+      "bytes": 793241,
+      "source": "https://polyhaven.com/a/rock_face_03",
+      "license": "CC0-1.0",
+      "author": "Dario Barresi (photography), Rico Cilliers (processing)"
     }
   ],
   "textureSource": "https://polyhaven.com/a/snow_02",
