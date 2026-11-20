@@ -5,6 +5,7 @@
  * No network requests, external npm packages or GPU required.
  */
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { extname, join, relative } from "node:path";
 import assert from "node:assert/strict";
 const pack = JSON.parse(readFileSync(new URL("./alpine-pack.json", import.meta.url), "utf8"));
@@ -35,7 +36,8 @@ for (const model of pack.models) manifest.set(
 );
 for (const texture of pack.textures) manifest.set(
   "public/assets/alpine/" + texture.key + ".jpg",
-  { source: pack.textureSource, license: pack.textureLicense, max: 3_000_000 },
+  { source: texture.source ?? pack.textureSource, license: texture.license ?? pack.textureLicense,
+    exact: texture.bytes, md5: texture.md5, max: 3_000_000 },
 );
 const extensions = new Set([
   ".glb", ".gltf", ".fbx", ".obj", ".blend", ".ktx2",
@@ -106,6 +108,9 @@ for (const name of files) {
     if (registered.exact && size !== registered.exact)
       throw Error("upstream size changed (" + size + " vs " + registered.exact + ")");
     if (size > registered.max) throw Error("size budget exceeded " + size);
+    if (registered.md5)
+      assert.equal(createHash("md5").update(readFileSync(name)).digest("hex"),
+        registered.md5, "Texture content differs from the audited source");
     const asset = { path: name, bytes: size, license: registered.license,
       source: registered.source };
     if (name.endsWith(".glb"))

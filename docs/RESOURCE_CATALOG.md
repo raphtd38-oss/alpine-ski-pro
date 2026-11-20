@@ -1,3 +1,5 @@
+> V1.18 : **Rock Face 03 — Poly Haven**, Dario Barresi / Rico Cilliers, trois cartes photo-PBR CC0 partagées par les falaises. Provenance et budgets : [ASSETS.md](ASSETS.md). Atlas de lumière ciel/neige original, sans HDRI externe. Blender, glTF Transform et KTX n’étaient pas exécutables dans l’environnement de cette session.
+
 # Alpine Ski Pro — catalogue de ressources pour les agents de développement
 
 Date de vérification : 16 novembre 2026. Référence durable et actionnable, à compléter avec docs/ASSETS.md et docs/ASSET_WORKFLOW.md. La présence d'un lien n'implique ni installation ni compte créé.

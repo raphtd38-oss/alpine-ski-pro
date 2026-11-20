@@ -1,3 +1,14 @@
+# Après le lot graphique V1.18 — 20 novembre 2026
+
+- Vérifier la publication et ses performances réelles sur GPU PC/mobile ; le cloud utilise SwiftShader.
+- Les cartes roche photo-PBR, l’éclairage d’environnement, la neige damée et les erreurs de normales/halos sont traités dans [ce lot](references/graphics-v118/README.md).
+- Poursuivre la géométrie naturelle des massifs et les silhouettes de végétation ; établir un terrain géoréférencé uniquement avec données et licence vérifiées. Découper les grands lots de décor en secteurs/LOD et mesurer le bénéfice.
+- Comparer les mouvements aux vidéos utilisateur lorsqu’elles sont accessibles, en préservant le contact des skis, le coureur et les 42 portes.
+
+Les paragraphes suivants sont historiques et ne rétablissent ni les anciennes disciplines ni le tracé à 34 portes.
+
+---
+
 > **18 novembre 2026 — priorité immédiate, skier physics (branche feat/sg-physics-biomechanics-20261118)** : contrôle gauche/droite corrigé, carving plafonné par l'adhérence au lieu d'inventer un dérapage permanent, accélération latérale réelle fournie à la pose 25 os, flexion et angles de carre plus marqués et replays enrichis sans casser les anciens. À suivre : CI complète, test manuel de virages alternés, contacts des skis en position très basse sur PC/iPhone et réglage par vidéo comparée à la référence fournie. Ne pas qualifier cette animation de mocap ou de copie du code d'un jeu tiers.
 
 # Feuille de route persistante

@@ -14,6 +14,7 @@ import type {
   Weather,
 } from "../game/types";
 import { color } from "./geometry";
+import { createCortinaEnvironment } from "./cortina-environment-light";
 import { cortinaLightingMode, cortinaHorizonHex } from "./cortina-sky-profile";
 import { AdaptiveQuality } from "../game/performance";
 import { cameraShake, speedFov } from "../game/camera-rig";
@@ -48,6 +49,7 @@ export class Renderer {
   maxRenderRatio = 1;
   renderScale = 1;
   baseShadowResolution = 2048;
+  private readonly environmentAtlas: pc.Texture;
   constructor(
     public canvas: HTMLCanvasElement,
     device: pc.GraphicsDevice,
@@ -61,9 +63,10 @@ export class Renderer {
     device.maxPixelRatio = Math.min(window.devicePixelRatio, 1.5);
     const lightingMode = cortinaLightingMode(window.location.search);
     this.app.scene.ambientLight = color(
-      lightingMode === "daylight" ? "#afc0d2" : "#898da6"
+      lightingMode === "daylight" ? "#9eafbf" : "#65798f"
     );
-    this.app.scene.exposure = 1.10;
+    this.app.scene.exposure = 1.05;
+    this.environmentAtlas = createCortinaEnvironment(this.app, lightingMode);
     // Atmospheric perspective softens the distant procedural cliffs and
     // creates photographic depth without blurring nearby race gates.
     // The sky dome itself is un-fogged; track and meshes share one horizon.
@@ -93,8 +96,8 @@ export class Renderer {
       normalOffsetBias: 0.045,
       numCascades: 3,
     });
-    // Real Olympic photographs show a blue daytime sky; keep original dusk
-    // as an optional visual preset through ?lighting=sunset.
+    // Directional light altitude ~16 degrees at dusk. Warm direct light,
+    // cooler ambient fill and the depth fog are kept separate.
     this.sun.setEulerAngles(lightingMode === "daylight" ? 57 : 74, -54, 0);
     this.app.root.addChild(this.sun);
     window.addEventListener("resize", () => this.app.resizeCanvas());
@@ -153,6 +156,9 @@ export class Renderer {
     this.ghost?.destroy();
     this.effects?.destroy();
     this.quality = quality;
+    // Per-pixel environment sampling is reserved for Medium and above.
+    // Low retains photo-PBR maps, cool ambient fill and actual direct lights.
+    this.app.scene.envAtlas = quality === "low" ? null : this.environmentAtlas;
     this.weather = weather;
     this.course = c;
     const baseRatio = {
@@ -177,7 +183,7 @@ export class Renderer {
     this.sun.light!.shadowResolution = this.baseShadowResolution;
     const day = cortinaLightingMode(window.location.search) === "daylight";
     this.sun.light!.intensity = weather === "clear"
-      ? (day ? 1.54 : 1.33) : 0.8;
+      ? (day ? 1.54 : 1.70) : 0.8;
     this.sun.light!.color = color(weather === "clear"
       ? (day ? "#fff3db" : "#ffd5ad") : "#dce4f5");
     this.world = new World(this.app, c, quality, this.alpineAssets);

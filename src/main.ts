@@ -28,7 +28,7 @@ import { Progress } from "./game/storage";
 import { SkiAudio } from "./game/audio";
 import { createRenderer } from "./render/engine";
 import { PRO_POLE } from "./render/equipment-specs";
-import { Vec3 } from "playcanvas";
+import { LAYERID_SKYBOX, Vec3 } from "playcanvas";
 import { UI, type Settings } from "./ui/ui";
 import type { Frame, Controls } from "./game/types";
 
@@ -525,13 +525,22 @@ async function boot() {
   if (import.meta.env.DEV) {
     // Controlled pose fixtures for visual QA; never exported in production.
     let inspection: Frame | null = null;
+    let sceneryInspection = false;
     renderer.app.on("update", () => {
       if (!inspection) return;
       renderer.athlete.update(inspection, race.course, 0.1);
       const y = terrainHeight(inspection.x, inspection.z, race.course);
       renderer.camera.setPosition(inspection.x + 3.4, y + inspection.height + 2.0, inspection.z - 4.2);
       renderer.camera.lookAt(inspection.x, y + inspection.height + 0.7, inspection.z);
-      renderer.camera.camera!.fov = 35;
+      if (sceneryInspection) {
+        const z = inspection.z, x = inspection.x;
+        renderer.camera.setPosition(x + 3, terrainHeight(x + 3, z - 12, race.course) + 4, z - 12);
+        renderer.camera.lookAt(x, terrainHeight(x, z + 45, race.course) + 5, z + 45);
+        renderer.world.updateCortinaLights(z);
+        renderer.world.updateGates(race.gateStatus, poles.poles, 0, z);
+        renderer.alpineAssets.updateVisuals(.1, renderer.camera.getPosition(), renderer.quality);
+      }
+      renderer.camera.camera!.fov = sceneryInspection ? 58 : 35;
       renderer.athlete.root.enabled = true;
     });
     Object.assign(window, {
@@ -539,7 +548,24 @@ async function boot() {
         /** DEV ONLY: world-space contact diagnostics for animation regression.
          * Production builds never expose these graph/bone references.
          */
-        inspectPose: (frame: Frame | null) => { inspection = frame; inspecting = !!frame; paused = true; },
+        inspectPose: (frame: Frame | null) => { inspection = frame; inspecting = !!frame; sceneryInspection = false; paused = true; },
+        inspectScenery: (frame: Frame) => { inspection = frame; inspecting = sceneryInspection = true; paused = true; },
+        getSceneryMaterials: () => ({
+          environmentAtlas: renderer.app.scene.envAtlas?.name ?? null,
+          backcountry: !!renderer.world.root.findByName(
+            "Continuous backcountry beneath the distant Tofane rock ridges"),
+          skyboxVisible: renderer.app.scene.layers.getLayerById(LAYERID_SKYBOX)?.enabled ?? false,
+          rock: renderer.world.materials.filter(m =>
+            ["Cortina pale stratified dolomite", "Tofane continuous fractured limestone ridges",
+             "Cortina 2026 limestone fracture faces"].includes(m.name)).map(m => ({
+              name: m.name, diffuse: m.diffuseMap?.name, normal: m.normalMap?.name,
+              ao: m.aoMap?.name, roughness: m.glossMap?.name, roughnessInverted: m.glossInvert,
+            })),
+          snow: {diffuse: renderer.world.snow.diffuseMap?.name,
+            detail: renderer.world.snow.diffuseDetailMap?.name,
+            normal: renderer.world.snow.normalMap?.name,
+            normalDetail: renderer.world.snow.normalDetailMap?.name},
+        }),
         getAthletePose: () => {
           const athlete = renderer.athlete;
           const groundClearance = (name: string) => {

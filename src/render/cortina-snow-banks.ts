@@ -17,9 +17,7 @@ export function snowShoulderLift(u: number, z: number, side: number): number {
     Math.cos(z * .13 - u * 4.9);
   return Math.max(.025, drift * shoulder + micro * shoulder + .055);
 }
-export function addCortinaSnowShoulders(
-  app: pc.Application, root: pc.Entity, course: Course, quality: Quality,
-): pc.StandardMaterial {
+export function buildCortinaSnowShoulders(course: Course, quality: Quality) {
   const longitudinalStep = quality === "low" ? 13 :
     quality === "medium" ? 9 : quality === "high" ? 6 : 4.5;
   const radial = quality === "low" ? 4 : 7;
@@ -53,10 +51,17 @@ export function addCortinaSnowShoulders(
         const b = a + stride;
         // Both sides are rendered; reverse the winding on the opposite side
         // for correct specular micro-normal response.
-        if (side < 0) indices.push(a, b, a + 1, a + 1, b, b + 1);
+        if (side > 0) indices.push(a, b, a + 1, a + 1, b, b + 1);
         else indices.push(a, a + 1, b, a + 1, b + 1, b);
       }
   }
+  return {positions: p, indices, colors, uvs: uv};
+}
+
+export function addCortinaSnowShoulders(
+  app: pc.Application, root: pc.Entity, course: Course, quality: Quality,
+): pc.StandardMaterial {
+  const {positions: p, indices, colors, uvs: uv} = buildCortinaSnowShoulders(course, quality);
   const mat = material("Cortina wind-packed snow shoulder sculptures",
     "#e9f1f5", 0, .29);
   mat.diffuseVertexColor = true;

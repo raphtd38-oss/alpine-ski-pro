@@ -101,7 +101,7 @@ function mountainSpurs(
   const anchors = [
     { z: 85, side: -1, dist: 200, h: 225, w: 52 },
     { z: 150, side: -1, dist: 290, h: 300, w: 67 },
-    { z: 310, side: 1, dist: 230, h: 220, w: 63 },
+    { z: 310, side: 1, dist: 280, h: 170, w: 90 },
     { z: 545, side: -1, dist: 310, h: 260, w: 85 },
     { z: 750, side: 1, dist: 340, h: 235, w: 88 },
     { z: 1100, side: -1, dist: 275, h: 240, w: 75 },
@@ -120,8 +120,8 @@ function mountainSpurs(
       radius: entry.w * (.85 + rand() * .31),
       seed: 600 + n * 23,
       ground: (xx, zz) => terrainHeight(xx, zz, course) - 10,
-      segments: quality === "low" ? 16 : quality === "medium" ? 22 : 30,
-      strata: quality === "low" ? 10 : quality === "medium" ? 14 : 19,
+      segments: quality === "low" ? 32 : quality === "medium" ? 46 : 64,
+      strata: quality === "low" ? 20 : quality === "medium" ? 28 : 38,
       elongation: n % 3 === 0 ? 2.1 : 1.75,
     });
   }

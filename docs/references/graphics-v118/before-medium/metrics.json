@@ -1,0 +1,72 @@
+{
+  "fixture": "Fixed visual inspection poses, no race or GPU benchmark",
+  "quality": "medium",
+  "metrics": {
+    "schuss": {
+      "frameMs": 3049.9000000000015,
+      "drawCalls": 1395,
+      "primitives": 1136529,
+      "gpuAllocatedBytes": 113290628,
+      "renderScale": 1,
+      "lights": {
+        "total": 15,
+        "active": 2,
+        "shadows": 0,
+        "closestDistanceM": 26,
+        "spotlights": true
+      },
+      "particles": 0,
+      "renderer": "webgl2"
+    },
+    "forest": {
+      "frameMs": 3433.0999999999913,
+      "drawCalls": 1333,
+      "primitives": 1131425,
+      "gpuAllocatedBytes": 113290628,
+      "renderScale": 1,
+      "lights": {
+        "total": 15,
+        "active": 2,
+        "shadows": 0,
+        "closestDistanceM": 39,
+        "spotlights": true
+      },
+      "particles": 0,
+      "renderer": "webgl2"
+    },
+    "finish": {
+      "frameMs": 1100,
+      "drawCalls": 1002,
+      "primitives": 1044233,
+      "gpuAllocatedBytes": 113290628,
+      "renderScale": 1,
+      "lights": {
+        "total": 15,
+        "active": 2,
+        "shadows": 0,
+        "closestDistanceM": 32,
+        "spotlights": true
+      },
+      "particles": 0,
+      "renderer": "webgl2"
+    }
+  },
+  "errors": [
+    "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+    "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+    "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+    "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+    "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+    "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+    "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+    "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+    "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+    "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+    "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+    "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+    "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+    "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+    "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+    "Failed to load resource: the server responded with a status of 403 (Forbidden)"
+  ]
+}

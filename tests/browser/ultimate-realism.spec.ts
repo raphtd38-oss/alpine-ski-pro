@@ -11,6 +11,21 @@ test("ultimate Super-G: actual spotlights and independently pressured carved ski
   expect(light.active).toBeLessThanOrEqual(1);
   expect(light.spotlights).toBe(true);
   expect(light.shadows).toBe(0); // mobile: no expensive shadow atlas
+  const materials = await page.evaluate(() => (window as any).__ski.getSceneryMaterials());
+  expect(materials.environmentAtlas).toBeNull(); // Low budgets ambient fill instead of IBL
+  expect(materials.skyboxVisible).toBe(false);
+  expect(materials.backcountry).toBe(true);
+  expect(materials.rock).toHaveLength(3);
+  for (const rock of materials.rock) {
+    expect(rock.diffuse).toBe("CC0 rock-diffuse");
+    expect(rock.normal).toBe("CC0 rock-normal");
+    expect(rock.ao).toBe("CC0 rock-arm");
+    expect(rock.roughness).toBe("CC0 rock-arm");
+    expect(rock.roughnessInverted).toBe(true);
+  }
+  expect(materials.snow.diffuse).toBe("Soft groomed snow albedo");
+  expect(materials.snow.normal).toBe("Fine grain snow normals");
+  expect(materials.snow.normalDetail).toBeUndefined(); // Low: no extra detail fetches
   await page.screenshot({path:"test-results/ultimate-cortina-spotlight-start.png"});
 
   await page.locator("#play").click();

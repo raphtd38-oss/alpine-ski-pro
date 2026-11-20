@@ -1,0 +1,18 @@
+
+> alpine-ski-pro@1.18.0 test:e2e
+> playwright test
+
+
+Running 7 tests using 1 worker
+
+(node:3953) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 tests/browser/force-contact.spec.ts:4:1 › real rendered feet follow takeoff, landing and edge reversal (55.1s)
+  ✓  2 tests/browser/game.spec.ts:2:1 › renders the Super-G, responds to keys, pauses, restarts and changes suit (1.4m)
+  ✓  3 tests/browser/game.spec.ts:83:1 › training mode has a guide and regular racing can toggle its dashed trajectory with G (38.1s)
+  ✓  4 tests/browser/seamless-racer.spec.ts:3:1 › full original Super-G racer renders and classic fallback remains available (28.6s)
+  ✓  5 tests/browser/superg-movement-25bone.spec.ts:3:1 › Super-G 25-joint skier: early start stays balanced with grounded feet and attached grips (28.3s)
+  ✓  6 tests/browser/superg.spec.ts:3:1 › World-Cup-style Super-G start house, four-pole flags and terrain crest (53.6s)
+  ✓  7 tests/browser/ultimate-realism.spec.ts:3:1 › ultimate Super-G: actual spotlights and independently pressured carved skis (26.3s)
+
+  7 passed (5.2m)

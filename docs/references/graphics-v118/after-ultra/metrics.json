@@ -1,0 +1,65 @@
+{
+  "fixture": "Fixed visual inspection poses, no race or GPU benchmark",
+  "quality": "ultra",
+  "racer": "full",
+  "viewport": {
+    "width": 960,
+    "height": 600
+  },
+  "metrics": {
+    "forest": {
+      "frameMs": 4316.5,
+      "drawCalls": 1139,
+      "primitives": 4772568,
+      "gpuAllocatedBytes": 297847998,
+      "renderScale": 1,
+      "lights": {
+        "total": 15,
+        "active": 2,
+        "shadows": 1,
+        "closestDistanceM": 39,
+        "spotlights": true
+      },
+      "particles": 0,
+      "renderer": "webgl2"
+    }
+  },
+  "materials": {
+    "environmentAtlas": "Cortina prefiltered sky and snow PBR lighting",
+    "backcountry": true,
+    "skyboxVisible": false,
+    "rock": [
+      {
+        "name": "Cortina pale stratified dolomite",
+        "diffuse": "CC0 rock-diffuse",
+        "normal": "CC0 rock-normal",
+        "ao": "CC0 rock-arm",
+        "roughness": "CC0 rock-arm",
+        "roughnessInverted": true
+      },
+      {
+        "name": "Tofane continuous fractured limestone ridges",
+        "diffuse": "CC0 rock-diffuse",
+        "normal": "CC0 rock-normal",
+        "ao": "CC0 rock-arm",
+        "roughness": "CC0 rock-arm",
+        "roughnessInverted": true
+      },
+      {
+        "name": "Cortina 2026 limestone fracture faces",
+        "diffuse": "CC0 rock-diffuse",
+        "normal": "CC0 rock-normal",
+        "ao": "CC0 rock-arm",
+        "roughness": "CC0 rock-arm",
+        "roughnessInverted": true
+      }
+    ],
+    "snow": {
+      "diffuse": "Soft groomed snow albedo",
+      "detail": "CC0 snow-diffuse",
+      "normal": "Fine grain snow normals",
+      "normalDetail": "CC0 snow-normal"
+    }
+  },
+  "errors": []
+}

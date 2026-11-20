@@ -1,10 +1,8 @@
-> V1.17.1 : correctif de chargement des sons optionnels absents, suite au contrôle de la version publique. Le lot physique V1.17 est décrit ci-dessous.
-
-> **V1.17 — contact et forces (18 novembre 2026)** : carres issues du solveur, jambes indépendantes sur pente/dévers, pieds libérés du sol en vol, réception amortie, posture liée aux forces et traces sous les vrais skis. **42 portes reconstituées**, sunset par défaut, branches volumétriques et culling des portes lointaines. Les notes V1.15/V1.16 ci-dessous sont historiques. Voir [rapport, preuves et limites](docs/REALISM_2026_11_18.md). Les cinq vidéos utilisateur citées étaient absentes ; aucune fidélité à ces vidéos ni performance GPU joueur n'est revendiquée.
-
 # Alpine Ski Pro — Super-G
 
-**V1.15 Ultimate Realism Pass 1 · Cortina Olympia delle Tofane · Coureur monobloc 25 os · Super-G uniquement**
+**V1.18 · Matières rocheuses photographiques, neige damée et éclairage PBR · Super-G**
+
+Falaises sculptées et texturées, rameaux proches en volume, bordures de neige correctement éclairées et halos de projecteurs corrigés. [Captures comparables, validation et limites](docs/references/graphics-v118/README.md). Les 42 portes, le personnage et la physique à 120 Hz sont conservés.
 
 🎮 **[Jouer dans le navigateur](https://raphtd38-oss.github.io/alpine-ski-pro/)**
 
@@ -15,7 +13,7 @@ Alpine Ski Pro est désormais consacré **uniquement au Super-G olympique de Cor
 - Cabane de compétition avec côtés et arrière fermés, toiture à pans, habillage bois original et protections.
 - Une tige de départ de 70 cm montée à 43 cm de la neige, déclenchement simulé à 20°, chronométrage au franchissement du portillon (non homologué).
 - Trois doubles poussées liées à l'accélération physique, aux articulations et aux contacts des bâtons.
-- Tracé Cortina 2026 reconstitué de 2 105 m et 635 m de dénivelé, avec 34 portes jouables de vitesse (4 piquets et 2 drapeaux chacune), marquages bleus, reliefs, compressions et sauts naturels.
+- Tracé Cortina 2026 reconstitué de 2 105 m et 635 m de dénivelé, avec 42 portes reconstituées jouables de vitesse (4 piquets et 2 drapeaux chacune), marquages bleus, reliefs, compressions et sauts naturels.
 - **Nouveau skieur monobloc 25 os**, 9 clips intégrés, combinaison PBR avec couleur par sommet, épaules/genoux/coudes sans discontinuité topologique et retarget des animations du jeu.
 - **Skis 212 cm et chaussures directement attachés aux os des pieds**, sans doublons procéduraux visibles. Bâtons Super-G courbés et poussées déjà liées à la physique.
 - Deux GLB originaux dans `public/assets/racer/` : **mobile 5,54 Mo** (bas/moyen, écran tactile), **full 17,26 Mo** (haut/ultra sur ordinateur). Une seule variante est téléchargée par session.
@@ -38,7 +36,7 @@ Alpine Ski Pro est désormais consacré **uniquement au Super-G olympique de Cor
 | Échap | Pause |
 | Tactile / manette | Commandes de base (à valider sur chaque appareil) |
 
-Choisir **Prendre le départ** ou **S'entraîner**. Les options graphiques, la météo et la couleur de combinaison sont conservées. Les préférences issues des anciennes versions passent automatiquement en Super-G ; les anciens chronos SL/GS/DH ne sont plus affichés. Les enregistrements SG existants conservent leur clé de sauvegarde.
+Choisir **Prendre le départ** ou **S'entraîner**. Les options graphiques, la météo et la couleur de combinaison sont conservées. Les préférences issues des anciennes versions passent automatiquement en Super-G ; les anciens chronos SL/GS/DH ne sont plus affichés. Les records du tracé à 42 portes utilisent une clé distincte ; les anciens enregistrements sont conservés sans mélanger les temps.
 
 ## Développement et vérification
 

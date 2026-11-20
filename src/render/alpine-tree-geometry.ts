@@ -7,6 +7,19 @@ export function appendAlpineTree(mesh: TreeMesh, x:number,y:number,z:number,
   const vertex=(a:number,b:number,c:number,tint:number[])=>{
     const n=p.length/3;p.push(a,b,c);colors.push(...tint,1);return n;
   };
+  const cluster=(cx:number,by:number,cz:number,dx:number,dz:number,length:number,
+    width:number,thick:number,tint:number[],snowy:boolean)=>{
+    const mx=cx+dx*length*.55,mz=cz+dz*length*.55,my=by-length*.16;
+    const start=vertex(cx,by,cz,tint);
+    vertex(mx-dz*width,my,mz+dx*width,tint);
+    vertex(cx+dx*length,by-length*.22+thick,cz+dz*length,tint);
+    vertex(mx+dz*width,my,mz-dx*width,tint);
+    vertex(mx,my+thick,mz,snowy?[.83,.89,.92]:tint.map(v=>v*1.25));
+    vertex(mx,my-thick,mz,tint.map(v=>v*.65));
+    for(let j=0;j<4;j++){
+      const k=(j+1)%4;i.push(start+j,start+k,start+4,start+k,start+j,start+5);
+    }
+  };
   const lean=(random()-.5)*height*.05;
   const yaw=random()*Math.PI*2;
   const bark=[.24,.17,.11];
@@ -25,19 +38,18 @@ export function appendAlpineTree(mesh: TreeMesh, x:number,y:number,z:number,
       const a=phase+b*Math.PI*2/branches+(random()-.5)*.3;
       const length=height*.24*Math.pow(1-t,.7)*(.65+random()*.6);
       const dx=Math.cos(a),dz=Math.sin(a),cx=x+lean*t;
-      const width=length*(larch?.12:.23), thick=height*(larch?.008:.022);
-      const mx=cx+dx*length*.55,mz=z+dz*length*.55;
-      const my=by-length*.16;
+      const width=length*(larch?.035:detail>=5?.10:.23), thick=height*(larch?.004:.018);
       const tint=larch?[.28,.22,.13]:[.055+random()*.02,.13+random()*.05,.10+random()*.03];
       const snowy=!larch&&random()<.32;
-      const start=vertex(cx,by,z,tint);
-      vertex(mx-dz*width,my,mz+dx*width,tint);
-      vertex(cx+dx*length,by-length*.22+thick,z+dz*length,tint);
-      vertex(mx+dz*width,my,mz-dx*width,tint);
-      vertex(mx,my+thick,mz,snowy?[.83,.89,.92]:tint.map(v=>v*1.25));
-      vertex(mx,my-thick,mz,tint.map(v=>v*.65));
-      for(let j=0;j<4;j++){
-        const k=(j+1)%4;i.push(start+j,start+k,start+4,start+k,start+j,start+5);
+      cluster(cx,by,z,dx,dz,length,width,thick,tint,snowy);
+      // Only foreground trees get secondary needle sprays. The thinner main
+      // whorl and alternating offshoots break the old diamond-shaped silhouette.
+      if(detail>=5) for(let twig=1;twig<=2;twig++) for(const side of [-1,1]){
+        const t=twig*.29, a2=a+side*(.65+random()*.25);
+        const twigLength=length*(.44-t*.25)*(.85+random()*.3);
+        cluster(cx+dx*length*t,by-length*.16*t,z+dz*length*t,
+          Math.cos(a2),Math.sin(a2),twigLength,
+          twigLength*(larch?.035:.23),thick*.65,tint,snowy&&twig===1);
       }
     }
   }

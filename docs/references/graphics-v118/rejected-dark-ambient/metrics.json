@@ -1,0 +1,55 @@
+{
+  "fixture": "Fixed visual inspection poses, no race or GPU benchmark",
+  "quality": "medium",
+  "metrics": {
+    "schuss": {
+      "frameMs": 5033.099999999991,
+      "drawCalls": 1396,
+      "primitives": 1284018,
+      "gpuAllocatedBytes": 138851078,
+      "renderScale": 1,
+      "lights": {
+        "total": 15,
+        "active": 2,
+        "shadows": 0,
+        "closestDistanceM": 26,
+        "spotlights": true
+      },
+      "particles": 0,
+      "renderer": "webgl2"
+    },
+    "forest": {
+      "frameMs": 4733.199999999997,
+      "drawCalls": 1334,
+      "primitives": 1278914,
+      "gpuAllocatedBytes": 138851078,
+      "renderScale": 1,
+      "lights": {
+        "total": 15,
+        "active": 2,
+        "shadows": 0,
+        "closestDistanceM": 39,
+        "spotlights": true
+      },
+      "particles": 0,
+      "renderer": "webgl2"
+    },
+    "finish": {
+      "frameMs": 1883.1999999999825,
+      "drawCalls": 1006,
+      "primitives": 1318280,
+      "gpuAllocatedBytes": 138851078,
+      "renderScale": 1,
+      "lights": {
+        "total": 15,
+        "active": 2,
+        "shadows": 0,
+        "closestDistanceM": 32,
+        "spotlights": true
+      },
+      "particles": 0,
+      "renderer": "webgl2"
+    }
+  },
+  "errors": []
+}

@@ -1,0 +1,66 @@
+
+> alpine-ski-pro@1.18.0 prebuild
+> npm run assets && npm run assets:verify && node scripts/generate_flex_gate_audio.mjs
+
+
+> alpine-ski-pro@1.18.0 assets
+> node scripts/build_skier_pro.mjs
+
+Generated original professional ski athlete: {
+  bytes: 1094208,
+  joints: 18,
+  surfaces: 46,
+  materials: 13,
+  vertices: 8424,
+  triangles: 14358
+}
+
+> alpine-ski-pro@1.18.0 assets:verify
+> node scripts/check_skier.mjs
+
+Valid professional ski athlete: {
+  bytes: 1094208,
+  joints: 18,
+  materials: 13,
+  surfaces: 46,
+  vertices: 8424,
+  multiWeightVertices: 751
+}
+generated pole-hard.wav 31404
+generated pole-soft.wav 26924
+generated pole-return.wav 17964
+
+> alpine-ski-pro@1.18.0 build
+> tsc --noEmit && vite build
+
+vite v8.3.8 building client environment for production...
+transforming...
+✓ 1459 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                                   0.95 kB │ gzip:   0.54 kB
+dist/assets/barlow-condensed-latin-500-normal-HIEiP5Ov.woff      18.60 kB
+dist/assets/barlow-condensed-latin-700-normal-Dmwat-ge.woff      18.82 kB
+dist/assets/barlow-condensed-latin-600-normal-BFJEwTuo.woff      18.89 kB
+dist/assets/barlow-latin-500-normal-C1h8hMer.woff                19.51 kB
+dist/assets/barlow-latin-400-normal-fsAxiSwU.woff                19.58 kB
+dist/assets/barlow-latin-800-normal-BdVooDN4.woff                19.63 kB
+dist/assets/barlow-latin-700-normal-__SGTsZ1.woff                19.76 kB
+dist/assets/barlow-latin-600-normal-CNwfPWQD.woff                19.88 kB
+dist/assets/barlow-condensed-latin-500-normal-BgYH2mbd.woff2     21.42 kB
+dist/assets/barlow-latin-500-normal-BPAOfeC8.woff2               22.00 kB
+dist/assets/barlow-latin-400-normal-qiz4-Cze.woff2               22.19 kB
+dist/assets/barlow-condensed-latin-600-normal-DepVgxBB.woff2     22.30 kB
+dist/assets/barlow-condensed-latin-700-normal-v1xN8_Wq.woff2     22.44 kB
+dist/assets/barlow-latin-600-normal-DILqtrty.woff2               22.77 kB
+dist/assets/barlow-latin-700-normal-A9pxMQ4z.woff2               22.78 kB
+dist/assets/barlow-latin-800-normal-s1sAMnoV.woff2               22.97 kB
+dist/assets/index-Dvq1W3Z5.css                                   19.54 kB │ gzip:   5.11 kB
+dist/assets/index-CrDC7YZS.js                                 2,371.29 kB │ gzip: 629.61 kB
+
+[plugin builtin:vite-reporter] 
+(!) Some chunks are larger than 1600 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 819ms

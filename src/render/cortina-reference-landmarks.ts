@@ -1,4 +1,5 @@
 import * as pc from "playcanvas";
+import { appendAlpineTree } from "./alpine-tree-geometry";
 import type { Course, Quality } from "../game/types";
 import { courseCenterX, terrainHeight } from "../game/course";
 import { material, meshEntity, rng } from "./geometry";
@@ -15,15 +16,15 @@ export const CORTINA_REFERENCE_DETAIL: Record<Quality, {
   rockFaces: number; rockSections: number; rockLevels: number;
   nearTrees: number; looseStones: number;
 }> = {
-  low:    { rockFaces: 3, rockSections: 13, rockLevels: 8,  nearTrees: 12,  looseStones: 32 },
-  medium: { rockFaces: 5, rockSections: 19, rockLevels: 10, nearTrees: 35,  looseStones: 76 },
-  high:   { rockFaces: 7, rockSections: 25, rockLevels: 12, nearTrees: 76,  looseStones: 135 },
-  ultra:  { rockFaces: 8, rockSections: 33, rockLevels: 15, nearTrees: 122, looseStones: 200 },
+  low:    { rockFaces: 3, rockSections: 40, rockLevels: 22, nearTrees: 12,  looseStones: 32 },
+  medium: { rockFaces: 5, rockSections: 56, rockLevels: 30, nearTrees: 35,  looseStones: 76 },
+  high:   { rockFaces: 7, rockSections: 72, rockLevels: 40, nearTrees: 76,  looseStones: 135 },
+  ultra:  { rockFaces: 8, rockSections: 88, rockLevels: 48, nearTrees: 122, looseStones: 200 },
 };
 
 export const CORTINA_REFERENCE_ROCK_FACES = [
   { name: "Schuss — left stratified rock corridor", station: 139, side: -1, offset: 100, span: 174, height: 130 },
-  { name: "Schuss — right dolomite shoulder", station: 176, side: 1, offset: 100, span: 177, height: 150 },
+  { name: "Schuss — right dolomite shoulder", station: 176, side: 1, offset: 112, span: 159, height: 94 },
   { name: "Duca d'Aosta — exposed limestone ledge", station: 350, side: -1, offset: 112, span: 132, height: 103 },
   { name: "Delta — stepped rock buttress", station: 700, side: 1, offset: 119, span: 147, height: 116 },
   { name: "Gran Curvone — high fractured cliff", station: 915, side: -1, offset: 139, span: 204, height: 143 },
@@ -88,10 +89,15 @@ function addReferenceCliffs(
       const silhouette = .53 + .32 * Math.sin(Math.PI * along) +
         .09 * Math.sin(along * 18 + seed) + .055 * Math.cos(along * 35 - seed);
       const h = face.height * Math.max(.31, silhouette);
-      const stratification = (k % 4 === 0 ? 2.3 : k % 4 === 1 ? -1.1 : .25);
+      // Metre-scaled bedding planes: geometry does not change its geology
+      // when the quality profile changes the tessellation density.
+      const stratum = t * h / 7 + .18 * Math.sin(along * 9 + seed);
+      const stratification = Math.pow(Math.max(0, Math.sin(stratum * Math.PI * 2)), 7) * 1.6;
+      const fracture = Math.pow(Math.max(0, Math.sin(along * 42 + seed + t * 1.5)), 10);
       const lateral = 7.7 * Math.sin(t * 2.8 + along * 6 + seed) +
         4.4 * Math.sin(t * 15.3 + along * 9.1 + seed * 2) +
-        stratification;
+        stratification - fracture * 5.5 +
+        .45 * Math.sin(along * 107 + t * 71 + seed);
       const x = x0 + face.side * lateral;
       const y = terrainHeight(x0, z, course) - 2.2 + t * h +
         1.1 * Math.sin(along * 32 + t * 18);
@@ -100,10 +106,10 @@ function addReferenceCliffs(
     for (let j = 0; j <= rockSections; j++) {
       for (let k = 0; k <= rockLevels; k++) {
         const point = sample(j, k);
-        const strata = Math.sin(k * 3.7 + j * .55) * .055;
-        const exposed = .80 + .14 * Math.sin(j * 1.13 + seed);
+        const strata = Math.sin(point.y * .83 + point.along * 3.1) * .025;
+        const exposed = .87 + .08 * Math.sin(point.along * 19 + seed);
         const shade = (1 - .10 * (1 - point.t)) * exposed;
-        const warm = .66 + Math.max(0, Math.sin(j * .27 + seed)) * .22;
+        const warm = .66 + Math.max(0, Math.sin(point.along * 9 + seed)) * .22;
         v(rock, point.x, point.y, point.z, [
           Math.min(1, (.65 + warm * .30 + strata) * shade),
           Math.min(1, (.64 + warm * .19 + strata) * shade),
@@ -115,23 +121,24 @@ function addReferenceCliffs(
       for (let k = 0; k < rockLevels; k++) {
         const a = base + j * (rockLevels + 1) + k;
         const b = a + rockLevels + 1;
-        quad(rock, a, b, a + 1, b + 1);
+        if (face.side > 0) quad(rock, a, b, a + 1, b + 1);
+        else quad(rock, a, a + 1, b, b + 1);
         // Snow collects on irregular, upward-facing erosion shelves.
-        if (k > rockLevels * .47 && (k % 3 === 0) &&
-            (j + faceIndex * 3) % 5 !== 0) {
+        if (k > rockLevels * .47 && (k % Math.max(1, Math.floor(rockLevels / 6)) === 0) &&
+            Math.sin(j / rockSections * 31 + faceIndex * 3) > -.3) {
           const p0 = sample(j, k), p1 = sample(j + 1, k);
-          const q0 = sample(j, k + 1), q1 = sample(j + 1, k + 1);
           const aS = v(snowfall, p0.x - face.side * .48, p0.y + .32, p0.z,
             [.87, .91, .92]);
           const bS = v(snowfall, p1.x - face.side * .48, p1.y + .30, p1.z,
             [.91, .94, .95]);
-          const cS = v(snowfall, (p0.x + q0.x) / 2 - face.side * .64,
-            p0.y + (q0.y - p0.y) * .43 + .35, p0.z,
+          const cS = v(snowfall, p0.x - face.side * 1.55,
+            p0.y + .29, p0.z,
             [.77, .84, .87]);
-          const dS = v(snowfall, (p1.x + q1.x) / 2 - face.side * .64,
-            p1.y + (q1.y - p1.y) * .43 + .32, p1.z,
+          const dS = v(snowfall, p1.x - face.side * 1.38,
+            p1.y + .27, p1.z,
             [.80, .87, .90]);
-          quad(snowfall, aS, bS, cS, dS);
+          if (face.side < 0) quad(snowfall, aS, bS, cS, dS);
+          else quad(snowfall, aS, cS, bS, dS);
         }
       }
     }
@@ -143,7 +150,8 @@ function addReferenceCliffs(
   materials.push(cliffMaterial);
   const e = meshEntity(app.graphicsDevice, root,
     "Cortina reference: continuous Schuss and Duca limestone ridges",
-    rock.positions, rock.indices, cliffMaterial, rock.colors);
+    rock.positions, rock.indices, cliffMaterial, rock.colors,
+    rock.positions.flatMap((_, i, p) => i % 3 === 0 ? [p[i + 2] / 6, p[i + 1] / 6] : []));
   e.render!.castShadows = quality === "high" || quality === "ultra";
 
   if (snowfall.indices.length) {
@@ -175,60 +183,9 @@ function addNearForest(
     const x = courseCenterX(z, course) + side * distance;
     const ground = terrainHeight(x, z, course) + .06;
     const h = 8 + rand() * 15;
-    const radius = h * (.17 + rand() * .055);
-    const larch = rand() < .19;
-    const needles: Tint = rand() < .5 ? [.079, .187, .149] : [.085, .172, .161];
-    const wood: Tint = [.27, .235, .205];
-    const drifted = rand() < .56;
-    // Visible tapered, four-sided trunk; varied whorls are not whole-tree cones.
-    const base: number[] = [], top: number[] = [];
-    for (let j = 0; j < 4; j++) {
-      const angle = 2 * Math.PI * j / 4;
-      base.push(v(forest, x + .17 * Math.cos(angle), ground,
-        z + .17 * Math.sin(angle), wood));
-      top.push(v(forest, x + .045 * Math.cos(angle), ground + h,
-        z + .045 * Math.sin(angle), wood));
-    }
-    for (let j = 0; j < 4; j++)
-      quad(forest, base[j], base[(j+1)%4], top[j], top[(j+1)%4]);
-    const tiers = larch ? 8 : 9;
-    for (let tier = 0; tier < tiers; tier++) {
-      const t = (tier + .28) / tiers;
-      const branchY = ground + h * t;
-      const length = radius * Math.pow(1 - t, .81) * (.72 + rand() * .46);
-      const rotation = (tier % 2) * .31 + rand() * .11;
-      const count = larch ? 7 : 9;
-      for (let j = 0; j < count; j++) {
-        const a = (j / count) * Math.PI * 2 + rotation;
-        const dx = Math.cos(a), dz = Math.sin(a);
-        const elevation = larch ? .20 : -.20;
-        const bx = x + dx * length, bz = z + dz * length;
-        const by = branchY + length * elevation + .04 * Math.sin(i+j);
-        const mid = v(forest, x + dx * .12, branchY + .03, z + dz * .12,
-          wood);
-        const left = v(forest, bx - dz * (larch ? .035 : length * .20),
-          by - (larch ? .028 : .13), bz + dx * (larch ? .035 : length * .20),
-          larch ? wood : needles);
-        const right = v(forest, bx + dz * (larch ? .035 : length * .20),
-          by + (larch ? .035 : .25), bz - dx * (larch ? .035 : length * .20),
-          larch ? wood : needles);
-        triangle(forest, mid, left, right);
-        if (!larch && drifted && tier > 2 && (tier + j + i) % 4 === 0) {
-          const snowA = v(forest, x + dx * length * .55,
-            branchY + .16, z + dz * length * .55, [.84,.89,.91]);
-          const snowB = v(forest, bx - dz * length * .10,
-            by + .26, bz + dx * length * .10, [.90,.94,.94]);
-          const snowC = v(forest, bx + dz * length * .10,
-            by + .25, bz - dx * length * .10, [.77,.84,.87]);
-          triangle(forest, snowA, snowB, snowC);
-        }
-        if (larch && tier % 2 === 0) {
-          const twig = v(forest, bx + dx * .12, by + length * .18,
-            bz + dz * .12, [.34,.29,.23]);
-          triangle(forest, mid, left, twig);
-        }
-      }
-    }
+    appendAlpineTree({p: forest.positions, i: forest.indices, colors: forest.colors},
+      x, ground, z, h, rand,
+      quality === "low" ? 4 : quality === "medium" ? 5 : 6, rand() < .19);
   }
   const treeMaterial = material("Cortina winter spruce and bare larch details", "#ffffff", 0, .16);
   treeMaterial.diffuseVertexColor = true;
@@ -238,7 +195,7 @@ function addNearForest(
   meshEntity(app.graphicsDevice, root,
     "Foreground Cortina spruce branch whorls and leafless larches",
     forest.positions, forest.indices, treeMaterial,
-    forest.colors).render!.castShadows = false;
+    forest.colors).render!.castShadows = quality !== "low";
 }
 
 /** Photographic foreground detail: irregular debris on safe exterior shoulders. */
