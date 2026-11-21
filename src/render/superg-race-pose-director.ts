@@ -20,6 +20,7 @@ import { gradient, terrainHeight } from "../game/course";
 import { skiSurfaceRotation, minimumSoleClearance } from "./ski-contact-frame";
 import { PRO_POLE } from "./equipment-specs";
 import { gateCrashPose } from "./gate-crash-pose";
+import { sampleTake2, TAKE2_JOINTS } from "./motionsmith-take2";
 import {
   SuperGCompetitionPose,
   type SGSourceFrame,
@@ -81,6 +82,10 @@ export interface SGDirectorDiagnostics {
   rightKneeFlexionDeg: number;
   leftLegLengthM: number;
   rightLegLengthM: number;
+  /** Studio-only human animation overlay; absent during ordinary play. */
+  motionSource?: string;
+  sourceMotionWeight?: number;
+  sourceMotionSeconds?: number;
   pelvisWorld: number[];
   leftFootWorld: number[];
   rightFootWorld: number[];
@@ -209,6 +214,11 @@ function positionLeg(
 
 export class SuperGRacePoseDirector {
   readonly model = new SuperGCompetitionPose();
+  /** Explicit opt-in preview: no change to the public mode or race physics. */
+  private readonly take2Enabled = typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("motion") === "take2";
+  private take2Weight = 0;
+  private take2Time = 0;
   private readonly bones: Record<SkiSide, LegBones>;
   private readonly pelvis: pc.GraphNode;
   private readonly spine: pc.GraphNode;
@@ -262,6 +272,57 @@ export class SuperGRacePoseDirector {
     this.poleWeights[0] = this.poleWeights[1] = 0;
     this.visualFall = 0;
     this.lastPose = null;
+    this.take2Weight = 0;
+    this.take2Time = 0;
+  }
+
+  private applyMotionSmithTake2(pose: SGPose, frame: SGSourceFrame,
+    flight: number, crashed: boolean): void {
+    if (!this.take2Enabled) return;
+    const speed = Number.isFinite(frame.vx) && Number.isFinite(frame.vz)
+      ? Math.hypot(frame.vx!, frame.vz!) : pose.speed;
+    // Activate only after the launch, and avoid overriding crash/landing IK.
+    const speedGain = bounded((speed-4)/16,0,1);
+    const startGain = bounded((pose.startPhase-0.25)/1.4,0,1);
+    const flightGain = 1-bounded(flight*2,0,0.9);
+    const weight = crashed ? 0 : 0.55*speedGain*startGain*flightGain;
+    const src = sampleTake2(Math.max(0,frame.t));
+    this.take2Weight=weight;
+    this.take2Time=src.seconds;
+    if (weight<0.001) return;
+    const heading = new pc.Quat().setFromEulerAngles(0,pose.headingDeg,0);
+    // The source's actual 89-bone UE5 local rotations have been converted
+    // OFFLINE into independent world-space rest-pose angular deltas. Apply
+    // those deltas to the corresponding 25-bone skier. Do not replace the
+    // body mesh or rotate the feet: original two-ski terrain IK is authoritative.
+    const target = (name:string):pc.GraphNode|undefined => {
+      const aliases:Record<string,string> = {
+        LeftShoulder:"LShoulder", RightShoulder:"RShoulder",
+        LeftUpperArm:"LUpperArm",RightUpperArm:"RUpperArm",
+        LeftForeArm:"LElbow",RightForeArm:"RElbow",
+      };
+      return this.actor.joints[aliases[name]??name] ??
+        this.actor.rig.findByName(name) ?? undefined;
+    };
+    for(let i=0;i<TAKE2_JOINTS.length;i++){
+      const boneName=TAKE2_JOINTS[i],bone=target(boneName);
+      if(!bone?.parent) continue;
+      // Partial motion transfer: arms follow race-ready hand positions while
+      // the spine/shoulders are animated from the actual 180-frame take.
+      const boneGain=boneName==="Head"?0.38:
+        boneName==="Neck"?0.25:
+        boneName.includes("ForeArm")?0.25:
+        boneName.includes("UpperArm")?0.36:0.67;
+      const v=src.rotationsDeg[i];
+      const angular=new pc.Vec3(v[0],v[1],v[2]);
+      const magnitude=angular.length()*weight*boneGain;
+      if(magnitude<0.002)continue;
+      const axis=heading.transformVector(angular).normalize();
+      const delta=new pc.Quat().setFromAxisAngle(axis,magnitude);
+      const world=delta.mul(bone.getRotation().clone());
+      const local=bone.parent.getRotation().clone().invert().mul(world);
+      bone.setLocalRotation(local);
+    }
   }
 
   private setTorso(pose: SGPose): void {
@@ -420,6 +481,16 @@ export class SuperGRacePoseDirector {
   update(f: Frame, c: Course, dt: number): void {
     const frame = f as SGSourceFrame;
     const pose = this.model.sample(frame, dt);
+    if (this.take2Enabled) {
+      const src = sampleTake2(Math.max(0,frame.t));
+      // Use real source hip motion with strict 4 cm range; the contact IK
+      // still resolves the pelvis against BOTH real race ski bases.
+      const speed = Number.isFinite(frame.vx) && Number.isFinite(frame.vz)
+        ? Math.hypot(frame.vx!,frame.vz!) : pose.speed;
+      const strength=bounded((speed-5)/20,0,1)*0.35;
+      pose.pelvisHeightM += bounded(src.pelvisDeltaM[1]*strength,-0.04,0.035);
+      pose.pelvisShiftM -= bounded(src.pelvisDeltaM[0]*strength,-0.035,0.035);
+    }
     this.lastPose = pose;
     const root = this.actor.root;
     const ground = terrainHeight(f.x, f.z, c);
@@ -452,6 +523,7 @@ export class SuperGRacePoseDirector {
       0, pose.pelvisYawDeg, pose.pelvisRollDeg);
     this.setTorso(pose);
     this.setArms(pose);
+    this.applyMotionSmithTake2(pose, frame, flight, crash.active);
     this.prepareFoot("L", pose.leftFoot, pose, c, ground, flight);
     this.prepareFoot("R", pose.rightFoot, pose, c, ground, flight);
     this.constrainPelvis();
@@ -517,6 +589,9 @@ export class SuperGRacePoseDirector {
     return {
       leftKneeFlexionDeg: left.flex, rightKneeFlexionDeg: right.flex,
       leftLegLengthM: left.length, rightLegLengthM: right.length,
+      motionSource: this.take2Enabled?"MotionSmith Take2":"procedural",
+      sourceMotionWeight:this.take2Weight,
+      sourceMotionSeconds:this.take2Time,
       pelvisWorld: xyz(this.pelvis), leftFootWorld: xyz(this.bones.L.foot),
       rightFootWorld: xyz(this.bones.R.foot),
       phase: p.phase,
