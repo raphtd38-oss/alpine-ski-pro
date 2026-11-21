@@ -253,7 +253,8 @@ export class SuperGRacePoseDirector {
     // one-query fallback for users: ?pose=legacy.
     const poseChoice = typeof window !== "undefined"
       ? new URLSearchParams(window.location.search).get("pose") : null;
-    this.humanMode = humanMode ?? (poseChoice !== "legacy");
+    this.humanMode = humanMode ??
+      (typeof window !== "undefined" && poseChoice !== "legacy");
     this.reconstructionMode = this.humanMode && poseChoice !== "human-v3";
     if (!actor.isSeamless || equipment.id !== "SG")
       throw new Error("The Super-G race director requires the seamless SG racer");
