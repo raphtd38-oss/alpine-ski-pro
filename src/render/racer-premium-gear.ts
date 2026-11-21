@@ -57,7 +57,9 @@ function curvedBib(
       // Curved full-width cloth; wraps around torso on either face.
       const z=(front?-1:1)*(.19-.055*edge*edge-.014*Math.sin(Math.PI*v));
       vertices.push(x,y,z);
-      uv.push(u,1-v);
+      // Imported rig faces -Z and rotates 180 degrees into game space.
+      // Both glTF UV axes must flip to keep bib print upright and readable.
+      uv.push(1-u,v);
     }
   }
   for(let j=0;j<rows;j++)for(let i=0;i<cols;i++){
@@ -108,48 +110,48 @@ export class PremiumRacerKit {
     shape(head,"sphere","SG aerodynamic helmet solid shell",
       [0,.092,.015],[.27,.31,.295],shell);
     shape(head,"sphere","SG helmet top inset",
-      [0,.178,.016],[.254,.21,.284],crown);
+      [0,.178,.016],[.202,.105,.188],crown);
     for(const sign of [-1,1]){
       shape(head,"sphere","Helmet ear cover "+sign,
-        [sign*.205,-.006,.015],[.076,.151,.188],shell);
+        [sign*.133,-.006,.015],[.056,.105,.12],shell);
       shape(head,"sphere","Helmet removable ear pad "+sign,
-        [sign*.258,-.038,.042],[.026,.125,.14],padding);
+        [sign*.161,-.038,.042],[.019,.084,.095],padding);
       shape(head,"box","Helmet side accent "+sign,
-        [sign*.245,.132,-.07],[.018,.028,.17],stripe);
+        [sign*.144,.132,-.07],[.012,.021,.096],stripe);
     }
     // Skin only below the lenses: face must remain visible for a mouth
     // expression even with competition goggles secured.
     shape(head,"sphere","Visible lower human face",
-      [0,-.12,-.087],[.214,.155,.22],face);
+      [0,-.112,-.084],[.190,.123,.150],face);
     this.jaw=shape(head,"sphere","Moving racing jaw",
-      [0,-.207,-.18],[.117,.061,.091],face);
+      [0,-.189,-.132],[.101,.053,.075],face);
     shape(head,"sphere","Nose under ski goggles",
-      [0,-.111,-.271],[.044,.064,.064],face);
+      [0,-.112,-.220],[.039,.060,.044],face);
     this.mouth=shape(head,"sphere","Expressive breathing mouth",
-      [0,-.222,-.275],[.055,.010,.010],lip);
+      [0,-.197,-.224],[.050,.009,.010],lip);
     // Subtle eyebrow shapes inside the transparent-looking upper lens.
     // They can compress to show focused effort at the start.
     this.eyeBrowLeft=shape(head,"box","Left racing eyebrow",
-      [-.078,-.014,-.265],[.084,.012,.012],padding);
+      [-.073,-.014,-.219],[.074,.010,.010],padding);
     this.eyeBrowRight=shape(head,"box","Right racing eyebrow",
-      [.078,-.014,-.265],[.084,.012,.012],padding);
+      [.073,-.014,-.219],[.074,.010,.010],padding);
 
     shape(head,"sphere","SG curved goggle rubber frame",
-      [0,.013,-.238],[.255,.144,.092],poly);
+      [0,.015,-.203],[.230,.108,.040],poly);
     const lens=shape(head,"sphere","SG photochromic curved lens",
-      [0,.026,-.293],[.235,.119,.063],visor);
+      [0,.025,-.227],[.221,.094,.026],visor);
     lens.render!.castShadows=false;
     shape(head,"box","Angular goggle reflection strip",
-      [-.075,.079,-.345],[.13,.014,.009],highlight)
+      [-.063,.067,-.241],[.112,.009,.006],highlight)
       .setLocalEulerAngles(0,0,-14);
     shape(head,"box","Second goggle lens reflection",
-      [.103,.067,-.347],[.064,.006,.009],highlight)
+      [.091,.060,-.242],[.055,.005,.006],highlight)
       .setLocalEulerAngles(0,0,12);
     shape(head,"box","Goggle strap along side",
-      [0,.026,.158],[.51,.045,.034],padding);
+      [0,.025,.140],[.298,.035,.025],padding);
     // Soft chinstrap below the cheek, not a rigid pole guard.
     shape(head,"box","Chin retention strap",
-      [0,-.235,.052],[.11,.024,.19],padding);
+      [0,-.209,.044],[.079,.019,.145],padding);
 
     for(const back of [false,true]){
       const texture=new pc.Texture(app.graphicsDevice,{
@@ -183,11 +185,11 @@ export class PremiumRacerKit {
       Math.abs(frame.edge)*.15+pressure*.25+frame.fallen*.7,0,1);
     const open=pre.active ?
       .23+.55*pre.breath : bounded(.15+.2*(speed/35)+.42*excitement,0,.85);
-    this.mouth.setLocalScale(.058,.007+open*.026,.01+open*.008);
-    this.jaw.setLocalPosition(0,-.207-open*.018,-.18);
+    this.mouth.setLocalScale(.048,.007+open*.020,.009+open*.006);
+    this.jaw.setLocalPosition(0,-.189-open*.014,-.132);
     const eyebrow=bounded(excitement*.016+pre.intensity*.012,0,.025);
-    this.eyeBrowLeft.setLocalPosition(-.078,-.014-eyebrow,-.265);
-    this.eyeBrowRight.setLocalPosition(.078,-.014-eyebrow,-.265);
+    this.eyeBrowLeft.setLocalPosition(-.073,-.014-eyebrow,-.219);
+    this.eyeBrowRight.setLocalPosition(.073,-.014-eyebrow,-.219);
   }
   destroy(){
     for(const m of this.materials)m.destroy();
