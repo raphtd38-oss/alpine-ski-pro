@@ -89,6 +89,29 @@ describe("reference-based World Cup ski physics and 25-bone posture", () => {
     expect(left.outsideSide).toBe("L");
   });
 
+  it("keeps a human-height stance during low-speed drive, but tucks at race speed (studio)", () => {
+    const run=(speed:number,preview:boolean) => {
+      const anim=new SuperGCompetitionPose({},preview);
+      let pose: ReturnType<typeof anim.sample> | undefined;
+      for(let i=0;i<110;i++){
+        pose=anim.sample({
+          t:i/60,x:0,z:i*speed/60,heading:0,
+          vx:0,vz:speed,edge:0,height:0,tuck:1,
+          fallen:0,startPhase:2,pressure:1,load:0.5,
+          skid:0,lateralAcceleration:0,
+        },1/60);
+      }
+      return pose!;
+    };
+    const baseline=run(6.5,false),drive=run(6.5,true);
+    const aero=run(29,true);
+    expect(baseline.tuck).toBeGreaterThan(0.95);
+    expect(drive.tuck).toBeLessThan(0.10);
+    expect(drive.pelvisHeightM).toBeGreaterThan(baseline.pelvisHeightM+0.08);
+    expect(aero.tuck).toBeGreaterThan(0.95);
+    expect(aero.pelvisHeightM).toBeLessThan(drive.pelvisHeightM-0.08);
+  });
+
   it("interpolates real forces in new replay frames and accepts legacy frames", () => {
     const base: Frame = {
       t: 0, x: 0, z: 0, heading: 0, edge: 0, height: 0,
