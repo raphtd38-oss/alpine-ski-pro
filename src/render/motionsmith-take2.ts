@@ -53,6 +53,10 @@ function readSamples(): Int8Array {
   }
   return samples;
 }
+/** Expose exact user-source-derived bytes for regression tests and provenance audit. */
+export function take2PackedBytes(): Uint8Array {
+  return new Uint8Array(readSamples().buffer);
+}
 export interface Take2Frame {
   /** Rotvec world-axis components, in degrees, for each mapped bone. */
   rotationsDeg: ReadonlyArray<readonly [number,number,number]>;
