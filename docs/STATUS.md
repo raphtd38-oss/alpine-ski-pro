@@ -368,3 +368,8 @@ Les coefficients sont des choix d'animation guidés par des séquences filmées,
 - Réglage conservateur des ombres directionnelles : portée portée à 155 m et réduction des offsets de shadow bias ; ombre projetée par le corps monobloc du coureur et réception explicite des ombres par le terrain neigeux. Les petites pièces de fixations ne multiplient pas les passes de shadow cascades.
 - Aucun asset, modèle ou animation propriétaire importé depuis le jeu de la vidéo de comparaison. La physique 120 Hz, les chronos, les portes et les parcours restent inchangés.
 - À valider : rendu réellement observé en captures WebGL2, Safari mobile, finesse des ombres et contraste suivant l'éclairage. **Cela n'est pas encore une égalité de rendu avec la vidéo de référence.**
+
+
+## 21 novembre 2026 — PR #56 : reconstruction du mouvement humain du skieur
+
+Ajout d'un nouveau contrôleur de mouvement biomécanique multi-phases pour le skieur monobloc à 25 os, et réalignement de la chaîne ski-sol -> bassin -> jambes IK -> bras IK -> bâtons. L'ancien contrôleur est conservé via ?pose=human-v3 et l'historique via ?pose=legacy. Aucune acquisition de motion capture externe n'est revendiquée. Les nouveaux tests d'articulation et les captures A/B doivent être validés par CI et revue visuelle avant publication. Détails dans BIOMECHANICS_RECONSTRUCTION_2026-11-21.md.

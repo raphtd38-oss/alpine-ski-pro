@@ -21,6 +21,7 @@ import { skiSurfaceRotation, minimumSoleClearance } from "./ski-contact-frame";
 import { PRO_POLE } from "./equipment-specs";
 import { gateCrashPose } from "./gate-crash-pose";
 import { humanRacerPose } from "./human-racer-pose";
+import { SuperGHumanReconstruction } from "./superg-human-reconstruction";
 import {
   SuperGCompetitionPose,
   type SGSourceFrame,
@@ -222,8 +223,10 @@ function positionLeg(
 
 export class SuperGRacePoseDirector {
   readonly model = new SuperGCompetitionPose();
-  /** Only enabled in ?pose=human-v3 until screenshots pass a visual review. */
+  /** Unified biomechanics is default; ?pose=human-v3 and ?pose=legacy are rollbacks. */
   readonly humanMode: boolean;
+  readonly reconstructionMode: boolean;
+  private readonly humanMotion = new SuperGHumanReconstruction();
   private readonly bones: Record<SkiSide, LegBones>;
   private readonly pelvis: pc.GraphNode;
   private readonly spine: pc.GraphNode;
@@ -248,9 +251,11 @@ export class SuperGRacePoseDirector {
     // New ergonomic controller will be the public default ONLY AFTER
     // this draft branch passes full A/B visual review. Legacy remains a
     // one-query fallback for users: ?pose=legacy.
+    const poseChoice = typeof window !== "undefined"
+      ? new URLSearchParams(window.location.search).get("pose") : null;
     this.humanMode = humanMode ??
-      (typeof window !== "undefined" &&
-       new URLSearchParams(window.location.search).get("pose") !== "legacy");
+      (typeof window !== "undefined" && poseChoice !== "legacy");
+    this.reconstructionMode = this.humanMode && poseChoice !== "human-v3";
     if (!actor.isSeamless || equipment.id !== "SG")
       throw new Error("The Super-G race director requires the seamless SG racer");
     const required = (name: string) => {
@@ -282,6 +287,7 @@ export class SuperGRacePoseDirector {
 
   reset(): void {
     this.model.reset();
+    this.humanMotion.reset();
     this.poleWeights[0] = this.poleWeights[1] = 0;
     this.visualFall = 0;
     this.lastPose = null;
@@ -337,52 +343,83 @@ export class SuperGRacePoseDirector {
    */
   private setHumanArms(pose: SGPose): void {
     if (!this.humanMode) return;
-    const yaw=new pc.Quat().setFromEulerAngles(0,pose.headingDeg,0);
-    const pelvis=this.pelvis.getPosition();
-    for(const [i,side] of (["L","R"] as const).entries()){
-      const j=this.actor.joints;
-      const upper=j[side+"UpperArm"],elbow=j[side+"Elbow"],
-        wrist=j[side+"Wrist"];
-      if(!upper||!elbow||!wrist||!upper.parent||!elbow.parent)continue;
-      const outward=side==="L"?1:-1;
-      const tuck=bounded(pose.tuck,0,1);
-      const reach=0.24+0.03*pose.engagement;
-      const target=pelvis.clone().add(yaw.transformVector(new pc.Vec3(
-        outward*reach,
-        0.035+0.035*pose.startPoleImpulse-0.028*tuck,
-        0.115+0.045*tuck,
-      )));
-      const upperWorld=upper.getPosition();
-      const upperRest=elbow.getLocalPosition().clone();
-      const lowerRest=wrist.getLocalPosition().clone();
-      const lenA=upperRest.length(),lenB=lowerRest.length();
-      const toTarget=target.clone().sub(upperWorld);
-      const rawDistance=toTarget.length();
-      const maxReach=lenA+lenB-0.007;
-      const minReach=Math.abs(lenA-lenB)+0.025;
-      const distance=bounded(rawDistance,minReach,maxReach);
-      const direction=normalized(toTarget,new pc.Vec3(0,-1,0));
-      const point=upperWorld.clone().add(direction.clone().mulScalar(distance));
-      const projected=(lenA*lenA-lenB*lenB+distance*distance)/(2*distance);
-      const bend=Math.sqrt(Math.max(0,lenA*lenA-projected*projected));
-      // Elbows point slightly out and behind the torso, not across the body.
-      const pole=yaw.transformVector(new pc.Vec3(
-        outward*.7,-.16,-.48));
+    const yaw = new pc.Quat().setFromEulerAngles(0, pose.headingDeg, 0);
+    const pelvis = this.pelvis.getPosition();
+    const load = bounded(pose.engagement, 0, 1);
+    const tuck = bounded(pose.tuck, 0, 1);
+    const flight = bounded(pose.airborne, 0, 1);
+    const landing = bounded(pose.landing, 0, 1);
+    const finish = bounded(pose.finishReach, 0, 1);
+    for (const [i, side] of (["L", "R"] as const).entries()) {
+      const j = this.actor.joints;
+      const upper = j[side + "UpperArm"];
+      const elbow = j[side + "Elbow"];
+      const wrist = j[side + "Wrist"];
+      if (!upper || !elbow || !wrist || !upper.parent || !elbow.parent) continue;
+
+      const outward = side === "L" ? 1 : -1;
+      const outside = pose.outsideSide === side ? 1 : 0;
+      const inside = pose.outsideSide && !outside ? 1 : 0;
+      const push = pose.startPhase >= 0 && pose.startPhase < 2.1
+        ? bounded(pose.startPoleImpulse, 0, 1) : 0;
+      // The three departure pushes alternate arms: this is not the old
+      // static mannequin grip applied for every frame of the race.
+      const stroke = push * Math.sin(pose.startPhase * 12
+        + (side === "L" ? 0 : Math.PI));
+      const finishHand = side === "R" ? finish : 0;
+      const release = pose.phase === "release" || pose.phase === "transition"
+        ? bounded(Math.abs(pose.edgeRate) / 1.5, 0, 1) : 0;
+
+      // A shoulder-anchored, reach-limited wrist target: hands stay at the
+      // grip zone, outside arm follows load, inside arm guards the chest.
+      // Pole endpoints are subsequently attached to the ACTUAL wrist bone.
+      const lateral = outward * (
+        .255 + .025 * load + .025 * landing - .055 * tuck
+        + .015 * outside
+      );
+      const height = .095 + .064 * tuck - .025 * outside * load
+        + .025 * inside * release + .08 * stroke
+        + .095 * flight - .26 * finishHand;
+      const fore = .215 + .13 * tuck + .045 * outside * load
+        + .045 * release - .16 * stroke + .11 * flight
+        + .18 * finishHand;
+      const target = pelvis.clone().add(yaw.transformVector(
+        new pc.Vec3(lateral, height, fore)));
+
+      const upperWorld = upper.getPosition();
+      const upperRest = elbow.getLocalPosition().clone();
+      const lowerRest = wrist.getLocalPosition().clone();
+      const lenA = upperRest.length(), lenB = lowerRest.length();
+      const delta = target.clone().sub(upperWorld);
+      const minReach = Math.abs(lenA - lenB) + .024;
+      const maxReach = lenA + lenB - .008;
+      const distance = bounded(delta.length(), minReach, maxReach);
+      const direction = normalized(delta, new pc.Vec3(0, -1, 0));
+      const wristGoal = upperWorld.clone().add(
+        direction.clone().mulScalar(distance));
+      const along = (lenA * lenA - lenB * lenB + distance * distance)
+        / (2 * distance);
+      const bend = Math.sqrt(Math.max(0, lenA * lenA - along * along));
+      // Elbow pole stays laterally outside the body and slightly behind.
+      // Its projection removes twist if the shoulder changes with the tuck.
+      const pole = yaw.transformVector(new pc.Vec3(
+        outward * .75, -.12 - .11 * tuck, -.50 + .15 * flight));
       pole.sub(direction.clone().mulScalar(pole.dot(direction)));
-      const bendDirection=normalized(pole,new pc.Vec3(outward,0,0));
-      const elbowWorld=upperWorld.clone().add(
-        direction.clone().mulScalar(projected)).add(
+      const bendDirection = normalized(pole, new pc.Vec3(outward, 0, 0));
+      const elbowGoal = upperWorld.clone().add(
+        direction.clone().mulScalar(along)).add(
         bendDirection.mulScalar(bend));
-      const femurWorld=elbowWorld.clone().sub(upperWorld);
-      const upperParentInverse=upper.parent.getRotation().clone().invert();
-      const femurInParent=upperParentInverse.transformVector(femurWorld);
-      upper.setLocalRotation(rotateTo(upperRest,femurInParent));
-      const shinWorld=point.clone().sub(elbow.getPosition());
-      const elbowParentInverse=elbow.parent.getRotation().clone().invert();
-      const shinInParent=elbowParentInverse.transformVector(shinWorld);
-      elbow.setLocalRotation(rotateTo(lowerRest,shinInParent));
-      wrist.setLocalEulerAngles(0,0,0);
-      this.humanHandError[i]=wrist.getPosition().distance(target);
+      const upperParentInv = upper.parent.getRotation().clone().invert();
+      const upperLocal = upperParentInv.transformVector(
+        elbowGoal.clone().sub(upperWorld));
+      upper.setLocalRotation(rotateTo(upperRest, upperLocal));
+
+      const lowerWorld = wristGoal.clone().sub(elbow.getPosition());
+      const lowerParentInv = elbow.parent.getRotation().clone().invert();
+      elbow.setLocalRotation(rotateTo(lowerRest,
+        lowerParentInv.transformVector(lowerWorld)));
+      wrist.setLocalEulerAngles(0, 0, 0);
+      this.humanHandError[i] = wrist.getPosition().distance(target);
     }
   }
 
@@ -453,15 +490,26 @@ export class SuperGRacePoseDirector {
       if (!wrist || !pole) continue;
       const wristWorld = wrist.getPosition();
       const wristInRoot = inverseRoot.transformPoint(wristWorld);
-      // Grip centre is not the centre of the long carbon shaft.
+      // Grip centre is near the top of the carbon shaft; real hands remain
+      // physically attached to the rendered poles through every race phase.
       const gripFromCentre =
         (PRO_POLE.shaftLength - PRO_POLE.gripLength) * 0.5;
-      const trailingPitch = 47 + 42 * arm.trailing;
-      const trailRotation = new pc.Quat().setFromEulerAngles(
-        trailingPitch, 0, (side === "L" ? -1 : 1) * 6);
-      const trailWorldToGrip = trailRotation.transformVector(
-        new pc.Vec3(0, gripFromCentre, 0));
-      const trailPosition = wristInRoot.clone().sub(trailWorldToGrip);
+      // The original static 47–89 degree Euler pole trail left a shaft
+      // pointing skyward on steep crossfalls. Drive the free trailing tip
+      // from the actual course surface instead, with a compact race silhouette.
+      const trailing = bounded(arm.trailing, 0, 1);
+      const terrainTip = wristWorld.clone().add(
+        backward.clone().mulScalar(.43 + .28 * trailing));
+      terrainTip.x += side === "L" ? .055 : -.055;
+      if (pose.airborne > .05) {
+        // Pole and wrist fly together: never pin a pole to the snow midair.
+        terrainTip.y = wristWorld.y - (.22 + .11 * pose.airborne);
+      } else {
+        terrainTip.y = terrainHeight(terrainTip.x, terrainTip.z, c) + .045;
+      }
+      const tipInRoot = inverseRoot.transformPoint(terrainTip);
+      const trailRotation = rotateTo(axisUp, normalized(
+        wristInRoot.clone().sub(tipInRoot), axisUp));
 
       const poleGoal = bounded(arm.poleContact, 0, 1);
       const rate = poleGoal > this.poleWeights[index] ? 26 : 20;
@@ -469,30 +517,24 @@ export class SuperGRacePoseDirector {
         (poleGoal - this.poleWeights[index]) *
         (1 - Math.exp(-rate * Math.max(0, Math.min(dt, 0.1))));
       const plantWeight = this.poleWeights[index];
-      if (plantWeight < 0.002) {
-        pole.setLocalRotation(trailRotation);
-        pole.setLocalPosition(trailPosition);
-      } else {
-        // Desired pole tip is behind the wrists on the race line, with the
-        // correct real snow height. No fixed Z axis assumption on curves.
-        const desiredTip = wristWorld.clone().add(backward.clone().mulScalar(
-          Math.max(0.27, PRO_POLE.shaftLength * 0.48)));
-        desiredTip.x += (side === "L" ? -0.045 : 0.045);
-        desiredTip.y = terrainHeight(
-          desiredTip.x, desiredTip.z, c) + 0.018;
-        const tipInRoot = inverseRoot.transformPoint(desiredTip);
-        const tipToWrist = normalized(
-          wristInRoot.clone().sub(tipInRoot), axisUp);
-        const plantRotation = rotateTo(axisUp, tipToWrist);
-        const blendRotation = new pc.Quat().slerp(
-          trailRotation, plantRotation, plantWeight);
-        // Recompute the pole midpoint from the FINAL blended orientation:
-        // this is essential to avoid detached hands during start impulses.
-        const gripShift = blendRotation.transformVector(new pc.Vec3(
-          0, gripFromCentre, 0));
-        pole.setLocalRotation(blendRotation);
-        pole.setLocalPosition(wristInRoot.clone().sub(gripShift));
+      // A planted pole is slightly longer in travel direction and reaches
+      // behind the skier, while snow remains the actual contact plane.
+      const plantedTip = wristWorld.clone().add(
+        backward.clone().mulScalar(Math.max(.27, PRO_POLE.shaftLength * .48)));
+      plantedTip.x += side === "L" ? -.045 : .045;
+      plantedTip.y = terrainHeight(plantedTip.x, plantedTip.z, c) + .018;
+      if (pose.airborne > .05) {
+        plantedTip.copy(terrainTip);
       }
+      const plantRotation = rotateTo(axisUp, normalized(
+        wristInRoot.clone().sub(inverseRoot.transformPoint(plantedTip)),
+        axisUp));
+      const finalRotation = new pc.Quat().slerp(
+        trailRotation, plantRotation, plantWeight);
+      const gripShift = finalRotation.transformVector(new pc.Vec3(
+        0, gripFromCentre, 0));
+      pole.setLocalRotation(finalRotation);
+      pole.setLocalPosition(wristInRoot.clone().sub(gripShift));
       const actualGripWorld = pole.getWorldTransform().transformPoint(
         new pc.Vec3(0, gripFromCentre, 0));
       this.lastGripError[index] = actualGripWorld.distance(wristWorld);
@@ -506,7 +548,9 @@ export class SuperGRacePoseDirector {
   update(f: Frame, c: Course, dt: number): void {
     const frame = f as SGSourceFrame;
     const inputPose = this.model.sample(frame, dt);
-    const pose = this.humanMode ? humanRacerPose(inputPose, frame) : inputPose;
+    const pose = this.reconstructionMode
+      ? this.humanMotion.sample(inputPose, frame, dt)
+      : this.humanMode ? humanRacerPose(inputPose, frame) : inputPose;
     this.lastPose = pose;
     const root = this.actor.root;
     const ground = terrainHeight(f.x, f.z, c);
@@ -549,12 +593,14 @@ export class SuperGRacePoseDirector {
       0, pose.pelvisYawDeg, pose.pelvisRollDeg);
     this.setTorso(pose);
     this.setArms(pose);
-    this.setHumanArms(pose);
     this.prepareFoot("L", pose.leftFoot, pose, c, ground, flight);
     this.prepareFoot("R", pose.rightFoot, pose, c, ground, flight);
     this.constrainPelvis();
     this.setFoot("L", pose, c);
     this.setFoot("R", pose, c);
+    // The pelvis must be projected into both ski reach spheres BEFORE
+    // solving arms; otherwise wrists/poles drift when leg IK adjusts COM.
+    this.setHumanArms(pose);
     this.setPoles(pose, dt, c);
     if (crash.active) {
       // 3-stage World-Cup-style fall with the EXISTING 25-bone racer, not a
