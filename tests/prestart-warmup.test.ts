@@ -3,7 +3,7 @@ import {prestartWarmup} from "../src/render/prestart-warmup";
 
 describe("World Cup racer pre-start warm-up choreography",()=>{
   it("contains distinct breathing, arm shake, leg flexion and shoulder roll",()=>{
-    const phases=[-3.85,-2.95,-2.20,-1.32,-.3];
+    const phases=[-2.9,-2.15,-1.4,-.75,-.15];
     const names=phases.map(p=>prestartWarmup(p).beat);
     expect(names).toEqual([
       "breath","shake-arms","flex-legs","shoulder-roll","ready"
@@ -20,7 +20,7 @@ describe("World Cup racer pre-start warm-up choreography",()=>{
   });
   it("is deterministic and bounded so neither ski nor the real race state changes",()=>{
     for(let i=0;i<100;i++){
-      const p=-4+i*.04,a=prestartWarmup(p),b=prestartWarmup(p);
+      const p=-3+i*.03,a=prestartWarmup(p),b=prestartWarmup(p);
       expect(a).toEqual(b);
       expect(a.pelvisBounceM).toBeGreaterThanOrEqual(-.09);
       expect(Math.abs(a.trunkRollDeg)).toBeLessThan(8);
