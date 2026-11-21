@@ -385,7 +385,9 @@ export class SuperGRacePoseDirector {
     const bones = this.bones[side], target = this.targets[side];
     const solution = positionLeg(this.pelvis, bones, target.ankle, target.rotation, side);
     const ix = side === "L" ? 0 : 1;
-    this.lastLegError[ix] = solution.targetErrorM;
+    // Diagnostic must measure the RENDERED ankle, not only the mathematical
+    // target clamp; otherwise broken joint rotations can silently pass tests.
+    this.lastLegError[ix] = bones.ankle.getPosition().distance(target.ankle);
     this.lastBaseClearance[ix] = minimumSoleClearance(
       bones.foot.getPosition(), bones.foot.getRotation(), course);
     const actual = bones.foot.getRotation().transformVector(localSkiForward);
