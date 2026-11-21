@@ -9,6 +9,7 @@ import {
 } from "./types";
 import { gradient, terrainHeight, courseCenterX } from "./course";
 import { shouldLaunchAtCrest } from "./superg";
+import { racerSteeringEdgeTarget } from "./ski-edge-dynamics";
 import {
   nextSkid,
   pressureGripFactor,
@@ -71,7 +72,11 @@ export function stepPhysics(
   const lengthFactor = Math.sqrt(e.length / 1.65);
   const grounded = s.height <= 0;
   const previousHeading = s.heading;
-  const target = input.steer * (input.brake ? 0.35 : 1.10);
+  // Prevent near-vertical 55° racing ski angles at only 20–25 km/h.
+  // The controlled roll must remain compatible with achievable sidecut
+  // centripetal force. Full World-Cup edges are retained at racing speed.
+  const target = racerSteeringEdgeTarget(
+    input.steer,speed,e.radius,input.brake,!grounded);
   const response = (e.response * (0.7 + e.stiffness * 0.3)) / lengthFactor;
   // The two edges roll continuously through flat; the inside ski is lighter
   // and slightly flatter. These exact angles feed both forces and the rig.
