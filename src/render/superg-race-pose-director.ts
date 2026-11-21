@@ -246,8 +246,8 @@ function positionLeg(
 
 export class SuperGRacePoseDirector {
   readonly model = new SuperGCompetitionPose();
-  /** Safe default until actual GLB foot-contact tests select a stable blend. */
-  cuffPreferenceWeight = 0;
+  /** Align the pressure-bearing shin with the World-Cup boot cuff. */
+  cuffPreferenceWeight = 0.85;
   private readonly bones: Record<SkiSide, LegBones>;
   private readonly pelvis: pc.GraphNode;
   private readonly spine: pc.GraphNode;
