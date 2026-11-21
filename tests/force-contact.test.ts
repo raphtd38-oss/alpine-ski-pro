@@ -46,8 +46,8 @@ describe('actual 25-bone hierarchy contact regression',()=>{
     // alignment WITH both real ski soles still in contact.
     expect(Number.isFinite(p.leftShinBootAngleDeg)).toBe(true);
     expect(Number.isFinite(p.rightShinBootAngleDeg)).toBe(true);
-    expect(p.leftShinBootAngleDeg).toBeLessThan(115);
-    expect(p.rightShinBootAngleDeg).toBeLessThan(115);
+    expect(p.leftShinBootAngleDeg).toBeLessThan(42);
+    expect(p.rightShinBootAngleDeg).toBeLessThan(42);
     console.info('[SG hinge contact]',edge,
       'shinBoot',p.leftShinBootAngleDeg.toFixed(1),p.rightShinBootAngleDeg.toFixed(1),
       'flex',p.leftKneeFlexionDeg.toFixed(1),p.rightKneeFlexionDeg.toFixed(1),
