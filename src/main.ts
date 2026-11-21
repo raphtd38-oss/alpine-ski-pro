@@ -585,6 +585,8 @@ async function boot() {
           };
           return {
             seamless: athlete.isSeamless,
+            premiumKit: athlete.premiumKit !== null,
+            bibNumber: athlete.premiumKit?.number ?? null,
             edge: athlete.visualEdge,
             crouch: athlete.visualCrouch,
             tuck: athlete.visualTuck,
@@ -675,6 +677,8 @@ async function boot() {
           visibleAlpineDetails: renderer.alpineAssets.visibleDetails,
           athleteBones: Object.keys(renderer.athlete.joints).length,
           athleteSeamless: renderer.athlete.isSeamless,
+          athletePremiumKit: renderer.athlete.premiumKit !== null,
+          athleteBibNumber: renderer.athlete.premiumKit?.number ?? null,
           athleteVariant: renderer.racerVariant,
           athleteHasAttachedSkis: !!renderer.athlete.rig.findByName("LEFTFOOT/Top glossy curved topsheet") && !!renderer.athlete.rig.findByName("RIGHTFOOT/Top glossy curved topsheet"),
           raceSkiTextureCount: renderer.athlete.ownedTextures.length,
