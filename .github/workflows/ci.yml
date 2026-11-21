@@ -26,6 +26,14 @@ jobs:
         run: npm run assets:audit -- --require-pack
       - run: npm test
       - run: npm run build
+      - name: Preserve new human 25-bone GLBs for visual inspection
+        if: github.event_name == 'pull_request' && startsWith(github.head_ref, 'rebuild/skier-mesh-skinning')
+        uses: actions/upload-artifact@v4
+        with:
+          name: reconstructed-skier-glbs
+          path: |
+            public/assets/racer/seamless-human-mobile.glb
+            public/assets/racer/seamless-human-full.glb
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
       - uses: actions/upload-artifact@v4
