@@ -18,6 +18,8 @@ test("premium helmet, original numbered bib, human mouth and pre-start warm-up r
   expect(pose.bibNumber).toBe(27);
   expect(pose.competitionPose).toBeTruthy();
   expect(pose.competitionPose.warmupBeat).toBe("shake-arms");
+  expect(Math.abs(pose.competitionPose.leftWristWorld[1]-
+    pose.competitionPose.rightWristWorld[1])).toBeGreaterThan(.05);
   expect(pose.competitionPose.leftAnkleTargetErrorM).toBeLessThan(.015);
   expect(pose.competitionPose.rightAnkleTargetErrorM).toBeLessThan(.015);
   await page.screenshot({path:"test-results/racer-premium-warmup-close-up.png"});
