@@ -123,6 +123,7 @@ export function solve25BoneLegKnee(
   targetAnklePelvis: pc.Vec3,
   side: SkiSide,
   preferredShinUpPelvis?: pc.Vec3,
+  preferenceWeight = 0,
 ): KneeSolution {
   const upper = kneeRestInHip.length();
   const lower = ankleRestInKnee.length();
@@ -156,9 +157,10 @@ export function solve25BoneLegKnee(
       normalized(preferredShinUpPelvis.clone(), axisUp).mulScalar(lower));
     const cuffPole = cuffKnee.sub(hipPelvis).sub(line.clone().mulScalar(projected));
     if (cuffPole.length() > 0.015) {
+      const weight = bounded(preferenceWeight, 0, 1);
       bendDirection = normalized(
-        normalized(cuffPole, forward.clone()).mulScalar(0.92)
-          .add(forward.clone().mulScalar(0.08)),
+        normalized(cuffPole, forward.clone()).mulScalar(weight)
+          .add(forward.clone().mulScalar(1 - weight)),
         forward.clone());
     }
   }
@@ -190,14 +192,21 @@ function positionLeg(
   ankleWorld: pc.Vec3,
   desiredSkiWorldRotation: pc.Quat,
   side: SkiSide,
+  cuffPreferenceWeight = 0,
 ): KneeSolution {
   const pelvisInverse = pelvis.getWorldTransform().clone().invert();
   const requestedAnklePelvis = pelvisInverse.transformPoint(ankleWorld);
   const hipPelvis = bones.hip.getLocalPosition().clone();
   const femurRest = bones.knee.getLocalPosition().clone();
   const shinRest = bones.ankle.getLocalPosition().clone();
+  const skiUp = desiredSkiWorldRotation.transformVector(axisUp.clone());
+  const skiFront = desiredSkiWorldRotation.transformVector(localSkiForward.clone());
+  const shinPreferenceWorld = normalized(
+    skiUp.mulScalar(0.93).add(skiFront.mulScalar(0.36)), axisUp.clone());
+  const shinPreference = pelvisInverse.transformVector(shinPreferenceWorld);
   const solution = solve25BoneLegKnee(
-    hipPelvis, femurRest, shinRest, requestedAnklePelvis, side);
+    hipPelvis, femurRest, shinRest, requestedAnklePelvis, side,
+    shinPreference, cuffPreferenceWeight);
 
   const desiredFemur = solution.kneePelvis.clone().sub(hipPelvis);
   const targetShinInPelvis = solution.anklePelvis.clone().sub(solution.kneePelvis);
@@ -229,6 +238,8 @@ function positionLeg(
 
 export class SuperGRacePoseDirector {
   readonly model = new SuperGCompetitionPose();
+  /** Safe default until actual GLB foot-contact tests select a stable blend. */
+  cuffPreferenceWeight = 0;
   private readonly bones: Record<SkiSide, LegBones>;
   private readonly pelvis: pc.GraphNode;
   private readonly spine: pc.GraphNode;
@@ -365,7 +376,8 @@ export class SuperGRacePoseDirector {
 
   private setFoot(side: SkiSide, pose: SGPose, course: Course): void {
     const bones = this.bones[side], target = this.targets[side];
-    const solution = positionLeg(this.pelvis, bones, target.ankle, target.rotation, side);
+    const solution = positionLeg(this.pelvis, bones, target.ankle, target.rotation,
+      side, this.cuffPreferenceWeight);
     const ix = side === "L" ? 0 : 1;
     // Diagnostic must measure the RENDERED ankle, not only the mathematical
     // target clamp; otherwise broken joint rotations can silently pass tests.
