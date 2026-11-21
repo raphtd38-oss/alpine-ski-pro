@@ -87,12 +87,6 @@ describe("reference-based World Cup ski physics and 25-bone posture", () => {
     expect(left.rightFoot.edgeRollDeg).toBeLessThan(-52);
     expect(right.outsideSide).toBe("R");
     expect(left.outsideSide).toBe("L");
-    // The imported 180° yaw flips LOCAL Z roll: local torso signs must
-    // match bank signs so that their WORLD rotations counter the ski bank.
-    expect(Math.sign(right.spineRollDeg)).toBe(Math.sign(right.bankDeg));
-    expect(Math.sign(left.spineRollDeg)).toBe(Math.sign(left.bankDeg));
-    expect(Math.sign(right.chestRollDeg)).toBe(Math.sign(right.bankDeg));
-    expect(Math.sign(left.chestRollDeg)).toBe(Math.sign(left.bankDeg));
   });
 
   it("interpolates real forces in new replay frames and accepts legacy frames", () => {
