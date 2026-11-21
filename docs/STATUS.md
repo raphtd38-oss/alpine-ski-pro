@@ -1,3 +1,13 @@
+# 21 novembre 2026 — Reprise du chantier Codex Astra terminée et publiée
+
+Les PR historiques #39 et #40 sont closes : #39 documentait un plan dépassé par les 42 portes et zones de saut déjà intégrées depuis #42 ; #40 contenait une caméra télévisée et une posture vitesse basées sur un ancien code incompatible avec V1.18. Son travail utile a été **porté sur V1.18 dans la PR #46**, fusionnée sous le commit `f355f69788ea37476de7cb0ef78fff017102f483`.
+
+**Changements effectivement livrés :** neuf secteurs/coupes dans la caméra « Télévision » avec focale adaptée à la vitesse et cadre élargi en vol ; tuck visuel additionnel à grande vitesse et relâché en carving chargé, en saut ou à la réception. Les vues Poursuite/Rapprochée/Subjective, le 25 os et son IK force-driven, le solveur 120 Hz, les 42 portes originales, le contact banderole et son seuil strict >45 %, les PBR de V1.18, les records et le sunset restent dans le même arbre. Le plan caméra n'est pas un relevé de la retransmission officielle de Cortina.
+
+**Validation confirmée :** [CI de la PR #46](https://github.com/raphtd38-oss/alpine-ski-pro/actions/runs/44919353766), 179 tests unitaires / 40 fichiers, 7/7 tests Chromium, build TypeScript/Vite et audit complet d'assets réussis. [CI de main et déploiement Pages](https://github.com/raphtd38-oss/alpine-ski-pro/actions/runs/44919896554) réussis. [Version jouable](https://raphtd38-oss.github.io/alpine-ski-pro/). Aucune inspection de la vidéo d'origine ni comparaison sur GPU utilisateur n'a été menée dans cette reprise ; l'impact de ces animations sur le rendu réel est à juger en jeu.
+
+---
+
 # V1.18 — publiée et vérifiée, 20 novembre 2026
 
 Base `d4737c9` (V1.17.1), commit `04b24ec`, [PR #45](https://github.com/raphtd38-oss/alpine-ski-pro/pull/45), fusion `5e8f1fe` : roche photographique CC0, reliefs plus détaillés, rameaux proches, neige damée, éclairage PBR ciel/neige, normales des bordures corrigées et halos de projecteurs transparents. Personnage 25 os, solveur 120 Hz, 42 portes et seuil strict >45 % conservés.
