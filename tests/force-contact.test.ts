@@ -46,12 +46,12 @@ describe('actual 25-bone hierarchy contact regression',()=>{
     for (const side of ['L','R'] as const) {
       const knee = actor.joints[side+'Knee'];
       const shin = actor.joints[side+'Ankle'];
-      const hinge = knee.getLocalPosition().clone()
-        .cross(shin.getLocalPosition()).normalize();
+      const hinge = new pc.Vec3()
+        .cross(knee.getLocalPosition(), shin.getLocalPosition()).normalize();
       const q = knee.getLocalRotation();
       const axis = new pc.Vec3(q.x,q.y,q.z);
       if (axis.length() > 0.00001)
-        expect(axis.cross(hinge).length()).toBeLessThan(0.002);
+        expect(new pc.Vec3().cross(axis, hinge).length()).toBeLessThan(0.002);
     }
     expect(Number.isFinite(p.leftShinBootAngleDeg)).toBe(true);
     expect(Number.isFinite(p.rightShinBootAngleDeg)).toBe(true);
