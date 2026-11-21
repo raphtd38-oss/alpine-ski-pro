@@ -39,6 +39,10 @@ export class Athlete {
   ownedTextures: pc.Texture[] = [];
   /** Connected 25-bone racer owns its own 3D carving solver. Ghost/fallback unchanged. */
   private competitionDirector: SuperGRacePoseDirector | null = null;
+  // Isolated visual studio preview: never enabled for normal play.
+  private authoredPreview = false;
+  private authoredPreviewName = "";
+  getAuthoredPreviewName(): string { return this.authoredPreviewName; }
   /** Contact projection of the actual rendered skis, for matching snow trails. */
   getSkiContacts() {
     if (!this.isSeamless) return undefined;
@@ -68,6 +72,20 @@ export class Athlete {
       // The donated glTF faces -Z, while the game skis forward along +Z.
       // Rotate the complete skinned hierarchy, without altering game physics.
       this.rig.setLocalEulerAngles(0, 180, 0);
+      if (!ghost && new URLSearchParams(location.search).get("motion") === "glb-preview") {
+        const resource = asset.resource as pc.ContainerResource;
+        const tracks = resource.animations.map((animation) => animation.resource);
+        const available = new Set(tracks.map((track) => track.name));
+        const wanted = new URLSearchParams(location.search).get("clip") ?? "SG_CARVE_RIGHT";
+        if (tracks.length !== 9 || !available.has(wanted)) {
+          throw new Error("GLB motion preview unavailable: " + wanted);
+        }
+        this.rig.addComponent("anim", {activate: true});
+        for (const track of tracks) this.rig.anim!.assignAnimation(track.name, track);
+        this.rig.anim!.baseLayer.play(wanted);
+        this.authoredPreview = true;
+        this.authoredPreviewName = wanted;
+      }
     }
     // Use the actual continuous racer for the primary directional silhouette
     // shadow, instead of 100+ tiny boot/binding shadow draws per cascade.
@@ -326,7 +344,7 @@ export class Athlete {
     }
     // Only the original connected SG player uses this new articulating IK.
     // Do not run both controllers: the old sagittal loop would undo ski heading.
-    if (this.isSeamless && !ghost && equipment.id === "SG") {
+    if (this.isSeamless && !ghost && equipment.id === "SG" && !this.authoredPreview) {
       this.competitionDirector = new SuperGRacePoseDirector(this, equipment);
     }
   }
@@ -354,6 +372,16 @@ export class Athlete {
     }
   }
   update(f: Frame, c: Course, dt: number) {
+    if (this.authoredPreview) {
+      // This isolated studio mode shows the original GLB keyframed motion.
+      // It is not a scored-race animation: ski-snow contact is not retargeted.
+      const y = terrainHeight(f.x, f.z, c) + f.height;
+      const [, grade] = gradient(f.x, f.z, c);
+      this.root.setPosition(f.x, y + 0.015, f.z);
+      this.root.setEulerAngles(-Math.atan(grade) * 180 / Math.PI,
+        f.heading * 180 / Math.PI, 0);
+      return;
+    }
     // Never execute legacy rotations after the 3D director: the feet, bindings,
     // and tips need to retain their own world direction and edge angle.
     if (this.competitionDirector) {
