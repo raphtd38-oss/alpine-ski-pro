@@ -47,20 +47,20 @@ export function prestartWarmup(startPhase:number | undefined):PrestartWarmup {
   return {
     active,beat,intensity,
     breath:active?(0.08+breath*.92)*early:0,
-    pelvisBounceM:active ? -legs*.057*bend : 0,
-    lateralWeightM:active ? .025*shoulders*rotate : 0,
+    pelvisBounceM:active ? -legs*.084*bend : 0,
+    lateralWeightM:active ? .038*shoulders*rotate : 0,
     trunkPitchDeg:active ? 2.7*early*Math.sin(elapsed*4)
-      +6*legs*bend+1.6*shoulders*rotate : 0,
-    trunkRollDeg:active ? 5.4*shoulders*rotate : 0,
+      +8*legs*bend+2.6*shoulders*rotate : 0,
+    trunkRollDeg:active ? 7.2*shoulders*rotate : 0,
     headNodDeg:active ? -2.5*early*breath
       +3.2*shoulders*rotate-1.5*ready : 0,
     armOffsetY:active ? [
-      .065*arms*shake + .025*shoulders*rotate,
-      -.065*arms*shake - .025*shoulders*rotate,
+      .11*arms*shake + .030*shoulders*rotate,
+      -.11*arms*shake - .030*shoulders*rotate,
     ] as const:[0,0],
     armForwardM:active ? [
-      .055*early + .045*arms*(1+shake)/2,
-      .055*early + .045*arms*(1-shake)/2,
+      .063*early + .090*arms*(1+shake)/2,
+      .063*early + .090*arms*(1-shake)/2,
     ] as const:[0,0],
     fistEnergy:active?arms*(.35+.65*Math.abs(shake)):0,
   };
