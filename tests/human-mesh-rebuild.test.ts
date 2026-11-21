@@ -1,3 +1,4 @@
+// @ts-nocheck — binary GLB diagnostic uses dynamically typed glTF JSON.
 import {describe,it,expect} from "vitest";
 import {readFileSync} from "node:fs";
 function glb(file:string){
