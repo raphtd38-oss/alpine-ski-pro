@@ -263,7 +263,7 @@ async function boot() {
     b.addEventListener("pointerdown", (e) => {
       b.setPointerCapture(e.pointerId);
       if (b.dataset.touch === "brake") input.touchBrake = true;
-      else input.touchSteer = b.dataset.touch === "left" ? -1 : 1;
+      else input.touchSteer = b.dataset.touch === "left" ? 1 : -1;
     });
     b.addEventListener("pointerup", clear);
     b.addEventListener("pointercancel", clear);
