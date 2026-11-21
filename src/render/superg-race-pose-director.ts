@@ -79,6 +79,9 @@ export interface SGDirectorDiagnostics {
   insideSkiLoad: number;
   leftKneeFlexionDeg: number;
   rightKneeFlexionDeg: number;
+  /** Shin direction relative to its own fixed boot/cuff up-axis. */
+  leftShinBootAngleDeg: number;
+  rightShinBootAngleDeg: number;
   leftLegLengthM: number;
   rightLegLengthM: number;
   pelvisWorld: number[];
@@ -111,7 +114,8 @@ function angleDegrees(a: pc.Vec3, b: pc.Vec3): number {
  * a small left/right lateral stabilizer. Ankle positions are clamped only if
  * physically unreachable; the numerical target error is exposed to tests.
  *
- * Returned knee/ankle coordinates use the *pelvis's local* coordinate frame.
+ * Returned knee/ankle coordinates use the SAME coordinate frame as inputs
+ * (world space in the race director); no mixed parent-local frames.
  */
 export function solve25BoneLegKnee(
   hipPelvis: pc.Vec3,
@@ -119,6 +123,9 @@ export function solve25BoneLegKnee(
   ankleRestInKnee: pc.Vec3,
   targetAnklePelvis: pc.Vec3,
   side: SkiSide,
+  preferredShinUpPelvis?: pc.Vec3,
+  preferenceWeight = 0,
+  preferredKneeForward?: pc.Vec3,
 ): KneeSolution {
   const upper = kneeRestInHip.length();
   const lower = ankleRestInKnee.length();
@@ -139,13 +146,30 @@ export function solve25BoneLegKnee(
     (2 * reach);
   const bend = Math.sqrt(Math.max(0, upper * upper - projected * projected));
 
-  // Orthogonal pole vector, favour knee forward (toward the tip). We don't
-  // let the knee collapse toward the snow's inside while the shin twists.
-  const sideX = side === "L" ? -0.08 : 0.08;
-  const pole = new pc.Vec3(sideX, -0.22, -1.0);
-  pole.sub(line.clone().mulScalar(pole.dot(line)));
-  if (pole.length() < 0.003) pole.set(0, 0, -1);
-  const bendDirection = normalized(pole, new pc.Vec3(0, 0, -1));
+  // Anatomical knee preference: the shin should mostly follow the boot cuff
+  // instead of pointing nearly vertically while the ski is rolled 60 degrees.
+  // The knee remains on the intersection of the two CONSTANT-length spheres.
+  // When working in world space, use the ski's TRUE heading instead of
+  // assuming the imported rig's local -Z is also world forward.
+  const sideX = side === "L" ? 0.08 : -0.08;
+  const forwardPole = preferredKneeForward
+    ? preferredKneeForward.clone().add(new pc.Vec3(sideX, -0.22, 0))
+    : new pc.Vec3(sideX, -0.22, -1.0);
+  forwardPole.sub(line.clone().mulScalar(forwardPole.dot(line)));
+  const forward = normalized(forwardPole, new pc.Vec3(0, 0, -1));
+  let bendDirection = forward;
+  if (preferredShinUpPelvis && preferredShinUpPelvis.length() > 0.001) {
+    const cuffKnee = anklePelvis.clone().add(
+      normalized(preferredShinUpPelvis.clone(), axisUp).mulScalar(lower));
+    const cuffPole = cuffKnee.sub(hipPelvis).sub(line.clone().mulScalar(projected));
+    if (cuffPole.length() > 0.015) {
+      const weight = bounded(preferenceWeight, 0, 1);
+      bendDirection = normalized(
+        normalized(cuffPole, forward.clone()).mulScalar(weight)
+          .add(forward.clone().mulScalar(1 - weight)),
+        forward.clone());
+    }
+  }
   const kneePelvis = hipPelvis.clone().add(
     line.clone().mulScalar(projected)).add(
     bendDirection.mulScalar(bend));
@@ -164,7 +188,7 @@ function rotateTo(a: pc.Vec3, b: pc.Vec3): pc.Quat {
 }
 
 /** Convert target ankle into the transformed pelvis local space, then solve
- * two rotations: thigh aims at the desired knee, shin aims at ankle target.
+ * two parent-space rotations: thigh aims at desired knee, shin at ankle target.
  * Finally cancel bone twist at the ankle so the SKI has its own physically
  * sensible heading and edge angle, unlike the old coupled torso/boot roll.
  */
@@ -174,24 +198,60 @@ function positionLeg(
   ankleWorld: pc.Vec3,
   desiredSkiWorldRotation: pc.Quat,
   side: SkiSide,
+  cuffPreferenceWeight = 0,
 ): KneeSolution {
-  const pelvisInverse = pelvis.getWorldTransform().clone().invert();
-  const requestedAnklePelvis = pelvisInverse.transformPoint(ankleWorld);
-  const hipPelvis = bones.hip.getLocalPosition().clone();
+  // Solve the entire two-bone triangle in WORLD coordinates. The imported
+  // seamless GLB has nontrivial joint parent frames; mixing "pelvis local"
+  // targets with hip/knee local translations made large carves detach the
+  // ankle from its real contact point.
+  const hipWorld = bones.hip.getPosition().clone();
   const femurRest = bones.knee.getLocalPosition().clone();
   const shinRest = bones.ankle.getLocalPosition().clone();
+  const skiUp = desiredSkiWorldRotation.transformVector(axisUp.clone());
+  const skiFront = desiredSkiWorldRotation.transformVector(localSkiForward.clone());
+  const shinPreferenceWorld = normalized(
+    skiUp.mulScalar(0.93).add(skiFront.clone().mulScalar(0.36)), axisUp.clone());
   const solution = solve25BoneLegKnee(
-    hipPelvis, femurRest, shinRest, requestedAnklePelvis, side);
+    hipWorld, femurRest, shinRest, ankleWorld, side,
+    shinPreferenceWorld, cuffPreferenceWeight, skiFront);
+  // Convert each desired BONE VECTOR into that bone's actual parent frame.
+  // Do not assume that Hips, LeftUpLeg and LeftLeg share local axes.
+  const desiredFemurWorld = solution.kneePelvis.clone().sub(hipWorld);
+  const hipParent = bones.hip.parent;
+  const kneeParent = bones.knee.parent;
+  if (!hipParent || !kneeParent)
+    throw new Error("25-bone GLB missing a leg parent transform");
+  const desiredFemurInParent = hipParent.getRotation().clone().invert()
+    .transformVector(desiredFemurWorld);
+  bones.hip.setLocalRotation(rotateTo(femurRest, desiredFemurInParent));
+  const desiredShinWorld = solution.anklePelvis.clone()
+    .sub(bones.knee.getPosition());
+  const desiredShinInParent = kneeParent.getRotation().clone().invert()
+    .transformVector(desiredShinWorld);
+  bones.knee.setLocalRotation(rotateTo(shinRest, desiredShinInParent));
 
-  const desiredFemur = solution.kneePelvis.clone().sub(hipPelvis);
-  const hipQuaternion = rotateTo(femurRest, desiredFemur);
-  bones.hip.setLocalRotation(hipQuaternion);
-  // Convert the desired shin direction from pelvis space to hip space, since
-  // knee.setLocalRotation acts *after* hip.setLocalRotation in the hierarchy.
-  const targetShinInPelvis = solution.anklePelvis.clone().sub(solution.kneePelvis);
-  const hipInverse = hipQuaternion.clone().invert();
-  const targetShinInHip = hipInverse.transformVector(targetShinInPelvis);
-  bones.knee.setLocalRotation(rotateTo(shinRest, targetShinInHip));
+  // The true GLB hierarchy is not a pair of ideal rigid vectors: changing
+  // the knee bend plane can displace the rendered ankle even when the
+  // analytic triangle says it is in reach. Close the REAL end effector by
+  // short deterministic CCD corrections before attaching the ski.
+  // This leaves the knee pole as a *preference*, never a reason to sink a
+  // ski into snow or detach the boot from the shin.
+  for (let pass = 0; pass < 12; pass++) {
+    if (bones.ankle.getPosition().distance(ankleWorld) < 0.00035) break;
+    for (const joint of [bones.knee, bones.hip]) {
+      const parent = joint.parent;
+      if (!parent) continue;
+      const pivot = joint.getPosition();
+      const current = bones.ankle.getPosition().clone().sub(pivot);
+      const desired = ankleWorld.clone().sub(pivot);
+      if (current.length() < 0.01 || desired.length() < 0.01) continue;
+      const correctionWorld = rotateTo(current, desired);
+      const correctedWorld = correctionWorld.mul(joint.getRotation().clone());
+      const correctedLocal = parent.getRotation().clone().invert()
+        .mul(correctedWorld);
+      joint.setLocalRotation(correctedLocal);
+    }
+  }
 
   // The boot and all the ski meshes are already parented to LeftFoot or
   // RightFoot. A real race binding stays rigid: setting foot rotation from
@@ -209,6 +269,8 @@ function positionLeg(
 
 export class SuperGRacePoseDirector {
   readonly model = new SuperGCompetitionPose();
+  /** Align the pressure-bearing shin with the World-Cup boot cuff. */
+  cuffPreferenceWeight = 1;
   private readonly bones: Record<SkiSide, LegBones>;
   private readonly pelvis: pc.GraphNode;
   private readonly spine: pc.GraphNode;
@@ -345,9 +407,12 @@ export class SuperGRacePoseDirector {
 
   private setFoot(side: SkiSide, pose: SGPose, course: Course): void {
     const bones = this.bones[side], target = this.targets[side];
-    const solution = positionLeg(this.pelvis, bones, target.ankle, target.rotation, side);
+    const solution = positionLeg(this.pelvis, bones, target.ankle, target.rotation,
+      side, this.cuffPreferenceWeight);
     const ix = side === "L" ? 0 : 1;
-    this.lastLegError[ix] = solution.targetErrorM;
+    // Diagnostic must measure the RENDERED ankle, not only the mathematical
+    // target clamp; otherwise broken joint rotations can silently pass tests.
+    this.lastLegError[ix] = bones.ankle.getPosition().distance(target.ankle);
     this.lastBaseClearance[ix] = minimumSoleClearance(
       bones.foot.getPosition(), bones.foot.getRotation(), course);
     const actual = bones.foot.getRotation().transformVector(localSkiForward);
@@ -510,12 +575,20 @@ export class SuperGRacePoseDirector {
       const b = this.bones[side];
       const upper = b.knee.getPosition().clone().sub(b.hip.getPosition());
       const lower = b.ankle.getPosition().clone().sub(b.knee.getPosition());
-      return { flex: angleDegrees(upper, lower), length: upper.length() + lower.length() };
+      const shinUp = lower.clone().mulScalar(-1);
+      const bootUp = b.foot.getRotation().transformVector(axisUp.clone());
+      return {
+        flex: angleDegrees(upper, lower),
+        length: upper.length() + lower.length(),
+        shinBootAngle: angleDegrees(shinUp, bootUp),
+      };
     };
     const left = leg("L"), right = leg("R");
     const xyz = (node: pc.GraphNode) => { const v = node.getPosition(); return [v.x, v.y, v.z]; };
     return {
       leftKneeFlexionDeg: left.flex, rightKneeFlexionDeg: right.flex,
+      leftShinBootAngleDeg: left.shinBootAngle,
+      rightShinBootAngleDeg: right.shinBootAngle,
       leftLegLengthM: left.length, rightLegLengthM: right.length,
       pelvisWorld: xyz(this.pelvis), leftFootWorld: xyz(this.bones.L.foot),
       rightFootWorld: xyz(this.bones.R.foot),

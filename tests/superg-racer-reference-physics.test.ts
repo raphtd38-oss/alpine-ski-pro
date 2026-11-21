@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { steeringFromDirections } from "../src/game/input";
+import { steeringFromDirections, steeringFromAnalog } from "../src/game/input";
 import { FIXED_DT, initialState, stepPhysics } from "../src/game/physics";
 import { COURSES, EQUIPMENT } from "../src/game/course";
 import { SuperGCompetitionPose } from "../src/render/superg-carve-kinematics";
@@ -13,11 +13,15 @@ const controls = (steer: number): Controls =>
   ({ steer, tuck: true, brake: false, jump: false });
 
 describe("reference-based World Cup ski physics and 25-bone posture", () => {
-  it("uses the same left/right sign for keyboard, touch, gamepad and world X", () => {
-    expect(steeringFromDirections(true, false)).toBe(-1);
-    expect(steeringFromDirections(false, true)).toBe(1);
+  it("maps the same screen-left/right motion on keyboard, touch and pad", () => {
+    // With the chase camera looking toward +Z, right on screen is world -X.
+    expect(steeringFromDirections(true, false)).toBe(1);
+    expect(steeringFromDirections(false, true)).toBe(-1);
     expect(steeringFromDirections(true, true)).toBe(0);
     expect(steeringFromDirections(false, false)).toBe(0);
+    expect(steeringFromAnalog(-0.8)).toBeCloseTo(0.8);
+    expect(steeringFromAnalog(0.8)).toBeCloseTo(-0.8);
+    expect(steeringFromAnalog(NaN)).toBe(0);
   });
 
   it("turns into a held edge without endless synthetic skidding", () => {
@@ -83,6 +87,12 @@ describe("reference-based World Cup ski physics and 25-bone posture", () => {
     expect(left.rightFoot.edgeRollDeg).toBeLessThan(-52);
     expect(right.outsideSide).toBe("R");
     expect(left.outsideSide).toBe("L");
+    // The imported 180° yaw flips LOCAL Z roll: local torso signs must
+    // match bank signs so that their WORLD rotations counter the ski bank.
+    expect(Math.sign(right.spineRollDeg)).toBe(Math.sign(right.bankDeg));
+    expect(Math.sign(left.spineRollDeg)).toBe(Math.sign(left.bankDeg));
+    expect(Math.sign(right.chestRollDeg)).toBe(Math.sign(right.bankDeg));
+    expect(Math.sign(left.chestRollDeg)).toBe(Math.sign(left.bankDeg));
   });
 
   it("interpolates real forces in new replay frames and accepts legacy frames", () => {

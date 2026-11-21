@@ -41,6 +41,13 @@ describe('actual 25-bone hierarchy contact regression',()=>{
     const actor=actorFromActualGLB(), d=new SuperGRacePoseDirector(actor,EQUIPMENT.SG);
     for(let i=0;i<120;i++) d.update(fixture(edge),COURSES.SG,1/60);
     const p=d.getDiagnostics()!;
+    // The imported GLB bind frame needs a small residual swing after the
+    // knee hinge. The measurable anatomical invariant is shin-to-cuff
+    // alignment WITH both real ski soles still in contact.
+    expect(Number.isFinite(p.leftShinBootAngleDeg)).toBe(true);
+    expect(Number.isFinite(p.rightShinBootAngleDeg)).toBe(true);
+    expect(p.leftShinBootAngleDeg).toBeLessThan(56);
+    expect(p.rightShinBootAngleDeg).toBeLessThan(56);
     expect(p.leftSkiBaseClearanceM).toBeCloseTo(.008,3);
     expect(p.rightSkiBaseClearanceM).toBeCloseTo(.008,3);
     expect(p.leftAnkleTargetErrorM).toBeLessThan(.001);

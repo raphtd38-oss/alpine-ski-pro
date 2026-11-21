@@ -43,14 +43,14 @@ test("renders the Super-G, responds to keys, pauses, restarts and changes suit",
   expect(before.z).toBeGreaterThan(3);
   await page.keyboard.down("KeyD");
   await page.waitForFunction(
-    () => (window as any).__ski.getState().edge > 0.5,
+    () => (window as any).__ski.getState().edge < -0.5,
     {},
     { timeout: 15000 },
   );
   await page.keyboard.up("KeyD");
   const after = await page.evaluate(() => (window as any).__ski.getState());
-  expect(after.heading).toBeGreaterThan(before.heading);
-  expect(after.edge).toBeGreaterThan(0);
+  expect(after.heading).toBeLessThan(before.heading);
+  expect(after.edge).toBeLessThan(0);
   await page.waitForFunction(
     () => (window as any).__ski.getState().z > 8,
     {}, { timeout: 45000 },
