@@ -196,13 +196,8 @@ function positionLeg(
   const hipPelvis = bones.hip.getLocalPosition().clone();
   const femurRest = bones.knee.getLocalPosition().clone();
   const shinRest = bones.ankle.getLocalPosition().clone();
-  const skiUp = desiredSkiWorldRotation.transformVector(axisUp.clone());
-  const skiFront = desiredSkiWorldRotation.transformVector(localSkiForward.clone());
-  const shinPreferenceWorld = normalized(
-    skiUp.mulScalar(0.93).add(skiFront.mulScalar(0.36)), axisUp.clone());
-  const shinPreference = pelvisInverse.transformVector(shinPreferenceWorld);
   const solution = solve25BoneLegKnee(
-    hipPelvis, femurRest, shinRest, requestedAnklePelvis, side, shinPreference);
+    hipPelvis, femurRest, shinRest, requestedAnklePelvis, side);
 
   const desiredFemur = solution.kneePelvis.clone().sub(hipPelvis);
   const targetShinInPelvis = solution.anklePelvis.clone().sub(solution.kneePelvis);
