@@ -172,6 +172,26 @@ const smoothstep = (a: number, b: number, value: number) => {
   const t = sat((value - a) / (b - a));
   return t * t * (3 - 2 * t);
 };
+/**
+ * Visual speed-tuck from Astra's Bormio TV-reference staging.
+ * Never changes physics, drag, speed, timing or replay data.
+ * Fades out during strong carving, flight and landing.
+ */
+export function superGVideoSpeedTuck(
+  speedMps: number, engagement: number,
+  airborne: number, landingShock: number,
+): number {
+  const speed = Number.isFinite(speedMps) ? Math.max(0, speedMps) : 0;
+  const load = Number.isFinite(engagement) ? engagement : 0;
+  const flight = Number.isFinite(airborne) ? airborne : 0;
+  const landing = Number.isFinite(landingShock) ? landingShock : 0;
+  const raceSpeed = smoothstep(22, 35, speed);
+  return 0.70 * raceSpeed *
+    (1 - 0.63 * clamp(load, 0, 1)) *
+    (1 - 0.78 * clamp(flight, 0, 1)) *
+    (1 - 0.58 * clamp(landing, 0, 1));
+}
+
 const pulse = (x: number, midpoint: number, width: number) => {
   if (width <= 0) return 0;
   const y = (x - midpoint) / width;
@@ -343,8 +363,11 @@ export class SuperGCompetitionPose {
     const edgeRoll = -sign * Math.min(T.maxSkiEdgeDeg,
       10 * smoothstep(0.08, 0.34, edgeAbs) + 67 * engagement);
 
+    // Recover the old TV-referenced compact silhouette between SG turns.
+    // Force-driven edge/IK and skier contact from V1.17 remain authoritative.
+    const speedTuck = superGVideoSpeedTuck(speed, engagement, flight, landing);
     const tuckTarget = Math.max(sat(safe(frame.tuck)) *
-      (1 - 0.22 * engagement), finishReach * 0.92);
+      (1 - 0.22 * engagement), speedTuck, finishReach * 0.92);
     a.tuck = smooth(a.tuck, tuckTarget, 9.5, sDt);
     const targetY = clamp(1.01 - (
       0.060 + 0.13 * a.tuck + 0.160 * engagement +
