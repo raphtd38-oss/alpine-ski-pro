@@ -7,9 +7,9 @@ function run(edge:number,speed:number,phase=12,height=0) {
   const physics=new SuperGCompetitionPose();
   const human=new SuperGHumanReconstruction();
   let raw=physics.sample({t:0,x:0,z:0,heading:0,edge:0,
-    vx:0,vz:0,height:0,fallen:0,pressure:1,load:.5},0);
+    vx:0,vz:0,height:0,fallen:0,tuck:1,pressure:1,load:.5},0);
   let pose=human.sample(raw,{t:0,x:0,z:0,heading:0,
-    vx:0,vz:0,edge:0,height:0,fallen:0},0);
+    vx:0,vz:0,edge:0,height:0,fallen:0,tuck:1},0);
   for(let i=0;i<100;i++){
     const frame:Frame={t:i/60,x:0,z:i*speed/60,heading:edge*.23,
       vx:0,vz:speed,edge,height,fallen:0,pressure:1.35,
@@ -70,7 +70,7 @@ describe("reconstructed Super-G human movement",()=>{
    const model=new SuperGCompetitionPose();
    const human=new SuperGHumanReconstruction();
    const f:Frame={t:2,x:0,z:60,vx:0,vz:30,heading:.2,
-     edge:.8,height:0,fallen:0,startPhase:12};
+     edge:.8,height:0,fallen:0,tuck:1,startPhase:12};
    const raw=model.sample(f,1/60);
    const first=human.sample(raw,f,1/60);
    human.sample({...raw,bankDeg:-20},f,1/60);
