@@ -245,9 +245,12 @@ export class SuperGRacePoseDirector {
 
   constructor(private readonly actor: SGActor, readonly equipment: Equipment,
     humanMode?: boolean) {
+    // New ergonomic controller will be the public default ONLY AFTER
+    // this draft branch passes full A/B visual review. Legacy remains a
+    // one-query fallback for users: ?pose=legacy.
     this.humanMode = humanMode ??
       (typeof window !== "undefined" &&
-       new URLSearchParams(window.location.search).get("pose") === "human-v3");
+       new URLSearchParams(window.location.search).get("pose") !== "legacy");
     if (!actor.isSeamless || equipment.id !== "SG")
       throw new Error("The Super-G race director requires the seamless SG racer");
     const required = (name: string) => {
