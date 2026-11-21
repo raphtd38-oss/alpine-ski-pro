@@ -22,8 +22,13 @@ describe("25-bone coordinated HUMAN pose (visual only)",()=>{
    const {raw,human}=sample(edge,29);
    expect(raw.pelvisHeightM).toBeLessThan(.79);
    expect(human.pelvisHeightM).toBeGreaterThan(raw.pelvisHeightM+.11);
-   expect(Math.abs(human.bankDeg)).toBeLessThan(Math.abs(raw.bankDeg)*.5);
-   expect(Math.abs(human.pelvisShiftM)).toBeLessThan(.14);
+   // The first human v3 version was too upright in a 45° ski-edge turn.
+   // Bank must have a meaningful amplitude but never follow the whole
+   // ski edge, because the chest counter-angulates independently.
+   expect(Math.abs(human.bankDeg)).toBeGreaterThan(Math.abs(raw.bankDeg)*.62);
+   expect(Math.abs(human.bankDeg)).toBeLessThan(Math.abs(raw.bankDeg));
+   expect(Math.abs(human.bankDeg)).toBeLessThan(42);
+   expect(Math.abs(human.pelvisShiftM)).toBeLessThan(.216);
    expect(human.spinePitchDeg+human.chestPitchDeg).toBeLessThan(45);
    expect(human.headPitchDeg).toBeGreaterThan(-22);
    expect(human.leftFoot).toBe(raw.leftFoot);
