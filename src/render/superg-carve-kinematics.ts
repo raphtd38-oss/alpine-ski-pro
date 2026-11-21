@@ -468,8 +468,13 @@ export class SuperGCompetitionPose {
     const counter = sign * engagement;
     const pelvisRoll = -sign * engagement *
       (12.5 + 3 * sat(loadTransfer.lateralG / 2));
-    const spineRoll = counter * 16.5;
-    const chestRoll = counter * T.chestCounterRollDeg;
+    // The seamless rig has a 180-degree local yaw. Its local Z roll is
+    // REVERSED in world space. Positive local spine/chest rolls previously
+    // reinforced the whole-body bank instead of counter-angulating it.
+    // Reversing these local commands leaves shoulders noticeably more level
+    // than the pressured skis in high-G carving.
+    const spineRoll = -counter * 16.5;
+    const chestRoll = -counter * T.chestCounterRollDeg;
     const forwardPitch = 13 + 29 * a.tuck +
       12 * a.start + 12 * a.pole + 22 * finishReach +
       3 * startPreparation;
