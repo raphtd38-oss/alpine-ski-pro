@@ -41,6 +41,25 @@ describe('actual 25-bone hierarchy contact regression',()=>{
     const actor=actorFromActualGLB(), d=new SuperGRacePoseDirector(actor,EQUIPMENT.SG);
     for(let i=0;i<120;i++) d.update(fixture(edge),COURSES.SG,1/60);
     const p=d.getDiagnostics()!;
+    // The athlete's knee must only hinge, not twist the shin around the
+    // forward/lateral axes as happened in the screenshot before this fix.
+    for (const side of ['L','R'] as const) {
+      const knee = actor.joints[side+'Knee'];
+      const shin = actor.joints[side+'Ankle'];
+      const hinge = knee.getLocalPosition().clone()
+        .cross(shin.getLocalPosition()).normalize();
+      const q = knee.getLocalRotation();
+      const axis = new pc.Vec3(q.x,q.y,q.z);
+      if (axis.length() > 0.00001)
+        expect(axis.cross(hinge).length()).toBeLessThan(0.002);
+    }
+    expect(Number.isFinite(p.leftShinBootAngleDeg)).toBe(true);
+    expect(Number.isFinite(p.rightShinBootAngleDeg)).toBe(true);
+    expect(p.leftShinBootAngleDeg).toBeLessThan(57);
+    expect(p.rightShinBootAngleDeg).toBeLessThan(57);
+    console.info('[SG hinge contact]',edge,
+      'shinBoot',p.leftShinBootAngleDeg.toFixed(1),p.rightShinBootAngleDeg.toFixed(1),
+      'flex',p.leftKneeFlexionDeg.toFixed(1),p.rightKneeFlexionDeg.toFixed(1));
     expect(p.leftSkiBaseClearanceM).toBeCloseTo(.008,3);
     expect(p.rightSkiBaseClearanceM).toBeCloseTo(.008,3);
     expect(p.leftAnkleTargetErrorM).toBeLessThan(.001);
