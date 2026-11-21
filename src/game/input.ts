@@ -1,8 +1,15 @@
 import type { Controls } from "./types";
 
-/** Player right is world +X, consistently for keyboard and analogue axes. */
+/**
+ * The chase camera looks along world +Z, so SCREEN RIGHT is world -X.
+ * Keep the physics solver's signed +X torque unchanged: convert at the
+ * human-input boundary, consistently across keyboards, pads and touch.
+ */
 export function steeringFromDirections(left: boolean, right: boolean): number {
-  return (right ? 1 : 0) - (left ? 1 : 0);
+  return (left ? 1 : 0) - (right ? 1 : 0);
+}
+export function steeringFromAnalog(axis: number): number {
+  return Number.isFinite(axis) ? Math.max(-1, Math.min(1, -axis)) : 0;
 }
 export class Input {
   keys = new Set<string>();
@@ -40,7 +47,7 @@ export class Input {
       jump = this.keys.has("Space");
     const pad = navigator.getGamepads?.()[0];
     if (pad) {
-      if (Math.abs(pad.axes[0]) > 0.12) steer = pad.axes[0];
+      if (Math.abs(pad.axes[0]) > 0.12) steer = steeringFromAnalog(pad.axes[0]);
       tuck ||= !!pad.buttons[7]?.pressed;
       brake ||= !!pad.buttons[6]?.pressed;
       jump ||= !!pad.buttons[0]?.pressed;
