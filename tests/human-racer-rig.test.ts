@@ -64,7 +64,7 @@ describe("real connected human 25-bone skeleton",()=>{
     kneeAngles:[a.leftKneeFlexionDeg,a.rightKneeFlexionDeg],
     errors:[a.leftAnkleTargetErrorM,a.rightAnkleTargetErrorM],
    }));
-   expect(a.headWorld![1]-a.pelvisWorld[1]).toBeGreaterThan(.15);
+   expect(a.headWorld![1]-a.pelvisWorld[1]).toBeGreaterThan(.37);
    expect(a.chestWorld![1]-a.pelvisWorld[1]).toBeGreaterThan(.16);
    for(const v of [a.leftKneeFlexionDeg,a.rightKneeFlexionDeg]){
     expect(v).toBeGreaterThan(9);
