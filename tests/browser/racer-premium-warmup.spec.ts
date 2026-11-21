@@ -9,7 +9,7 @@ test("premium helmet, original numbered bib, human mouth and pre-start warm-up r
   await page.locator("#play").click();
   await page.evaluate(()=>{
     const api=(window as any).__ski;api.start();api.freezeSimulation(true);
-    api.step(20,{steer:0,tuck:false,brake:false,jump:false});
+    api.step(135,{steer:0,tuck:false,brake:false,jump:false});
   });
   await page.waitForTimeout(350);
   let pose=await page.evaluate(()=>(window as any).__ski.getAthletePose());
@@ -17,20 +17,20 @@ test("premium helmet, original numbered bib, human mouth and pre-start warm-up r
   expect(pose.premiumKit).toBe(true);
   expect(pose.bibNumber).toBe(27);
   expect(pose.competitionPose).toBeTruthy();
-  expect(pose.competitionPose.warmupBeat).not.toBe("ready");
+  expect(pose.competitionPose.warmupBeat).toBe("shake-arms");
   expect(pose.competitionPose.leftAnkleTargetErrorM).toBeLessThan(.015);
   expect(pose.competitionPose.rightAnkleTargetErrorM).toBeLessThan(.015);
   await page.screenshot({path:"test-results/racer-premium-warmup-close-up.png"});
   await page.evaluate(()=>(window as any).__ski.step(
-    190,{steer:0,tuck:false,brake:false,jump:false}));
+    105,{steer:0,tuck:false,brake:false,jump:false}));
   await page.waitForTimeout(320);
   pose=await page.evaluate(()=>(window as any).__ski.getAthletePose());
-  expect(pose.competitionPose.warmupBeat).not.toBe("breath");
+  expect(pose.competitionPose.warmupBeat).toBe("flex-legs");
   expect(pose.competitionPose.leftSkiBaseClearanceM).toBeCloseTo(.008,2);
   expect(pose.competitionPose.rightSkiBaseClearanceM).toBeCloseTo(.008,2);
   await page.screenshot({path:"test-results/racer-premium-warmup-shift.png"});
   await page.evaluate(()=>(window as any).__ski.step(
-    320,{steer:0,tuck:false,brake:false,jump:false}));
+    290,{steer:0,tuck:false,brake:false,jump:false}));
   await page.waitForTimeout(220);
   pose=await page.evaluate(()=>(window as any).__ski.getAthletePose());
   expect(pose.competitionPose.warmupBeat).toBe("ready");
