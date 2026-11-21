@@ -230,6 +230,29 @@ function positionLeg(
     .transformVector(desiredShinWorld);
   bones.knee.setLocalRotation(rotateTo(shinRest, desiredShinInParent));
 
+  // The true GLB hierarchy is not a pair of ideal rigid vectors: changing
+  // the knee bend plane can displace the rendered ankle even when the
+  // analytic triangle says it is in reach. Close the REAL end effector by
+  // short deterministic CCD corrections before attaching the ski.
+  // This leaves the knee pole as a *preference*, never a reason to sink a
+  // ski into snow or detach the boot from the shin.
+  for (let pass = 0; pass < 12; pass++) {
+    if (bones.ankle.getPosition().distance(ankleWorld) < 0.00035) break;
+    for (const joint of [bones.knee, bones.hip]) {
+      const parent = joint.parent;
+      if (!parent) continue;
+      const pivot = joint.getPosition();
+      const current = bones.ankle.getPosition().clone().sub(pivot);
+      const desired = ankleWorld.clone().sub(pivot);
+      if (current.length() < 0.01 || desired.length() < 0.01) continue;
+      const correctionWorld = rotateTo(current, desired);
+      const correctedWorld = correctionWorld.mul(joint.getRotation().clone());
+      const correctedLocal = parent.getRotation().clone().invert()
+        .mul(correctedWorld);
+      joint.setLocalRotation(correctedLocal);
+    }
+  }
+
   // The boot and all the ski meshes are already parented to LeftFoot or
   // RightFoot. A real race binding stays rigid: setting foot rotation from
   // the WORLD ski target guarantees that the tip points in the intended
