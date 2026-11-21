@@ -55,12 +55,12 @@ export function prestartWarmup(startPhase:number | undefined):PrestartWarmup {
     headNodDeg:active ? -2.5*early*breath
       +3.2*shoulders*rotate-1.5*ready : 0,
     armOffsetY:active ? [
-      .11*arms*shake + .030*shoulders*rotate,
-      -.11*arms*shake - .030*shoulders*rotate,
+      .205*arms*(.5+.5*shake) + .055*shoulders*rotate,
+      .205*arms*(.5-.5*shake) - .055*shoulders*rotate,
     ] as const:[0,0],
     armForwardM:active ? [
-      .063*early + .090*arms*(1+shake)/2,
-      .063*early + .090*arms*(1-shake)/2,
+      .063*early + .145*arms*(1+shake)/2,
+      .063*early + .145*arms*(1-shake)/2,
     ] as const:[0,0],
     fistEnergy:active?arms*(.35+.65*Math.abs(shake)):0,
   };
