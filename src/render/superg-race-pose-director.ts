@@ -445,6 +445,16 @@ export class SuperGRacePoseDirector {
     const ground = terrainHeight(f.x, f.z, c);
     const [, grade] = gradient(f.x, f.z, c);
     const gradePitchDeg = -Math.atan(grade) * RAD;
+    if(this.humanMode){
+      // CRITICAL anatomical fix:
+      // The imported GLB binds shoulders/head already pitched ~18° forward.
+      // Root orientation adds the real downhill pitch (+15° to +30° here),
+      // then the old torso added another 25–40° FORWARD. Their stacked sum
+      // made the back nearly horizontal (head only 17 cm above hips in 3D).
+      // Compensate both bind-frame lean and slope once, at the WHOLE
+      // spine level, without touching physical ski pitch or head/hand IK.
+      pose.spinePitchDeg -= 20 + 0.72*gradePitchDeg;
+    }
     const flight = Math.max(0, f.height);
     // Player ground position remains *exactly* controlled by the simulator.
     root.setPosition(f.x, ground + flight + 0.015, f.z);
