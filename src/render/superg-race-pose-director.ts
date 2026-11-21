@@ -97,6 +97,8 @@ export interface SGDirectorDiagnostics {
   rightWristWorld?: number[];
   leftHumanHandTargetErrorM?: number;
   rightHumanHandTargetErrorM?: number;
+  leftHandGoalWorld?: number[];
+  rightHandGoalWorld?: number[];
 }
 
 const clone = (v: pc.Vec3) => v.clone();
@@ -232,6 +234,9 @@ export class SuperGRacePoseDirector {
   private readonly poleWeights: [number, number] = [0, 0];
   private visualFall = 0;
   private humanHandError: [number,number] = [0,0];
+  private readonly humanHandGoals:Record<SkiSide,pc.Vec3>={
+    L:new pc.Vec3(),R:new pc.Vec3(),
+  };
   private lastPose: SGPose | null = null;
   private lastLegError: [number, number] = [0, 0];
   private lastGripError: [number, number] = [0, 0];
@@ -346,12 +351,34 @@ export class SuperGRacePoseDirector {
       if(!upper||!elbow||!wrist||!upper.parent||!elbow.parent)continue;
       const outward=side==="L"?1:-1;
       const tuck=bounded(pose.tuck,0,1);
-      const reach=0.24+0.03*pose.engagement;
+      const loaded=bounded(pose.engagement,0,1);
+      const transitioning=pose.phase==="transition"||pose.phase==="release"
+        ?bounded(Math.abs(pose.edgeRate)/1.9,0,1):0;
+      const outside=pose.outsideSide===side;
+      const airborne=bounded(pose.airborne,0,1);
+      const startDrive=pose.startPhase>=0&&pose.startPhase<1.55
+        ?bounded(pose.startPoleImpulse,0,1):0;
+      // Both arms drive the poles on the SAME physical start pulses:
+      // planted -> push rearward -> recover. Not two random paddles.
+      const stroke=Math.sin(2*Math.PI*(pose.startPhase-.10)/.44);
+      const prestart=pose.startPhase<0?bounded(pose.startPreparation,0,1):0;
+      // Real alpine arm asymmetry: outside hand reaches for balance;
+      // inside hand is lower and more compact, then both recover as the
+      // skis release their edges. The previous target NEVER moved and
+      // locked both fists to the hips all the way down the race.
+      const reach=.245+loaded*(outside?.084:.025)+
+        transitioning*.028+airborne*.075-.027*tuck;
+      const y=.072+loaded*(outside?.022:-.028)+
+        transitioning*.022+startDrive*(.045+.075*Math.cos(
+          2*Math.PI*(pose.startPhase-.10)/.44))+
+        airborne*.15+prestart*.022*Math.sin(pose.startPhase*7);
+      const forward=.175+loaded*(outside?.145:.045)+
+        transitioning*.105+startDrive*(.09+.17*stroke)+
+        airborne*.13-.045*tuck;
       const target=pelvis.clone().add(yaw.transformVector(new pc.Vec3(
-        outward*reach,
-        0.035+0.035*pose.startPoleImpulse-0.028*tuck,
-        0.115+0.045*tuck,
+        outward*reach, y, forward,
       )));
+      this.humanHandGoals[side].copy(target);
       const upperWorld=upper.getPosition();
       const upperRest=elbow.getLocalPosition().clone();
       const lowerRest=wrist.getLocalPosition().clone();
@@ -629,6 +656,8 @@ export class SuperGRacePoseDirector {
         ? xyz(this.actor.joints.RWrist) : [],
       leftHumanHandTargetErrorM:this.humanHandError[0],
       rightHumanHandTargetErrorM:this.humanHandError[1],
+      leftHandGoalWorld:[this.humanHandGoals.L.x,this.humanHandGoals.L.y,this.humanHandGoals.L.z],
+      rightHandGoalWorld:[this.humanHandGoals.R.x,this.humanHandGoals.R.y,this.humanHandGoals.R.z],
       phase: p.phase,
       pelvisHeightM: p.pelvisHeightM,
       pelvisOffsetM: p.pelvisShiftM,
