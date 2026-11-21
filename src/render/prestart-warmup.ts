@@ -1,7 +1,7 @@
 /**
  * Cinematic pre-start warm-up authored for Alpine Ski Pro.
  * Pure function: reproducible in 120-Hz replays, without moving the skis.
- * Timeline is the four seconds of the race's existing start countdown.
+ * Timeline is the three seconds of the race's actual start countdown.
  */
 export type WarmupBeat =
   | "breath" | "shake-arms" | "flex-legs" | "shoulder-roll" | "ready";
@@ -27,13 +27,13 @@ const pulse=(x:number,start:number,end:number,fade=.16)=>
   ease((x-start)/fade)*ease((end-x)/fade);
 
 export function prestartWarmup(startPhase:number | undefined):PrestartWarmup {
-  const elapsed=clamp(4+(startPhase??-4),0,4);
+  const elapsed=clamp(3+(startPhase??-3),0,3);
   const active=startPhase!==undefined&&startPhase<0;
-  const early=pulse(elapsed,.10,1.12);
-  const arms=pulse(elapsed,.65,1.78);
-  const legs=pulse(elapsed,1.25,2.45);
-  const shoulders=pulse(elapsed,2.00,3.10);
-  const ready=ease((elapsed-3.0)/.72);
+  const early=pulse(elapsed,.05,.87);
+  const arms=pulse(elapsed,.36,1.36);
+  const legs=pulse(elapsed,1.04,2.16);
+  const shoulders=pulse(elapsed,1.79,2.68);
+  const ready=ease((elapsed-2.42)/.52);
   const breath=Math.sin(elapsed*5.1)*.5+.5;
   // No noisy random motion; 4 Hz arm-shake cadence and two deliberate
   // knee flexions are human-readable even at modest frame rates.
@@ -41,9 +41,9 @@ export function prestartWarmup(startPhase:number | undefined):PrestartWarmup {
   const bend=Math.pow(.5+.5*Math.sin((elapsed-1.1)*2*Math.PI*1.25),2);
   const rotate=Math.sin((elapsed-2)*Math.PI*2.2);
   const intensity=active?Math.max(early,arms,legs,shoulders):0;
-  const beat:WarmupBeat=!active||elapsed>=3.12?"ready":
-    elapsed<.7?"breath":elapsed<1.5?"shake-arms":
-    elapsed<2.25?"flex-legs":"shoulder-roll";
+  const beat:WarmupBeat=!active||elapsed>=2.58?"ready":
+    elapsed<.46?"breath":elapsed<1.30?"shake-arms":
+    elapsed<2.08?"flex-legs":"shoulder-roll";
   return {
     active,beat,intensity,
     breath:active?(0.08+breath*.92)*early:0,
