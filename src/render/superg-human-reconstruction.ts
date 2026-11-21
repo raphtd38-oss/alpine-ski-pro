@@ -77,7 +77,7 @@ export class SuperGHumanReconstruction {
     // The rigid two skis establish a stable stance. We never fake the
     // deep two-leg crouch by translating both feet into the same hip.
     const target: Channels = {
-      bank: clamp(raw.bankDeg * (.61 + .16 * force), -42, 42),
+      bank: clamp(raw.bankDeg * (.53 + .11 * force), -34, 34),
       height: clamp(
         .984 - .085 * tuck - .055 * commitment - .055 * landing
           - .042 * brace - .045 * push + .066 * extension
@@ -85,14 +85,15 @@ export class SuperGHumanReconstruction {
       side: clamp(raw.pelvisShiftM * (.64 + .14 * outsideBias), -.24, .24),
       fore: clamp(-.023 - .042 * tuck - .019 * commitment
         - .028 * raw.finishReach, -.115, .01),
-      pelvisRoll: clamp(sideSign * commitment * (2 + 5 * force), -8, 8),
+      pelvisRoll: clamp(-sideSign * commitment * (2 + 5 * force), -8, 8),
+      // The source GLB is yawed 180°: local counterroll must oppose the physical root bank.
       // Bind-pose correction and downhill pitch are applied once by director.
       // Hip hinging is the major source of aero tuck, not a folded upper back.
       torsoPitch: 14 + 18 * tuck + 7 * brace + 5 * push
         + 2 * commitment + 6 * raw.finishReach,
-      torsoRoll: clamp(sideSign * commitment * (11 + 5 * force), -17, 17),
+      torsoRoll: clamp(-sideSign * commitment * (11 + 5 * force), -17, 17),
       chestPitch: 2 + 5 * tuck + 2 * commitment,
-      chestRoll: clamp(sideSign * commitment * 7, -9, 9),
+      chestRoll: clamp(-sideSign * commitment * 7, -9, 9),
       headPitch: -clamp(6 + 9 * tuck + 3 * brace, 4, 20),
     };
     if (!this.channels || !Number.isFinite(dt) || dt > .25) {
