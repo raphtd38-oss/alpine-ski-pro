@@ -20,6 +20,7 @@ import { gradient, terrainHeight } from "../game/course";
 import { skiSurfaceRotation, minimumSoleClearance } from "./ski-contact-frame";
 import { PRO_POLE } from "./equipment-specs";
 import { gateCrashPose } from "./gate-crash-pose";
+import { humanRacerPose } from "./human-racer-pose";
 import {
   SuperGCompetitionPose,
   type SGSourceFrame,
@@ -84,6 +85,16 @@ export interface SGDirectorDiagnostics {
   pelvisWorld: number[];
   leftFootWorld: number[];
   rightFootWorld: number[];
+  /** Positions are taken from the ACTUAL rendered bones, not target hints. */
+  humanMode?: boolean;
+  chestWorld?: number[];
+  headWorld?: number[];
+  leftKneeWorld?: number[];
+  rightKneeWorld?: number[];
+  leftAnkleWorld?: number[];
+  rightAnkleWorld?: number[];
+  leftWristWorld?: number[];
+  rightWristWorld?: number[];
 }
 
 const clone = (v: pc.Vec3) => v.clone();
@@ -209,6 +220,8 @@ function positionLeg(
 
 export class SuperGRacePoseDirector {
   readonly model = new SuperGCompetitionPose();
+  /** Only enabled in ?pose=human-v3 until screenshots pass a visual review. */
+  readonly humanMode: boolean;
   private readonly bones: Record<SkiSide, LegBones>;
   private readonly pelvis: pc.GraphNode;
   private readonly spine: pc.GraphNode;
@@ -227,7 +240,11 @@ export class SuperGRacePoseDirector {
   };
   private readonly feetBySide: Record<SkiSide, pc.GraphNode>;
 
-  constructor(private readonly actor: SGActor, readonly equipment: Equipment) {
+  constructor(private readonly actor: SGActor, readonly equipment: Equipment,
+    humanMode?: boolean) {
+    this.humanMode = humanMode ??
+      (typeof window !== "undefined" &&
+       new URLSearchParams(window.location.search).get("pose") === "human-v3");
     if (!actor.isSeamless || equipment.id !== "SG")
       throw new Error("The Super-G race director requires the seamless SG racer");
     const required = (name: string) => {
@@ -347,7 +364,9 @@ export class SuperGRacePoseDirector {
     const bones = this.bones[side], target = this.targets[side];
     const solution = positionLeg(this.pelvis, bones, target.ankle, target.rotation, side);
     const ix = side === "L" ? 0 : 1;
-    this.lastLegError[ix] = solution.targetErrorM;
+    this.lastLegError[ix] = this.humanMode ?
+      bones.ankle.getPosition().distance(target.ankle) :
+      solution.targetErrorM;
     this.lastBaseClearance[ix] = minimumSoleClearance(
       bones.foot.getPosition(), bones.foot.getRotation(), course);
     const actual = bones.foot.getRotation().transformVector(localSkiForward);
@@ -419,7 +438,8 @@ export class SuperGRacePoseDirector {
    */
   update(f: Frame, c: Course, dt: number): void {
     const frame = f as SGSourceFrame;
-    const pose = this.model.sample(frame, dt);
+    const inputPose = this.model.sample(frame, dt);
+    const pose = this.humanMode ? humanRacerPose(inputPose, frame) : inputPose;
     this.lastPose = pose;
     const root = this.actor.root;
     const ground = terrainHeight(f.x, f.z, c);
@@ -519,6 +539,16 @@ export class SuperGRacePoseDirector {
       leftLegLengthM: left.length, rightLegLengthM: right.length,
       pelvisWorld: xyz(this.pelvis), leftFootWorld: xyz(this.bones.L.foot),
       rightFootWorld: xyz(this.bones.R.foot),
+      humanMode: this.humanMode,
+      chestWorld: xyz(this.chest), headWorld: xyz(this.head),
+      leftKneeWorld: xyz(this.bones.L.knee),
+      rightKneeWorld: xyz(this.bones.R.knee),
+      leftAnkleWorld: xyz(this.bones.L.ankle),
+      rightAnkleWorld: xyz(this.bones.R.ankle),
+      leftWristWorld: this.actor.joints.LWrist
+        ? xyz(this.actor.joints.LWrist) : [],
+      rightWristWorld: this.actor.joints.RWrist
+        ? xyz(this.actor.joints.RWrist) : [],
       phase: p.phase,
       pelvisHeightM: p.pelvisHeightM,
       pelvisOffsetM: p.pelvisShiftM,
