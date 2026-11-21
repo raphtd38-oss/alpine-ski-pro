@@ -25,5 +25,9 @@ export function racerSteeringEdgeTarget(
 ):number {
   const maxEdge=supportedSkiEdgeRadians(speedMps,sidecutRadiusM);
   const control=Math.max(-1,Math.min(1,Number.isFinite(steer)?steer:0));
-  return control*Math.min(brake?0.35:1.10,maxEdge)*(airborne?0.55:1);
+  // Keep analogue control responsiveness for ordinary medium edge inputs:
+  // clamp only PHYSICALLY impossible requests, not the whole steer scale.
+  const requested=control*(brake?0.35:1.10);
+  const feasible=Math.max(-maxEdge,Math.min(maxEdge,requested));
+  return feasible*(airborne?0.55:1);
 }
