@@ -25,7 +25,7 @@ describe("World Cup racer pre-start warm-up choreography",()=>{
       expect(a.pelvisBounceM).toBeGreaterThanOrEqual(-.09);
       expect(Math.abs(a.trunkRollDeg)).toBeLessThan(8);
       expect(Math.abs(a.headNodDeg)).toBeLessThan(7);
-      expect(Math.abs(a.armOffsetY[0])).toBeLessThan(.15);
+      expect(Math.abs(a.armOffsetY[0])).toBeLessThan(.28);
       expect(a).not.toHaveProperty("skiYaw");
       expect(a).not.toHaveProperty("contact");
     }
@@ -33,8 +33,8 @@ describe("World Cup racer pre-start warm-up choreography",()=>{
   it("moves actual body channels rather than only UI/camera",()=>{
     const frames=Array.from({length:200},(_,i)=>prestartWarmup(-4+i*.02));
     expect(Math.min(...frames.map(x=>x.pelvisBounceM))).toBeLessThan(-.014);
-    expect(Math.max(...frames.map(x=>x.armOffsetY[0]))).toBeGreaterThan(.015);
-    expect(Math.min(...frames.map(x=>x.armOffsetY[1]))).toBeLessThan(-.015);
+    expect(Math.max(...frames.map(x=>x.armOffsetY[0]))).toBeGreaterThan(.10);
+    expect(Math.max(...frames.map(x=>x.armOffsetY[1]))).toBeGreaterThan(.10);
     expect(Math.max(...frames.map(x=>x.trunkRollDeg))).toBeGreaterThan(1);
   });
 });
