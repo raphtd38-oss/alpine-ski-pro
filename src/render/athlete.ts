@@ -74,15 +74,18 @@ export class Athlete {
       this.rig.setLocalEulerAngles(0, 180, 0);
       if (!ghost && new URLSearchParams(location.search).get("motion") === "glb-preview") {
         const resource = asset.resource as pc.ContainerResource;
-        const tracks = resource.animations.map((animation) => animation.resource);
+        const tracks = resource.animations.map((animation) => animation.resource)
+          .filter((track): track is pc.AnimTrack => track !== undefined);
         const available = new Set(tracks.map((track) => track.name));
         const wanted = new URLSearchParams(location.search).get("clip") ?? "SG_CARVE_RIGHT";
         if (tracks.length !== 9 || !available.has(wanted)) {
           throw new Error("GLB motion preview unavailable: " + wanted);
         }
         this.rig.addComponent("anim", {activate: true});
-        for (const track of tracks) this.rig.anim!.assignAnimation(track.name, track);
-        this.rig.anim!.baseLayer.play(wanted);
+        const anim = this.rig.anim;
+        if (!anim) throw new Error("GLB preview: Anim component missing");
+        for (const track of tracks) anim.assignAnimation(track.name, track);
+        anim.baseLayer.play(wanted);
         this.authoredPreview = true;
         this.authoredPreviewName = wanted;
       }
