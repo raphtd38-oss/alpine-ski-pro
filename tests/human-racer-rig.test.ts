@@ -11,9 +11,9 @@ function original25BoneActor(): SGActor {
  const gltf=JSON.parse(bytes.toString("utf8",20,20+bytes.readUInt32LE(12)));
  const nodes=gltf.nodes.map((n:any)=>{
   const e=new pc.GraphNode(n.name);
-  if(n.translation)e.setLocalPosition(...n.translation);
-  if(n.rotation)e.setLocalRotation(...n.rotation);
-  if(n.scale)e.setLocalScale(...n.scale);
+  if(n.translation)e.setLocalPosition(...n.translation as [number,number,number]);
+  if(n.rotation)e.setLocalRotation(...n.rotation as [number,number,number,number]);
+  if(n.scale)e.setLocalScale(...n.scale as [number,number,number]);
   return e;
  });
  gltf.nodes.forEach((n:any,i:number)=>n.children?.forEach((j:number)=>nodes[i].addChild(nodes[j])));
