@@ -7,7 +7,7 @@ Cette branche conserve le rig 25 os et les deux skis entièrement pilotés par l
 - Casque de vitesse anatomique à coque profilée, oreillettes, rétention, lentille ski convexe et masque réfléchissant : src/render/racer-premium-gear.ts.
 - Deux panneaux de dossard incurvés et texturés, numérotés 27 par défaut, valeur paramétrable via ?bib=1..999, graphismes originaux pour éviter de copier logos et sponsors protégés.
 - Partie inférieure du visage visible et bouche/jaw modulés par respiration, effort, impact, inclinaison ; masque de course couvre les yeux (comme en ski réel).
-- Échauffement piloté par la phase du compte à rebours : respiration, mobilisation des épaules, secousses de bras, flexions de genoux, mise en appui, position de départ. Les deux skis restent verrouillés au sol ; préstart-warmup.ts est purement visuel.
+- Échauffement de trois secondes piloté par la phase du compte à rebours : respiration, mobilisation des épaules, secousses de bras, flexions de genoux, mise en appui, position de départ. Les deux skis restent verrouillés au sol ; préstart-warmup.ts est purement visuel.
 - Gros plan de pré-départ puis retour automatique à la caméra poursuite, uniquement en SG.
 - Tests unitaires pour la chronologie, tests navigateur avec trois captures, matériel présent, synchro skis/bâtons.
 
