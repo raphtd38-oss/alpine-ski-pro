@@ -243,3 +243,13 @@ Le but est un simulateur de ski de grande qualité, amélioré sur le même dép
 
 - Contrôler les assets sur un serveur statique sans fallback HTML, puis sur GitHub Pages : Vite dev/preview peut masquer des fichiers manquants. Les sons doivent provenir de `PACKAGED_SOUNDS` et avoir un type MIME audio.
 - Les quatre MP3 optionnels non générés restent remplacés par les synthèses existantes ; ne pas introduire de requêtes spéculatives vers des assets absents.
+
+
+## Reconstruction du mouvement — jalon PR #56 (21 novembre 2026)
+
+- [x] Remplacer le pilotage visuel des poses par une reconstruction procédurale liée à la charge, au changement de carre et aux phases de course.
+- [x] Résoudre les bras après projection du bassin sur les deux points de contact des skis.
+- [x] Préserver les deux ski-contacts, la physique déterministe et un repli vers les anciens contrôleurs.
+- [x] Ajouter tests de phases et capture A/B au même point du parcours.
+- [ ] Valider toutes les captures face/profil/poursuite, sur ordinateur et mobile, et rejeter les poses artificielles restantes.
+- [ ] Importer légalement une véritable motion capture de ski à haute fréquence, retargeter le squelette 25 os et valider le skinning sous charge.
