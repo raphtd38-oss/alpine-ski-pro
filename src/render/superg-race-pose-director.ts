@@ -210,15 +210,15 @@ function positionLeg(
   // Use the actual GLB rest-segment plane to derive that hinge; the hip
   // supplies the necessary 3D orientation, including counter-angulation.
   const hinge = normalized(
-    femurRest.clone().cross(shinRest), new pc.Vec3(1, 0, 0));
+    new pc.Vec3().cross(femurRest, shinRest), new pc.Vec3(1, 0, 0));
   const hipBase = rotateTo(femurRest, desiredFemur);
   const currentNormal = hipBase.transformVector(hinge.clone());
   const desiredNormal = normalized(
-    desiredFemur.clone().cross(targetShinInPelvis),
+    new pc.Vec3().cross(desiredFemur, targetShinInPelvis),
     currentNormal.clone());
   const femurAxis = normalized(desiredFemur.clone(), new pc.Vec3(0, -1, 0));
   const hipTwistDeg = Math.atan2(
-    femurAxis.dot(currentNormal.clone().cross(desiredNormal)),
+    femurAxis.dot(new pc.Vec3().cross(currentNormal, desiredNormal)),
     currentNormal.dot(desiredNormal)) * RAD;
   const hipQuaternion = new pc.Quat()
     .setFromAxisAngle(femurAxis, hipTwistDeg).mul(hipBase);
@@ -226,7 +226,7 @@ function positionLeg(
   const targetShinInHip = hipQuaternion.clone().invert()
     .transformVector(targetShinInPelvis);
   const kneeFlexDeg = Math.atan2(
-    hinge.dot(shinRest.clone().cross(targetShinInHip)),
+    hinge.dot(new pc.Vec3().cross(shinRest, targetShinInHip)),
     shinRest.dot(targetShinInHip)) * RAD;
   bones.knee.setLocalRotation(new pc.Quat()
     .setFromAxisAngle(hinge, kneeFlexDeg));
