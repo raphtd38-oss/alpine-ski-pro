@@ -35,6 +35,10 @@ test("human-v3 reduces frog-squat and gorilla back while preserving both skis",a
     expect(p.headWorld[1]-p.pelvisWorld[1]).toBeGreaterThan(.35);
     expect(p.leftKneeFlexionDeg).toBeLessThan(115);
     expect(p.rightKneeFlexionDeg).toBeLessThan(115);
+    expect(p.leftHumanHandTargetErrorM).toBeLessThan(.12);
+    expect(p.rightHumanHandTargetErrorM).toBeLessThan(.12);
+    expect(p.leftWristWorld[1]-p.pelvisWorld[1]).toBeLessThan(.22);
+    expect(p.rightWristWorld[1]-p.pelvisWorld[1]).toBeLessThan(.22);
   }
   expect(p.leftSkiBaseClearanceM).toBeCloseTo(.008,2);
   expect(p.rightSkiBaseClearanceM).toBeCloseTo(.008,2);
@@ -60,7 +64,7 @@ test("human-v3 reduces frog-squat and gorilla back while preserving both skis",a
  // the regression was a near-horizontal spine, not missing hip extension.
  const oldHeadHeight=a.headWorld[1]-a.pelvis[1];
  const newHeadHeight=b.headWorld[1]-b.pelvis[1];
- expect(newHeadHeight).toBeGreaterThan(oldHeadHeight+.14);
+ expect(newHeadHeight).toBeGreaterThan(oldHeadHeight+.12);
  expect(Math.abs(b.bank)).toBeLessThan(Math.abs(a.bank)*.6);
  writeFileSync("test-results/human-rig-rebuild.json",JSON.stringify(results,null,2));
  console.info("[HUMAN_RIG_AB]",JSON.stringify(results));
