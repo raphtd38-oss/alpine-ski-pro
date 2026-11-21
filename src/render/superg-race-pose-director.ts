@@ -490,15 +490,26 @@ export class SuperGRacePoseDirector {
       if (!wrist || !pole) continue;
       const wristWorld = wrist.getPosition();
       const wristInRoot = inverseRoot.transformPoint(wristWorld);
-      // Grip centre is not the centre of the long carbon shaft.
+      // Grip centre is near the top of the carbon shaft; real hands remain
+      // physically attached to the rendered poles through every race phase.
       const gripFromCentre =
         (PRO_POLE.shaftLength - PRO_POLE.gripLength) * 0.5;
-      const trailingPitch = 47 + 42 * arm.trailing;
-      const trailRotation = new pc.Quat().setFromEulerAngles(
-        trailingPitch, 0, (side === "L" ? -1 : 1) * 6);
-      const trailWorldToGrip = trailRotation.transformVector(
-        new pc.Vec3(0, gripFromCentre, 0));
-      const trailPosition = wristInRoot.clone().sub(trailWorldToGrip);
+      // The original static 47–89 degree Euler pole trail left a shaft
+      // pointing skyward on steep crossfalls. Drive the free trailing tip
+      // from the actual course surface instead, with a compact race silhouette.
+      const trailing = bounded(arm.trailing, 0, 1);
+      const terrainTip = wristWorld.clone().add(
+        backward.clone().mulScalar(.43 + .28 * trailing));
+      terrainTip.x += side === "L" ? .055 : -.055;
+      if (pose.airborne > .05) {
+        // Pole and wrist fly together: never pin a pole to the snow midair.
+        terrainTip.y = wristWorld.y - (.22 + .11 * pose.airborne);
+      } else {
+        terrainTip.y = terrainHeight(terrainTip.x, terrainTip.z, c) + .045;
+      }
+      const tipInRoot = inverseRoot.transformPoint(terrainTip);
+      const trailRotation = rotateTo(axisUp, normalized(
+        wristInRoot.clone().sub(tipInRoot), axisUp));
 
       const poleGoal = bounded(arm.poleContact, 0, 1);
       const rate = poleGoal > this.poleWeights[index] ? 26 : 20;
@@ -506,30 +517,24 @@ export class SuperGRacePoseDirector {
         (poleGoal - this.poleWeights[index]) *
         (1 - Math.exp(-rate * Math.max(0, Math.min(dt, 0.1))));
       const plantWeight = this.poleWeights[index];
-      if (plantWeight < 0.002) {
-        pole.setLocalRotation(trailRotation);
-        pole.setLocalPosition(trailPosition);
-      } else {
-        // Desired pole tip is behind the wrists on the race line, with the
-        // correct real snow height. No fixed Z axis assumption on curves.
-        const desiredTip = wristWorld.clone().add(backward.clone().mulScalar(
-          Math.max(0.27, PRO_POLE.shaftLength * 0.48)));
-        desiredTip.x += (side === "L" ? -0.045 : 0.045);
-        desiredTip.y = terrainHeight(
-          desiredTip.x, desiredTip.z, c) + 0.018;
-        const tipInRoot = inverseRoot.transformPoint(desiredTip);
-        const tipToWrist = normalized(
-          wristInRoot.clone().sub(tipInRoot), axisUp);
-        const plantRotation = rotateTo(axisUp, tipToWrist);
-        const blendRotation = new pc.Quat().slerp(
-          trailRotation, plantRotation, plantWeight);
-        // Recompute the pole midpoint from the FINAL blended orientation:
-        // this is essential to avoid detached hands during start impulses.
-        const gripShift = blendRotation.transformVector(new pc.Vec3(
-          0, gripFromCentre, 0));
-        pole.setLocalRotation(blendRotation);
-        pole.setLocalPosition(wristInRoot.clone().sub(gripShift));
+      // A planted pole is slightly longer in travel direction and reaches
+      // behind the skier, while snow remains the actual contact plane.
+      const plantedTip = wristWorld.clone().add(
+        backward.clone().mulScalar(Math.max(.27, PRO_POLE.shaftLength * .48)));
+      plantedTip.x += side === "L" ? -.045 : .045;
+      plantedTip.y = terrainHeight(plantedTip.x, plantedTip.z, c) + .018;
+      if (pose.airborne > .05) {
+        plantedTip.copy(terrainTip);
       }
+      const plantRotation = rotateTo(axisUp, normalized(
+        wristInRoot.clone().sub(inverseRoot.transformPoint(plantedTip)),
+        axisUp));
+      const finalRotation = new pc.Quat().slerp(
+        trailRotation, plantRotation, plantWeight);
+      const gripShift = finalRotation.transformVector(new pc.Vec3(
+        0, gripFromCentre, 0));
+      pole.setLocalRotation(finalRotation);
+      pole.setLocalPosition(wristInRoot.clone().sub(gripShift));
       const actualGripWorld = pole.getWorldTransform().transformPoint(
         new pc.Vec3(0, gripFromCentre, 0));
       this.lastGripError[index] = actualGripWorld.distance(wristWorld);
