@@ -85,7 +85,9 @@ export class Athlete {
         const anim = this.rig.anim;
         if (!anim) throw new Error("GLB preview: Anim component missing");
         for (const track of tracks) anim.assignAnimation(track.name, track);
-        anim.baseLayer.play(wanted);
+        const baseLayer = anim.baseLayer;
+        if (!baseLayer) throw new Error("GLB preview: no base animation layer");
+        baseLayer.play(wanted);
         this.authoredPreview = true;
         this.authoredPreviewName = wanted;
       }
