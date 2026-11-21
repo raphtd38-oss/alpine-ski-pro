@@ -20,6 +20,7 @@ import { gradient, terrainHeight } from "../game/course";
 import { skiSurfaceRotation, minimumSoleClearance } from "./ski-contact-frame";
 import { PRO_POLE } from "./equipment-specs";
 import { gateCrashPose } from "./gate-crash-pose";
+import { humanRacerPose } from "./human-racer-pose";
 import {
   SuperGCompetitionPose,
   type SGSourceFrame,
@@ -84,6 +85,18 @@ export interface SGDirectorDiagnostics {
   pelvisWorld: number[];
   leftFootWorld: number[];
   rightFootWorld: number[];
+  /** Positions are taken from the ACTUAL rendered bones, not target hints. */
+  humanMode?: boolean;
+  chestWorld?: number[];
+  headWorld?: number[];
+  leftKneeWorld?: number[];
+  rightKneeWorld?: number[];
+  leftAnkleWorld?: number[];
+  rightAnkleWorld?: number[];
+  leftWristWorld?: number[];
+  rightWristWorld?: number[];
+  leftHumanHandTargetErrorM?: number;
+  rightHumanHandTargetErrorM?: number;
 }
 
 const clone = (v: pc.Vec3) => v.clone();
@@ -209,6 +222,8 @@ function positionLeg(
 
 export class SuperGRacePoseDirector {
   readonly model = new SuperGCompetitionPose();
+  /** Only enabled in ?pose=human-v3 until screenshots pass a visual review. */
+  readonly humanMode: boolean;
   private readonly bones: Record<SkiSide, LegBones>;
   private readonly pelvis: pc.GraphNode;
   private readonly spine: pc.GraphNode;
@@ -216,6 +231,7 @@ export class SuperGRacePoseDirector {
   private readonly head: pc.GraphNode;
   private readonly poleWeights: [number, number] = [0, 0];
   private visualFall = 0;
+  private humanHandError: [number,number] = [0,0];
   private lastPose: SGPose | null = null;
   private lastLegError: [number, number] = [0, 0];
   private lastGripError: [number, number] = [0, 0];
@@ -227,7 +243,14 @@ export class SuperGRacePoseDirector {
   };
   private readonly feetBySide: Record<SkiSide, pc.GraphNode>;
 
-  constructor(private readonly actor: SGActor, readonly equipment: Equipment) {
+  constructor(private readonly actor: SGActor, readonly equipment: Equipment,
+    humanMode?: boolean) {
+    // New ergonomic controller will be the public default ONLY AFTER
+    // this draft branch passes full A/B visual review. Legacy remains a
+    // one-query fallback for users: ?pose=legacy.
+    this.humanMode = humanMode ??
+      (typeof window !== "undefined" &&
+       new URLSearchParams(window.location.search).get("pose") !== "legacy");
     if (!actor.isSeamless || equipment.id !== "SG")
       throw new Error("The Super-G race director requires the seamless SG racer");
     const required = (name: string) => {
@@ -262,6 +285,7 @@ export class SuperGRacePoseDirector {
     this.poleWeights[0] = this.poleWeights[1] = 0;
     this.visualFall = 0;
     this.lastPose = null;
+    this.humanHandError = [0,0];
   }
 
   private setTorso(pose: SGPose): void {
@@ -299,6 +323,66 @@ export class SuperGRacePoseDirector {
         -arm.elbowPitchDeg, 0, 0);
       j[side + "Wrist"]?.setLocalEulerAngles(
         -arm.wristPitchDeg, 0, 0);
+    }
+  }
+
+  /**
+   * Real two-segment ARM IK for the 25-bone GLB. The legacy independent
+   * shoulder+elbow Euler angles raised both hands to shoulder height once
+   * the spine was upright. That looked like a scarecrow, not a racer.
+   *
+   * Put hands at the waist, slightly ahead of the hips and apart enough to
+   * hold both poles. Solve UPPER ARM and FOREARM with their actual GLB lengths
+   * and parent world transforms. The lower-body IK remains independent.
+   */
+  private setHumanArms(pose: SGPose): void {
+    if (!this.humanMode) return;
+    const yaw=new pc.Quat().setFromEulerAngles(0,pose.headingDeg,0);
+    const pelvis=this.pelvis.getPosition();
+    for(const [i,side] of (["L","R"] as const).entries()){
+      const j=this.actor.joints;
+      const upper=j[side+"UpperArm"],elbow=j[side+"Elbow"],
+        wrist=j[side+"Wrist"];
+      if(!upper||!elbow||!wrist||!upper.parent||!elbow.parent)continue;
+      const outward=side==="L"?1:-1;
+      const tuck=bounded(pose.tuck,0,1);
+      const reach=0.24+0.03*pose.engagement;
+      const target=pelvis.clone().add(yaw.transformVector(new pc.Vec3(
+        outward*reach,
+        0.035+0.035*pose.startPoleImpulse-0.028*tuck,
+        0.115+0.045*tuck,
+      )));
+      const upperWorld=upper.getPosition();
+      const upperRest=elbow.getLocalPosition().clone();
+      const lowerRest=wrist.getLocalPosition().clone();
+      const lenA=upperRest.length(),lenB=lowerRest.length();
+      const toTarget=target.clone().sub(upperWorld);
+      const rawDistance=toTarget.length();
+      const maxReach=lenA+lenB-0.007;
+      const minReach=Math.abs(lenA-lenB)+0.025;
+      const distance=bounded(rawDistance,minReach,maxReach);
+      const direction=normalized(toTarget,new pc.Vec3(0,-1,0));
+      const point=upperWorld.clone().add(direction.clone().mulScalar(distance));
+      const projected=(lenA*lenA-lenB*lenB+distance*distance)/(2*distance);
+      const bend=Math.sqrt(Math.max(0,lenA*lenA-projected*projected));
+      // Elbows point slightly out and behind the torso, not across the body.
+      const pole=yaw.transformVector(new pc.Vec3(
+        outward*.7,-.16,-.48));
+      pole.sub(direction.clone().mulScalar(pole.dot(direction)));
+      const bendDirection=normalized(pole,new pc.Vec3(outward,0,0));
+      const elbowWorld=upperWorld.clone().add(
+        direction.clone().mulScalar(projected)).add(
+        bendDirection.mulScalar(bend));
+      const femurWorld=elbowWorld.clone().sub(upperWorld);
+      const upperParentInverse=upper.parent.getRotation().clone().invert();
+      const femurInParent=upperParentInverse.transformVector(femurWorld);
+      upper.setLocalRotation(rotateTo(upperRest,femurInParent));
+      const shinWorld=point.clone().sub(elbow.getPosition());
+      const elbowParentInverse=elbow.parent.getRotation().clone().invert();
+      const shinInParent=elbowParentInverse.transformVector(shinWorld);
+      elbow.setLocalRotation(rotateTo(lowerRest,shinInParent));
+      wrist.setLocalEulerAngles(0,0,0);
+      this.humanHandError[i]=wrist.getPosition().distance(target);
     }
   }
 
@@ -347,7 +431,9 @@ export class SuperGRacePoseDirector {
     const bones = this.bones[side], target = this.targets[side];
     const solution = positionLeg(this.pelvis, bones, target.ankle, target.rotation, side);
     const ix = side === "L" ? 0 : 1;
-    this.lastLegError[ix] = solution.targetErrorM;
+    this.lastLegError[ix] = this.humanMode ?
+      bones.ankle.getPosition().distance(target.ankle) :
+      solution.targetErrorM;
     this.lastBaseClearance[ix] = minimumSoleClearance(
       bones.foot.getPosition(), bones.foot.getRotation(), course);
     const actual = bones.foot.getRotation().transformVector(localSkiForward);
@@ -419,12 +505,23 @@ export class SuperGRacePoseDirector {
    */
   update(f: Frame, c: Course, dt: number): void {
     const frame = f as SGSourceFrame;
-    const pose = this.model.sample(frame, dt);
+    const inputPose = this.model.sample(frame, dt);
+    const pose = this.humanMode ? humanRacerPose(inputPose, frame) : inputPose;
     this.lastPose = pose;
     const root = this.actor.root;
     const ground = terrainHeight(f.x, f.z, c);
     const [, grade] = gradient(f.x, f.z, c);
     const gradePitchDeg = -Math.atan(grade) * RAD;
+    if(this.humanMode){
+      // CRITICAL anatomical fix:
+      // The imported GLB binds shoulders/head already pitched ~18° forward.
+      // Root orientation adds the real downhill pitch (+15° to +30° here),
+      // then the old torso added another 25–40° FORWARD. Their stacked sum
+      // made the back nearly horizontal (head only 17 cm above hips in 3D).
+      // Compensate both bind-frame lean and slope once, at the WHOLE
+      // spine level, without touching physical ski pitch or head/hand IK.
+      pose.spinePitchDeg -= 20 + 0.72*gradePitchDeg;
+    }
     const flight = Math.max(0, f.height);
     // Player ground position remains *exactly* controlled by the simulator.
     root.setPosition(f.x, ground + flight + 0.015, f.z);
@@ -452,6 +549,7 @@ export class SuperGRacePoseDirector {
       0, pose.pelvisYawDeg, pose.pelvisRollDeg);
     this.setTorso(pose);
     this.setArms(pose);
+    this.setHumanArms(pose);
     this.prepareFoot("L", pose.leftFoot, pose, c, ground, flight);
     this.prepareFoot("R", pose.rightFoot, pose, c, ground, flight);
     this.constrainPelvis();
@@ -519,6 +617,18 @@ export class SuperGRacePoseDirector {
       leftLegLengthM: left.length, rightLegLengthM: right.length,
       pelvisWorld: xyz(this.pelvis), leftFootWorld: xyz(this.bones.L.foot),
       rightFootWorld: xyz(this.bones.R.foot),
+      humanMode: this.humanMode,
+      chestWorld: xyz(this.chest), headWorld: xyz(this.head),
+      leftKneeWorld: xyz(this.bones.L.knee),
+      rightKneeWorld: xyz(this.bones.R.knee),
+      leftAnkleWorld: xyz(this.bones.L.ankle),
+      rightAnkleWorld: xyz(this.bones.R.ankle),
+      leftWristWorld: this.actor.joints.LWrist
+        ? xyz(this.actor.joints.LWrist) : [],
+      rightWristWorld: this.actor.joints.RWrist
+        ? xyz(this.actor.joints.RWrist) : [],
+      leftHumanHandTargetErrorM:this.humanHandError[0],
+      rightHumanHandTargetErrorM:this.humanHandError[1],
       phase: p.phase,
       pelvisHeightM: p.pelvisHeightM,
       pelvisOffsetM: p.pelvisShiftM,
