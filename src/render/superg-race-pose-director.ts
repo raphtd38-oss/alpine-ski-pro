@@ -22,6 +22,7 @@ import { PRO_POLE } from "./equipment-specs";
 import { gateCrashPose } from "./gate-crash-pose";
 import { humanRacerPose } from "./human-racer-pose";
 import { SuperGHumanReconstruction } from "./superg-human-reconstruction";
+import { prestartWarmup, type PrestartWarmup } from "./prestart-warmup";
 import {
   SuperGCompetitionPose,
   type SGSourceFrame,
@@ -88,6 +89,8 @@ export interface SGDirectorDiagnostics {
   rightFootWorld: number[];
   /** Positions are taken from the ACTUAL rendered bones, not target hints. */
   humanMode?: boolean;
+  warmupBeat?: PrestartWarmup["beat"];
+  warmupIntensity?: number;
   chestWorld?: number[];
   headWorld?: number[];
   leftKneeWorld?: number[];
@@ -236,6 +239,7 @@ export class SuperGRacePoseDirector {
   private visualFall = 0;
   private humanHandError: [number,number] = [0,0];
   private lastPose: SGPose | null = null;
+  private lastWarmup: PrestartWarmup = prestartWarmup(undefined);
   private lastLegError: [number, number] = [0, 0];
   private lastGripError: [number, number] = [0, 0];
   private lastBaseClearance: [number, number] = [0, 0];
@@ -291,6 +295,7 @@ export class SuperGRacePoseDirector {
     this.poleWeights[0] = this.poleWeights[1] = 0;
     this.visualFall = 0;
     this.lastPose = null;
+    this.lastWarmup = prestartWarmup(undefined);
     this.humanHandError = [0,0];
   }
 
@@ -341,7 +346,7 @@ export class SuperGRacePoseDirector {
    * hold both poles. Solve UPPER ARM and FOREARM with their actual GLB lengths
    * and parent world transforms. The lower-body IK remains independent.
    */
-  private setHumanArms(pose: SGPose): void {
+  private setHumanArms(pose: SGPose, warmup:PrestartWarmup): void {
     if (!this.humanMode) return;
     const yaw = new pc.Quat().setFromEulerAngles(0, pose.headingDeg, 0);
     const pelvis = this.pelvis.getPosition();
@@ -379,10 +384,12 @@ export class SuperGRacePoseDirector {
       );
       const height = .095 + .064 * tuck - .025 * outside * load
         + .025 * inside * release + .08 * stroke
-        + .095 * flight - .26 * finishHand;
+        + .095 * flight - .26 * finishHand +
+        warmup.armOffsetY[i];
+      const warmArm=i===0?0:1;
       const fore = .215 + .13 * tuck + .045 * outside * load
         + .045 * release - .16 * stroke + .11 * flight
-        + .18 * finishHand;
+        + .18 * finishHand + warmup.armForwardM[warmArm];
       const target = pelvis.clone().add(yaw.transformVector(
         new pc.Vec3(lateral, height, fore)));
 
@@ -551,6 +558,15 @@ export class SuperGRacePoseDirector {
     const pose = this.reconstructionMode
       ? this.humanMotion.sample(inputPose, frame, dt)
       : this.humanMode ? humanRacerPose(inputPose, frame) : inputPose;
+    const warmup=prestartWarmup(this.reconstructionMode?frame.startPhase:undefined);
+    this.lastWarmup=warmup;
+    if(warmup.active){
+      pose.pelvisHeightM+=warmup.pelvisBounceM;
+      pose.pelvisShiftM+=warmup.lateralWeightM;
+      pose.spinePitchDeg+=warmup.trunkPitchDeg;
+      pose.spineRollDeg+=warmup.trunkRollDeg;
+      pose.headPitchDeg+=warmup.headNodDeg;
+    }
     this.lastPose = pose;
     const root = this.actor.root;
     const ground = terrainHeight(f.x, f.z, c);
@@ -600,7 +616,7 @@ export class SuperGRacePoseDirector {
     this.setFoot("R", pose, c);
     // The pelvis must be projected into both ski reach spheres BEFORE
     // solving arms; otherwise wrists/poles drift when leg IK adjusts COM.
-    this.setHumanArms(pose);
+    this.setHumanArms(pose,warmup);
     this.setPoles(pose, dt, c);
     if (crash.active) {
       // 3-stage World-Cup-style fall with the EXISTING 25-bone racer, not a
@@ -664,6 +680,8 @@ export class SuperGRacePoseDirector {
       pelvisWorld: xyz(this.pelvis), leftFootWorld: xyz(this.bones.L.foot),
       rightFootWorld: xyz(this.bones.R.foot),
       humanMode: this.humanMode,
+      warmupBeat: this.lastWarmup.beat,
+      warmupIntensity: this.lastWarmup.intensity,
       chestWorld: xyz(this.chest), headWorld: xyz(this.head),
       leftKneeWorld: xyz(this.bones.L.knee),
       rightKneeWorld: xyz(this.bones.R.knee),
