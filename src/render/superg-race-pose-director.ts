@@ -306,8 +306,10 @@ export class SuperGRacePoseDirector {
     // Activate only after the launch, and avoid overriding crash/landing IK.
     const speedGain = bounded((speed-4)/16,0,1);
     const startGain = bounded((pose.startPhase-0.25)/1.4,0,1);
-    const flightGain = 1-bounded(flight*2,0,0.9);
-    const weight = crashed ? 0 : 0.55*speedGain*startGain*flightGain;
+    const grounded=flight<=0.01 && frame.fallen===0;
+    const landingGain=1-bounded(pose.landing,0,1);
+    const weight = crashed || !grounded ? 0 :
+      0.55*speedGain*startGain*landingGain;
     const src = sampleTake2(Math.max(0,frame.t));
     this.take2Weight=weight;
     this.take2Time=src.seconds;
@@ -517,7 +519,8 @@ export class SuperGRacePoseDirector {
   update(f: Frame, c: Course, dt: number): void {
     const frame = f as SGSourceFrame;
     const pose = this.model.sample(frame, dt);
-    if (this.take2Enabled) {
+    if (this.take2Enabled && frame.fallen===0 && frame.height<=0.01 &&
+      (frame.gateCrashElapsed===undefined || frame.gateCrashElapsed<0)) {
       const src = sampleTake2(Math.max(0,frame.t));
       // Use real source hip motion with strict 4 cm range; the contact IK
       // still resolves the pelvis against BOTH real race ski bases.
