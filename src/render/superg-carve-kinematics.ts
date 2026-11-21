@@ -232,9 +232,16 @@ const newScratch = (): Scratch => ({
 export class SuperGCompetitionPose {
   private state: Scratch = newScratch();
   readonly tuning: SGAnimationTuning;
+  /** Studio A/B only. Keep normal playable simulation unchanged pending QA. */
+  readonly humanMotionPreview: boolean;
 
-  constructor(overrides: Partial<SGAnimationTuning> = {}) {
+  constructor(overrides: Partial<SGAnimationTuning> = {},
+    humanMotionPreview?: boolean) {
     this.tuning = { ...SG_RACE_DEFAULTS, ...overrides };
+    this.humanMotionPreview = humanMotionPreview ?? (
+      typeof window !== "undefined" &&
+      new URLSearchParams(window.location.search).get("pose") === "human-v2"
+    );
   }
 
   reset(): void { this.state = newScratch(); }
@@ -366,7 +373,13 @@ export class SuperGCompetitionPose {
     // Recover the old TV-referenced compact silhouette between SG turns.
     // Force-driven edge/IK and skier contact from V1.17 remain authoritative.
     const speedTuck = superGVideoSpeedTuck(speed, engagement, flight, landing);
-    const tuckTarget = Math.max(sat(safe(frame.tuck)) *
+    // The original pose collapsed into a full aero tuck almost immediately
+    // after GO, at 20–25 km/h. A real Super-G racer finishes the pole-drive
+    // and extends before settling into a high-speed aerodynamic position.
+    // Preview only: speed gates the VISUAL tuck, never the drag physics.
+    const requestedTuck = sat(safe(frame.tuck)) *
+      (this.humanMotionPreview ? smoothstep(7.5, 19, speed) : 1);
+    const tuckTarget = Math.max(requestedTuck *
       (1 - 0.22 * engagement), speedTuck, finishReach * 0.92);
     a.tuck = smooth(a.tuck, tuckTarget, 9.5, sDt);
     const targetY = clamp(1.01 - (
@@ -374,7 +387,10 @@ export class SuperGCompetitionPose {
       0.035 * flex * forceCommitment + safe(frame.suspension) + 0.060 * a.start + 0.064 * a.pole -
       0.095 * extension + 0.060 * landing + 0.065 * finishReach
     ), T.minPelvisHeightM, T.maxPelvisHeightM) +
-      0.035 * smoothstep(0.55, 1.7, Math.abs(a.edgeRate)) * (1 - engagement);
+      // Elite turn transition includes extension/COM lift as the new edge
+      // releases. This reduces the two-knees-at-once squat silhouette.
+      (this.humanMotionPreview ? 0.058 : 0.035) *
+        smoothstep(0.55, 1.7, Math.abs(a.edgeRate)) * (1 - engagement);
     a.pelvisY = smooth(a.pelvisY, targetY,
       T.heightResponseHz, sDt);
     // Rig yaw is 180°: negative local X moves hips into a +X turn.
