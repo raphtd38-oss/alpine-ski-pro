@@ -1,3 +1,11 @@
+# Suite à la reprise Codex Astra — 21 novembre 2026
+
+La caméra télévision à neuf plans et la posture aéro visuelle issues de l'ancienne PR #40 ont été adaptées, testées et publiées via la PR #46 ; l'ancien plan #39 de 42 portes est supersédé par le tracé jouable actuel. [Statut détaillé](STATUS.md).
+
+**Encore à réaliser** : vérification de fluidité et de qualité sur GPU PC et iPhone, comparaison du coureur et des caméras à une référence vidéo accessible, géographie de Cortina fondée sur données réellement licenciées et mesurées, végétation/LOD spatiale et éventuelles animations mocap sous licences compatibles. Ne pas revendiquer de positions officielles des 43 portes FIS ni de rendu photoréaliste sans mesures et sources ; préserver le solveur 120 Hz, le rig 25 os, les 42 portes de jeu et le seuil de chute >45 %.
+
+---
+
 # Après le lot graphique V1.18 — 20 novembre 2026
 
 - Publication V1.18 vérifiée sur le site public (PR #45, fusion `5e8f1fe`). Mesurer ensuite les performances réelles sur GPU PC/mobile ; le cloud utilise SwiftShader et son banc révèle un coût de rendu supérieur.
