@@ -429,11 +429,11 @@ footer button span {
 }
 #countdown {
   position: absolute;
-  left: 50%;
-  top: 38%;
+  left: 18%;
+  top: 43%;
   transform: translate(-50%, -50%);
   font-family: "Barlow Condensed", Impact, sans-serif;
-  font-size: 130px;
+  font-size: 96px;
   font-weight: 700;
   text-shadow: 0 4px 35px #132c47aa;
 }
