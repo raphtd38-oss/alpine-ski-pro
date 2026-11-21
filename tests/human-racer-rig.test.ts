@@ -72,6 +72,13 @@ describe("real connected human 25-bone skeleton",()=>{
    }
    expect(a.leftHandGripErrorM).toBeLessThan(.08);
    expect(a.rightHandGripErrorM).toBeLessThan(.08);
+   for(const wrist of [a.leftWristWorld!,a.rightWristWorld!]){
+     // Hand in the waist/pole-grip zone, not raised to the shoulder.
+     expect(wrist[1]-a.pelvisWorld[1]).toBeGreaterThan(-.15);
+     expect(wrist[1]-a.pelvisWorld[1]).toBeLessThan(.22);
+   }
+   expect(a.leftHumanHandTargetErrorM!).toBeLessThan(.12);
+   expect(a.rightHumanHandTargetErrorM!).toBeLessThan(.12);
    console.info("[HUMAN_25BONE]",edge,
     JSON.stringify({
      knee:[a.leftKneeFlexionDeg,a.rightKneeFlexionDeg],
