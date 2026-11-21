@@ -84,8 +84,9 @@ export class PremiumRacerKit {
     const head=rig.findByName("Head") as pc.Entity | null;
     const chest=rig.findByName("Chest") as pc.Entity | null;
     if(!head||!chest)throw new Error("Premium kit needs Head/Chest in racer GLB");
-    const n=typeof window==="undefined"?27:
-      Number(new URLSearchParams(window.location.search).get("bib"));
+    const numberParam=typeof window==="undefined"?null:
+      new URLSearchParams(window.location.search).get("bib");
+    const n=numberParam===null?27:Number(numberParam);
     this.number=Number.isInteger(n)&&n>=1&&n<=999?n:27;
     const mat=(name:string,hex:string,metal=0,gloss=.4)=>{
       const m=material(name,hex,metal,gloss);
