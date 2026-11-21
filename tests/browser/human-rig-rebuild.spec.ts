@@ -12,7 +12,7 @@ test("human-v3 reduces frog-squat and gorilla back while preserving both skis",a
  page.on("pageerror",e=>errors.push(e.message));
  for(const style of ["old","human-v3"]){
   await page.goto("/?quality=low&racer=mobile&renderer=webgl2"+
-    (style==="human-v3"?"&pose=human-v3":""));
+    (style==="human-v3"?"&pose=human-v3":"&pose=legacy"));
   await expect(page.locator("#loading")).toHaveCount(0,{timeout:75000});
   await page.locator("#play").click();
   await page.evaluate(()=>{
