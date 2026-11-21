@@ -1,3 +1,11 @@
+# Après PR #47 — améliorer le skieur sans casser l'IK (21 novembre 2026)
+
+Les commandes à l'écran, la contre-angulation et le calcul 3D des appuis ont fait l'objet de la [PR #47](https://github.com/raphtd38-oss/alpine-ski-pro/pull/47), avec tests réussis. La pose visible dans les captures navigateur est **encore trop stylisée** pour l'objectif de simulation de Super-G ; ne pas présenter ce résultat comme AAA ou biomécaniquement validé.
+
+**Prochaines améliorations à faire en priorité :** enregistrer une séquence réelle du skieur en virages à vitesse de course avec angles latéraux avant/arrière ; calibrer les repères mécaniques du GLB (axes hanche/genou/cheville et pivots de fixation), améliorer la flexion longitudinale du tibia et la contre-angulation des épaules en conservant la fermeture des contacts ; comparer images avant/après au même temps, vitesse, carre et caméra ; tester l'appui en vitesse lente et rapide et les réceptions ; mesurer les FPS sur GPU iPhone/PC et ajuster le niveau graphique. Ne pas rebasculer vers l'ancienne rotation libre du genou qui ignorait le contact exact du ski.
+
+---
+
 # Suite à la reprise Codex Astra — 21 novembre 2026
 
 La caméra télévision à neuf plans et la posture aéro visuelle issues de l'ancienne PR #40 ont été adaptées, testées et publiées via la PR #46 ; l'ancien plan #39 de 42 portes est supersédé par le tracé jouable actuel. [Statut détaillé](STATUS.md).
