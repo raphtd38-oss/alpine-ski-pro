@@ -206,36 +206,17 @@ function positionLeg(
 
   const desiredFemur = solution.kneePelvis.clone().sub(hipPelvis);
   const targetShinInPelvis = solution.anklePelvis.clone().sub(solution.kneePelvis);
-  // A knee has ONE flexion hinge, not a freely rotating ball joint.
-  // Use the actual GLB rest-segment plane to derive that hinge; the hip
-  // supplies the necessary 3D orientation, including counter-angulation.
-  const hinge = normalized(
-    new pc.Vec3().cross(femurRest, shinRest), new pc.Vec3(1, 0, 0));
-  const hipBase = rotateTo(femurRest, desiredFemur);
-  const currentNormal = hipBase.transformVector(hinge.clone());
-  const desiredNormal = normalized(
-    new pc.Vec3().cross(desiredFemur, targetShinInPelvis),
-    currentNormal.clone());
-  const femurAxis = normalized(desiredFemur.clone(), new pc.Vec3(0, -1, 0));
-  const hipTwistDeg = Math.atan2(
-    femurAxis.dot(new pc.Vec3().cross(currentNormal, desiredNormal)),
-    currentNormal.dot(desiredNormal)) * RAD;
-  const hipQuaternion = new pc.Quat()
-    .setFromAxisAngle(femurAxis, hipTwistDeg).mul(hipBase);
+  // The hip aims the femur at the anatomical knee target. For this GLB
+  // the knee and hip have different rest coordinate frames: enforcing a
+  // naive X-axis hinge moves the ANKLE by up to 28 cm and breaks ski contact.
+  // Use a shortest-arc knee swing instead; the knee BEND PLANE has already
+  // been constrained by the boot-cuff-aware analytical target above.
+  // The shortest arc avoids adding any arbitrary axial twist to the shin.
+  const hipQuaternion = rotateTo(femurRest, desiredFemur);
   bones.hip.setLocalRotation(hipQuaternion);
   const targetShinInHip = hipQuaternion.clone().invert()
     .transformVector(targetShinInPelvis);
-  const kneeFlexDeg = Math.atan2(
-    hinge.dot(new pc.Vec3().cross(shinRest, targetShinInHip)),
-    shinRest.dot(targetShinInHip)) * RAD;
-  const hingeRotation = new pc.Quat().setFromAxisAngle(hinge, kneeFlexDeg);
-  // A few imported GLB joints have nontrivial bind-frame orientation.
-  // The hinge is the anatomical baseline, but a residual swing correction
-  // is required to keep the real foot target EXACTLY reachable in 3D.
-  // Without it, shins detach by 10-28 cm and skis clip through snow.
-  const hingeShin = hingeRotation.transformVector(shinRest.clone());
-  const residualSwing = rotateTo(hingeShin, targetShinInHip);
-  bones.knee.setLocalRotation(residualSwing.mul(hingeRotation));
+  bones.knee.setLocalRotation(rotateTo(shinRest, targetShinInHip));
 
   // The boot and all the ski meshes are already parented to LeftFoot or
   // RightFoot. A real race binding stays rigid: setting foot rotation from
