@@ -63,6 +63,22 @@ describe("genuine anatomical reconstructed skier mesh and original ski hardware"
      if(weights[i].filter(x=>x>.08).length>=2)multi++;
    }
    expect(multi).toBeGreaterThan(250);
+   expect(b.doc.extras.humanRebuild.method).toBe("anatomical-source-skin-reconstruction");
+   const oldPrimitive=a.doc.meshes[sourceNode.mesh].primitives[0];
+   const oldVerts=a.access(oldPrimitive.attributes.POSITION);
+   const oldWeights=a.access(oldPrimitive.attributes.WEIGHTS_0);
+   expect(pos.length).toBe(oldVerts.length);
+   // This is a REAL weight reconstruction, not a renamed unchanged GLB.
+   // Original sculpted anatomy is retained to avoid rounded "capsule" limbs.
+   const maxSurfaceMove=Math.max(...pos.map((p,i)=>
+     Math.hypot(...p.map((v,k)=>v-oldVerts[i][k]))));
+   expect(maxSurfaceMove).toBeLessThan(.025);
+   let changed=0;
+   for(let i=0;i<weights.length;i++)
+     if(weights[i].some((v,k)=>Math.abs(v-oldWeights[i][k])>.005))changed++;
+   expect(changed).toBeGreaterThan(pos.length*.10);
+   console.info("[SKIN_RECONSTRUCTION_DEFORMATION]",variant,
+     JSON.stringify({changedVertices:changed,maxSurfaceMove}));
    // Preserve original 25 bone rig and all import-visible entity names.
    for(const name of ["Hips","LeftUpLeg","RightUpLeg","LeftLeg","RightLeg",
      "LeftFoot","RightFoot","ONE seamless fused skinned athlete body"])
