@@ -228,8 +228,14 @@ function positionLeg(
   const kneeFlexDeg = Math.atan2(
     hinge.dot(new pc.Vec3().cross(shinRest, targetShinInHip)),
     shinRest.dot(targetShinInHip)) * RAD;
-  bones.knee.setLocalRotation(new pc.Quat()
-    .setFromAxisAngle(hinge, kneeFlexDeg));
+  const hingeRotation = new pc.Quat().setFromAxisAngle(hinge, kneeFlexDeg);
+  // A few imported GLB joints have nontrivial bind-frame orientation.
+  // The hinge is the anatomical baseline, but a residual swing correction
+  // is required to keep the real foot target EXACTLY reachable in 3D.
+  // Without it, shins detach by 10-28 cm and skis clip through snow.
+  const hingeShin = hingeRotation.transformVector(shinRest.clone());
+  const residualSwing = rotateTo(hingeShin, targetShinInHip);
+  bones.knee.setLocalRotation(residualSwing.mul(hingeRotation));
 
   // The boot and all the ski meshes are already parented to LeftFoot or
   // RightFoot. A real race binding stays rigid: setting foot rotation from
