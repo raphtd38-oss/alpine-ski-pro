@@ -75,25 +75,20 @@ export function humanRacerPose(original:SGPose,f:SGSourceFrame):SGPose {
   const spineRoll=clamp(lateralTorso*6.5,-8,8);
   const chestRoll=clamp(lateralTorso*6,-8,8);
   const headPitch=-clamp(5+10*tuck+5*preBrace,5,21);
-  // A racing pole grip is a bent elbow brought toward the hip, not hands
-  // swinging from the shoulders like a gorilla. Preserve start pole contact.
-  const arm=(input:SGArmPose,side:"L"|"R"):SGArmPose=>{
-    const handed=side==="L"?-1:1;
-    const outside=original.outsideSide===side;
-    const pole=drive*.85+preBrace*.32;
-    return {
-      shoulderPitchDeg: clamp(-6-15*tuck-18*pole+
-        5*loaded*(outside?-1:1)-33*finish*(side==="R"?1:0),-70,23),
-      shoulderRollDeg: handed*(5+6*loaded-3*tuck),
-      upperArmPitchDeg: clamp(-7-14*tuck+7*pole,-35,18),
-      upperArmYawDeg: handed*(1+3*loaded),
-      elbowPitchDeg: clamp(-27-31*tuck+29*pole-
-        10*finish*(side==="R"?1:0),-68,14),
-      wristPitchDeg: clamp(-4*pole+6*finish,-12,10),
-      poleContact:input.poleContact,
-      trailing:clamp(.35+.52*tuck+.18*loaded+.26*original.airborne,0,1),
-    };
-  };
+  // Preserve the REAL wrist/shaft grip behaviour from the existing 25-bone
+  // skier: our first from-scratch arm angles raised both hands to the
+  // shoulders (confirmed in image A/B) even though the spine is now correct.
+  // Reuse that contact-aware arm solution, but soften its excessive flare
+  // and elbow snap. Pole positions are still derived from actual wrists.
+  const arm=(input:SGArmPose,_side:"L"|"R"):SGArmPose=>({
+    ...input,
+    shoulderPitchDeg:input.shoulderPitchDeg*.81,
+    shoulderRollDeg:input.shoulderRollDeg*.83,
+    upperArmPitchDeg:input.upperArmPitchDeg*.86,
+    upperArmYawDeg:input.upperArmYawDeg*.82,
+    elbowPitchDeg:clamp(input.elbowPitchDeg*.86,-44,39),
+    wristPitchDeg:input.wristPitchDeg*.9,
+  });
   return {
     ...original,
     bankDeg:bank,
