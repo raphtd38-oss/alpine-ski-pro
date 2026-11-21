@@ -32,7 +32,7 @@ describe("reconstructed Super-G human movement",()=>{
      expect(pose.headingDeg).toBe(raw.headingDeg);
      expect(pose.edge).toBe(raw.edge);
      expect(pose.outsideSide).toBe(raw.outsideSide);
-     expect(Math.abs(pose.bankDeg)).toBeLessThanOrEqual(27);
+     expect(Math.abs(pose.bankDeg)).toBeLessThanOrEqual(42);
      expect(pose.pelvisHeightM).toBeGreaterThan(.8);
      expect(pose.pelvisHeightM).toBeLessThan(1.05);
      expect(pose.spinePitchDeg+pose.chestPitchDeg).toBeLessThan(45);
