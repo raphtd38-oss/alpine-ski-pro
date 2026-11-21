@@ -3,6 +3,7 @@ import type { Course, Equipment, Frame } from "../game/types";
 import { terrainHeight, gradient } from "../game/course";
 import { shape, material, meshEntity } from "./geometry";
 import { PRO_POLE } from "./equipment-specs";
+import { PremiumRacerKit } from "./racer-premium-gear";
 import { SuperGRacePoseDirector, type SGDirectorDiagnostics } from "./superg-race-pose-director";
 import { startDrivePhase, startDriveBlend, startPoleContact } from "../game/start-gate";
 import {
@@ -39,6 +40,7 @@ export class Athlete {
   ownedTextures: pc.Texture[] = [];
   /** Connected 25-bone racer owns its own 3D carving solver. Ghost/fallback unchanged. */
   private competitionDirector: SuperGRacePoseDirector | null = null;
+  readonly premiumKit: PremiumRacerKit | null;
   /** Contact projection of the actual rendered skis, for matching snow trails. */
   getSkiContacts() {
     if (!this.isSeamless) return undefined;
@@ -324,6 +326,10 @@ export class Athlete {
       this.material.depthWrite = false;
       this.material.update();
     }
+    // Only the active racer (not ghost/replays) gets the original premium
+    // competition kit. Elements follow the 25 actual bones, no loose props.
+    this.premiumKit = this.isSeamless && !ghost && equipment.id === "SG"
+      ? new PremiumRacerKit(app,this.rig, false) : null;
     // Only the original connected SG player uses this new articulating IK.
     // Do not run both controllers: the old sagittal loop would undo ski heading.
     if (this.isSeamless && !ghost && equipment.id === "SG") {
@@ -358,6 +364,7 @@ export class Athlete {
     // and tips need to retain their own world direction and edge angle.
     if (this.competitionDirector) {
       this.competitionDirector.update(f, c, dt);
+      this.premiumKit?.update(f);
       return;
     }
     const y = terrainHeight(f.x, f.z, c) + f.height;
@@ -683,6 +690,7 @@ export class Athlete {
     this.rig.setLocalPosition(0, this.visualFall * 0.15, 0);
   }
   destroy() {
+    this.premiumKit?.destroy();
     this.root.destroy();
     this.ownedMaterials.forEach((m) => m.destroy());
     this.ownedTextures.forEach((t) => t.destroy());
