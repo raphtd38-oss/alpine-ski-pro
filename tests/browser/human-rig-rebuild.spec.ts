@@ -65,7 +65,10 @@ test("human-v3 reduces frog-squat and gorilla back while preserving both skis",a
  const oldHeadHeight=a.headWorld[1]-a.pelvis[1];
  const newHeadHeight=b.headWorld[1]-b.pelvis[1];
  expect(newHeadHeight).toBeGreaterThan(oldHeadHeight+.12);
- expect(Math.abs(b.bank)).toBeLessThan(Math.abs(a.bank)*.6);
+ // A racing human follows the COM bank, not the full 70° steel edge.
+ // The older v3 <.6 limit was the cause of the upright, rigid silhouette.
+ expect(Math.abs(b.bank)).toBeGreaterThan(Math.abs(a.bank)*.60);
+ expect(Math.abs(b.bank)).toBeLessThan(Math.abs(a.bank));
  writeFileSync("test-results/human-rig-rebuild.json",JSON.stringify(results,null,2));
  console.info("[HUMAN_RIG_AB]",JSON.stringify(results));
  expect(errors).toEqual([]);
