@@ -1,3 +1,17 @@
+# 21 novembre 2026 — correction des commandes et des jambes, PR #47
+
+Le chantier interrompu dans ChatGPT Work a été reconstruit à partir des symptômes et captures fournis ; les modifications locales privées de Work n'étaient pas accessibles directement. [PR #47](https://github.com/raphtd38-oss/alpine-ski-pro/pull/47) fusionnée avec le commit `a5a5a27691b1e25cbdd302ff6791ce5314cfaf92`, après **179 tests unitaires et 7 tests navigateur Chromium** réussis, build Vite/TypeScript et audit d'assets réussis ([CI de la PR](https://github.com/raphtd38-oss/alpine-ski-pro/actions/runs/44930885998)). [CI / déploiement main](https://github.com/raphtd38-oss/alpine-ski-pro/actions/runs/44931329312) à consulter pour la publication.
+
+- Les touches gauche/droite, boutons tactiles et axe horizontal de la manette sont mappés dans le sens de la caméra de poursuite sans changer le solveur physique 120 Hz.
+- Les signes locaux de contre-angulation thoracique ont été corrigés pour le yaw 180° du GLB.
+- Le solveur de jambes place hanche, genou et cheville dans un repère 3D commun, oriente la flexion vers la chaussure, puis ferme l'IK sur la position *réelle* de cheville par CCD déterministe. Le diagnostic d'erreur contrôle la position finale rendue.
+- Essais sur le véritable GLB : deux semelles à 8 mm de la neige pour les trois postures de régression, angle tibia/chaussure inférieur à 56° et écarts des cibles cheville inférieurs à 1 mm dans ces tests. Ils ne prouvent pas un résultat biomécanique professionnel en toute situation.
+- Le personnage 25 os, les 42 portes, les collisions et leur seuil >45 %, le coucher de soleil, les replays, la caméra TV et les graphismes V1.18 sont conservés.
+
+**Inspection visuelle des captures automatisées :** les jambes sont moins incohérentes mais le skieur reste stylisé, raide et parfois artificiellement fléchi. La qualité d'une animation de skieur de haut niveau n'est **pas** atteinte ni certifiée. Réglages sur GPU iPhone/PC et analyse vidéo/mocap autorisés restent nécessaires. La capture automatique n'est pas une preuve de fluidité sur appareils réels.
+
+---
+
 # 21 novembre 2026 — Reprise du chantier Codex Astra terminée et publiée
 
 Les PR historiques #39 et #40 sont closes : #39 documentait un plan dépassé par les 42 portes et zones de saut déjà intégrées depuis #42 ; #40 contenait une caméra télévisée et une posture vitesse basées sur un ancien code incompatible avec V1.18. Son travail utile a été **porté sur V1.18 dans la PR #46**, fusionnée sous le commit `f355f69788ea37476de7cb0ef78fff017102f483`.
