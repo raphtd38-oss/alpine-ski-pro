@@ -593,6 +593,7 @@ async function boot() {
             pelvis: groundClearance(athlete.isSeamless ? "Hips" : "Pelvis"),
             poleGripError: [gripError(0), gripError(1)],
             competitionPose: athlete.getCompetitionDiagnostics(),
+            authoredMotion: athlete.getAuthoredPreviewSnapshot(),
           };
         },
         profilePhysics: (ticks = 12000) => {
