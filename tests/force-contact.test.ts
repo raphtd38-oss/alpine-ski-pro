@@ -59,7 +59,9 @@ describe('actual 25-bone hierarchy contact regression',()=>{
     expect(p.rightShinBootAngleDeg).toBeLessThan(57);
     console.info('[SG hinge contact]',edge,
       'shinBoot',p.leftShinBootAngleDeg.toFixed(1),p.rightShinBootAngleDeg.toFixed(1),
-      'flex',p.leftKneeFlexionDeg.toFixed(1),p.rightKneeFlexionDeg.toFixed(1));
+      'flex',p.leftKneeFlexionDeg.toFixed(1),p.rightKneeFlexionDeg.toFixed(1),
+      'ankleError',p.leftAnkleTargetErrorM.toFixed(3),p.rightAnkleTargetErrorM.toFixed(3),
+      'sole',p.leftSkiBaseClearanceM.toFixed(3),p.rightSkiBaseClearanceM.toFixed(3));
     expect(p.leftSkiBaseClearanceM).toBeCloseTo(.008,3);
     expect(p.rightSkiBaseClearanceM).toBeCloseTo(.008,3);
     expect(p.leftAnkleTargetErrorM).toBeLessThan(.001);
