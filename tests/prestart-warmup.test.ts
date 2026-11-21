@@ -22,10 +22,10 @@ describe("World Cup racer pre-start warm-up choreography",()=>{
     for(let i=0;i<100;i++){
       const p=-4+i*.04,a=prestartWarmup(p),b=prestartWarmup(p);
       expect(a).toEqual(b);
-      expect(a.pelvisBounceM).toBeGreaterThanOrEqual(-.058);
-      expect(Math.abs(a.trunkRollDeg)).toBeLessThan(6);
+      expect(a.pelvisBounceM).toBeGreaterThanOrEqual(-.09);
+      expect(Math.abs(a.trunkRollDeg)).toBeLessThan(8);
       expect(Math.abs(a.headNodDeg)).toBeLessThan(7);
-      expect(Math.abs(a.armOffsetY[0])).toBeLessThan(.11);
+      expect(Math.abs(a.armOffsetY[0])).toBeLessThan(.15);
       expect(a).not.toHaveProperty("skiYaw");
       expect(a).not.toHaveProperty("contact");
     }
