@@ -3,6 +3,16 @@ import {writeFileSync} from "node:fs";
 
 const distance=(a:number[],b:number[])=>
   Math.hypot(...a.map((n,i)=>n-b[i]));
+// Compare articulations in the MOVING SKIER'S body frame, never world
+// positions. World-space hands trivially move metres with the racer and
+// could make a frozen mannequin falsely pass this test.
+const local=(p:number[],hip:number[],heading:number)=>{
+  const dx=p[0]-hip[0],dy=p[1]-hip[1],dz=p[2]-hip[2];
+  return [
+    dx*Math.cos(heading)-dz*Math.sin(heading),dy,
+    dx*Math.sin(heading)+dz*Math.cos(heading),
+  ];
+};
 
 /**
  * Based on the user's real 30-second Nov 21 capture: arms were glued to
@@ -40,11 +50,14 @@ test("human launch, loaded left/right turns and edge release animate a real body
     samples.push({label,state:{
       t:data.state.t,speed:Math.hypot(data.state.vx,data.state.vz),
       height:data.state.height,edge:data.state.edge,
+      heading:data.state.heading,
     },pose:{
       bank:data.pose.bodyBankDeg,outside:data.pose.outsideSide,
       hips:data.pose.pelvisWorld,head:data.pose.headWorld,
-      leftWrist:data.pose.leftWristWorld,rightWrist:data.pose.rightWristWorld,
-      leftGoal:data.pose.leftHandGoalWorld,rightGoal:data.pose.rightHandGoalWorld,
+      leftWrist:local(data.pose.leftWristWorld,data.pose.pelvisWorld,data.state.heading),
+      rightWrist:local(data.pose.rightWristWorld,data.pose.pelvisWorld,data.state.heading),
+      leftGoal:local(data.pose.leftHandGoalWorld,data.pose.pelvisWorld,data.state.heading),
+      rightGoal:local(data.pose.rightHandGoalWorld,data.pose.pelvisWorld,data.state.heading),
       knees:[data.pose.leftKneeFlexionDeg,data.pose.rightKneeFlexionDeg],
       soles:[data.pose.leftSkiBaseClearanceM,data.pose.rightSkiBaseClearanceM],
     }});
