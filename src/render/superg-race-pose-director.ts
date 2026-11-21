@@ -374,13 +374,13 @@ export class SuperGRacePoseDirector {
       // grip zone, outside arm follows load, inside arm guards the chest.
       // Pole endpoints are subsequently attached to the ACTUAL wrist bone.
       const lateral = outward * (
-        .235 + .025 * load + .035 * landing - .022 * tuck
+        .255 + .025 * load + .025 * landing - .055 * tuck
         + .015 * outside
       );
-      const height = .038 - .025 * tuck - .025 * outside * load
+      const height = .095 + .064 * tuck - .025 * outside * load
         + .025 * inside * release + .08 * stroke
         + .095 * flight - .26 * finishHand;
-      const fore = .125 + .09 * tuck + .045 * outside * load
+      const fore = .215 + .13 * tuck + .045 * outside * load
         + .045 * release - .16 * stroke + .11 * flight
         + .18 * finishHand;
       const target = pelvis.clone().add(yaw.transformVector(
