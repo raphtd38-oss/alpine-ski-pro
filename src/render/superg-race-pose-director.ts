@@ -20,7 +20,7 @@ import { gradient, terrainHeight } from "../game/course";
 import { skiSurfaceRotation, minimumSoleClearance } from "./ski-contact-frame";
 import { PRO_POLE } from "./equipment-specs";
 import { gateCrashPose } from "./gate-crash-pose";
-import { sampleTake2, TAKE2_JOINTS } from "./motionsmith-take2";
+import { sampleTake2, sampleTake2KneePoles, TAKE2_JOINTS } from "./motionsmith-take2";
 import {
   SuperGCompetitionPose,
   type SGSourceFrame,
@@ -124,6 +124,8 @@ export function solve25BoneLegKnee(
   ankleRestInKnee: pc.Vec3,
   targetAnklePelvis: pc.Vec3,
   side: SkiSide,
+  sourceKneePole?: pc.Vec3,
+  sourcePoleWeight=0,
 ): KneeSolution {
   const upper = kneeRestInHip.length();
   const lower = ankleRestInKnee.length();
@@ -150,6 +152,21 @@ export function solve25BoneLegKnee(
   const pole = new pc.Vec3(sideX, -0.22, -1.0);
   pole.sub(line.clone().mulScalar(pole.dot(line)));
   if (pole.length() < 0.003) pole.set(0, 0, -1);
+  // Studio preview: source motion suggests the knee bend-plane direction.
+  // Preserve anatomical forward bending, solve BOTH fixed segment lengths
+  // and exactly the original ski/ankle target. Source footsteps are ignored.
+  if(sourceKneePole && sourcePoleWeight>0){
+    const candidate=sourceKneePole.clone().sub(
+      line.clone().mulScalar(sourceKneePole.dot(line)));
+    if(candidate.length()>0.02){
+      const reference=normalized(pole.clone(),new pc.Vec3(0,0,-1));
+      candidate.normalize();
+      if(candidate.dot(reference)>0.35){
+        const w=bounded(sourcePoleWeight,0,0.30);
+        pole.lerp(pole.clone(),candidate,w);
+      }
+    }
+  }
   const bendDirection = normalized(pole, new pc.Vec3(0, 0, -1));
   const kneePelvis = hipPelvis.clone().add(
     line.clone().mulScalar(projected)).add(
@@ -179,6 +196,8 @@ function positionLeg(
   ankleWorld: pc.Vec3,
   desiredSkiWorldRotation: pc.Quat,
   side: SkiSide,
+  sourceKneePole?: pc.Vec3,
+  sourcePoleWeight=0,
 ): KneeSolution {
   const pelvisInverse = pelvis.getWorldTransform().clone().invert();
   const requestedAnklePelvis = pelvisInverse.transformPoint(ankleWorld);
@@ -186,7 +205,8 @@ function positionLeg(
   const femurRest = bones.knee.getLocalPosition().clone();
   const shinRest = bones.ankle.getLocalPosition().clone();
   const solution = solve25BoneLegKnee(
-    hipPelvis, femurRest, shinRest, requestedAnklePelvis, side);
+    hipPelvis, femurRest, shinRest, requestedAnklePelvis, side,
+    sourceKneePole, sourcePoleWeight);
 
   const desiredFemur = solution.kneePelvis.clone().sub(hipPelvis);
   const hipQuaternion = rotateTo(femurRest, desiredFemur);
@@ -219,6 +239,7 @@ export class SuperGRacePoseDirector {
     new URLSearchParams(window.location.search).get("motion") === "take2";
   private take2Weight = 0;
   private take2Time = 0;
+  private take2KneePoles: Record<SkiSide,pc.Vec3>|null=null;
   private readonly bones: Record<SkiSide, LegBones>;
   private readonly pelvis: pc.GraphNode;
   private readonly spine: pc.GraphNode;
@@ -274,6 +295,7 @@ export class SuperGRacePoseDirector {
     this.lastPose = null;
     this.take2Weight = 0;
     this.take2Time = 0;
+    this.take2KneePoles = null;
   }
 
   private applyMotionSmithTake2(pose: SGPose, frame: SGSourceFrame,
@@ -289,8 +311,19 @@ export class SuperGRacePoseDirector {
     const src = sampleTake2(Math.max(0,frame.t));
     this.take2Weight=weight;
     this.take2Time=src.seconds;
-    if (weight<0.001) return;
+    if (weight<0.001){
+      this.take2KneePoles=null;
+      return;
+    }
     const heading = new pc.Quat().setFromEulerAngles(0,pose.headingDeg,0);
+    const kneeSource=sampleTake2KneePoles(Math.max(0,frame.t));
+    const pelvisInverse=this.pelvis.getRotation().clone().invert();
+    const asPole=(v:readonly [number,number,number]) =>
+      pelvisInverse.transformVector(heading.transformVector(
+        new pc.Vec3(v[0],v[1],v[2]))).normalize();
+    this.take2KneePoles={
+      L:asPole(kneeSource[0]),R:asPole(kneeSource[1]),
+    };
     // The source's actual 89-bone UE5 local rotations have been converted
     // OFFLINE into independent world-space rest-pose angular deltas. Apply
     // those deltas to the corresponding 25-bone skier. Do not replace the
@@ -406,7 +439,10 @@ export class SuperGRacePoseDirector {
 
   private setFoot(side: SkiSide, pose: SGPose, course: Course): void {
     const bones = this.bones[side], target = this.targets[side];
-    const solution = positionLeg(this.pelvis, bones, target.ankle, target.rotation, side);
+    const hint=this.take2Enabled?this.take2KneePoles?.[side]:undefined;
+    const hintWeight=this.take2Enabled?Math.min(.30,this.take2Weight*.8):0;
+    const solution = positionLeg(this.pelvis, bones, target.ankle,
+      target.rotation,side,hint,hintWeight);
     const ix = side === "L" ? 0 : 1;
     this.lastLegError[ix] = solution.targetErrorM;
     this.lastBaseClearance[ix] = minimumSoleClearance(
