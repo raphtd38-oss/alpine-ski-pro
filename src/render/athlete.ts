@@ -43,6 +43,23 @@ export class Athlete {
   private authoredPreview = false;
   private authoredPreviewName = "";
   getAuthoredPreviewName(): string { return this.authoredPreviewName; }
+  getAuthoredPreviewSnapshot() {
+    if (!this.authoredPreview) return null;
+    const names = ["Hips","Spine","Chest","Head","LeftUpLeg","RightUpLeg",
+      "LeftLeg","RightLeg","LeftFoot","RightFoot"];
+    const joints: Record<string,{localRotation:[number,number,number,number],
+      worldPosition:[number,number,number]}> = {};
+    for (const name of names) {
+      const bone = this.rig.findByName(name);
+      if (!bone) continue;
+      const q = bone.getLocalRotation(), p = bone.getPosition();
+      joints[name] = {
+        localRotation: [q.x,q.y,q.z,q.w],
+        worldPosition: [p.x,p.y,p.z],
+      };
+    }
+    return {clip:this.authoredPreviewName,joints};
+  }
   /** Contact projection of the actual rendered skis, for matching snow trails. */
   getSkiContacts() {
     if (!this.isSeamless) return undefined;
