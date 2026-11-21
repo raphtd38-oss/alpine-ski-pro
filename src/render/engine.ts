@@ -261,11 +261,13 @@ export class Renderer {
       // shoulder warm-up and gloves. Automatic cut back to normal pursuit
       // as the final start cue approaches. No gameplay camera displacement.
       const elapsed = Math.max(0, Math.min(3.15, 4 + f.startPhase));
-      const side = 1.65 + 0.20 * Math.sin(elapsed * 1.35);
+      const side = .34 + .10 * Math.sin(elapsed * .75);
+      // Film through the CENTER of the start-house opening, not behind
+      // its right support column; frame the athlete front-on at chest level.
       eye = new pc.Vec3(f.x + side,
-        y + 1.65 + .12 * Math.sin(elapsed * .9),
-        f.z + 2.66 - .18 * elapsed);
-      look = new pc.Vec3(f.x, y + 1.44, f.z + .045);
+        y + 1.72 + .09 * Math.sin(elapsed * .9),
+        f.z + 3.60 - .06 * elapsed);
+      look = new pc.Vec3(f.x, y + 1.33, f.z + .03);
     } else if (this.cameraMode === 2) {
       eye = target.clone().add(new pc.Vec3(0, 0.45, 0.2));
       look = eye
