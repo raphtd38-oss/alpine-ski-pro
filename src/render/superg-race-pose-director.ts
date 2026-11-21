@@ -352,6 +352,13 @@ export class SuperGRacePoseDirector {
       const outward=side==="L"?1:-1;
       const tuck=bounded(pose.tuck,0,1);
       const loaded=bounded(pose.engagement,0,1);
+      // Edge initiation is a real athlete balance gesture even BEFORE the
+      // lateral acceleration reaches the full racing load. Our old target
+      // depended entirely on engagement, which is tiny at 30–40 km/h and
+      // left the wrists moving only 2.5 cm relative to the pelvis.
+      const edgeBalance=bounded(Math.abs(pose.edge),0,1)*
+        bounded((pose.speed-3)/9,0,1);
+      const commitment=Math.max(loaded,.88*edgeBalance);
       const transitioning=pose.phase==="transition"||pose.phase==="release"
         ?bounded(Math.abs(pose.edgeRate)/1.9,0,1):0;
       const outside=pose.outsideSide===side;
@@ -366,13 +373,13 @@ export class SuperGRacePoseDirector {
       // inside hand is lower and more compact, then both recover as the
       // skis release their edges. The previous target NEVER moved and
       // locked both fists to the hips all the way down the race.
-      const reach=.245+loaded*(outside?.084:.025)+
+      const reach=.245+commitment*(outside?.132:.032)+
         transitioning*.028+airborne*.075-.027*tuck;
-      const y=.072+loaded*(outside?.022:-.028)+
+      const y=.072+commitment*(outside?.065:-.026)+
         transitioning*.022+startDrive*(.045+.075*Math.cos(
           2*Math.PI*(pose.startPhase-.10)/.44))+
         airborne*.15+prestart*.022*Math.sin(pose.startPhase*7);
-      const forward=.175+loaded*(outside?.145:.045)+
+      const forward=.175+commitment*(outside?.228:.033)+
         transitioning*.105+startDrive*(.09+.17*stroke)+
         airborne*.13-.045*tuck;
       const target=pelvis.clone().add(yaw.transformVector(new pc.Vec3(
