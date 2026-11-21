@@ -37,7 +37,7 @@ export function humanRacerPose(original:SGPose,f:SGSourceFrame):SGPose {
     smoothstep(.14,.85,Math.abs(original.edgeRate)):0;
   const starting=original.startPhase<0||original.startPhase<2.0;
   const pushing=original.startPhase>=0&&original.startPhase<1.8;
-  const airborne=original.airborne>0.5;
+  const airborne=original.airborne>0.5||f.height>0.1;
   const landing=sat(original.landing);
   const finish=sat(original.finishReach);
   const drive=sat(original.startPoleImpulse);
@@ -64,7 +64,7 @@ export function humanRacerPose(original:SGPose,f:SGSourceFrame):SGPose {
      -.035*finish
      +.065*extension
      +.035*release
-     + (airborne?.025:0),
+     + (airborne ? 0.025 : 0),
     .81,1.01);
   const pelvisShift=clamp(original.pelvisShiftM*.35,-.128,.128);
   // Race tuck comes mainly from hip flexion; two small vertebral rotations
