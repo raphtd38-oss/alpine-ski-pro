@@ -42,7 +42,7 @@ test("human-v3 reduces frog-squat and gorilla back while preserving both skis",a
   expect(snap.visual.poleGripError[1]).toBeLessThan(.08);
   results[style]={
    x:snap.state.x,z:snap.state.z,speed:Math.hypot(snap.state.vx,snap.state.vz),
-   pelvicHeight:p.pelvisHeightM,bank:p.bodyBankDeg,
+   pelvicHeight:p.pelvisHeightM,pelvis:p.pelvisWorld,bank:p.bodyBankDeg,
    chestWorld:p.chestWorld,headWorld:p.headWorld,
    kneeAngles:[p.leftKneeFlexionDeg,p.rightKneeFlexionDeg],
    realAnkleErrors:[p.leftAnkleTargetErrorM,p.rightAnkleTargetErrorM]
@@ -56,7 +56,11 @@ test("human-v3 reduces frog-squat and gorilla back while preserving both skis",a
  expect(a.x).toBeCloseTo(b.x,3);
  expect(a.z).toBeCloseTo(b.z,3);
  expect(a.speed).toBeCloseTo(b.speed,3);
- expect(b.pelvicHeight).toBeGreaterThan(a.pelvicHeight+.10);
+ // At low speed the ORIGINAL pelvis is already near standing height;
+ // the regression was a near-horizontal spine, not missing hip extension.
+ const oldHeadHeight=a.headWorld[1]-a.pelvis[1];
+ const newHeadHeight=b.headWorld[1]-b.pelvis[1];
+ expect(newHeadHeight).toBeGreaterThan(oldHeadHeight+.14);
  expect(Math.abs(b.bank)).toBeLessThan(Math.abs(a.bank)*.6);
  writeFileSync("test-results/human-rig-rebuild.json",JSON.stringify(results,null,2));
  console.info("[HUMAN_RIG_AB]",JSON.stringify(results));
