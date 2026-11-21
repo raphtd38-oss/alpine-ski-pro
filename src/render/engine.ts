@@ -18,6 +18,7 @@ import { createCortinaEnvironment } from "./cortina-environment-light";
 import { cortinaLightingMode, cortinaHorizonHex } from "./cortina-sky-profile";
 import { AdaptiveQuality } from "../game/performance";
 import { cameraShake, speedFov } from "../game/camera-rig";
+import { planSuperGBroadcastShot, broadcastFlightFraming } from "./superg-broadcast-shot";
 export const CAMERAS = ["Poursuite", "Rapprochée", "Subjective", "Télévision"];
 export class Renderer {
   app: pc.Application;
@@ -36,6 +37,7 @@ export class Renderer {
   course!: Course;
   cameraMode = 0;
   cameraReady = false;
+  private lastBroadcastShotId = -1;
   smoothedLook: pc.Vec3 | null = null;
   /** Camera world position before local chatter offset, to avoid shake drift. */
   cleanCameraPos: pc.Vec3 | null = null;
@@ -194,6 +196,7 @@ export class Renderer {
     this.effects = new SnowEffects(this.app, c, quality);
     configureWeather(this.app, this.camera, weather);
     this.cameraReady = false;
+    this.lastBroadcastShotId = -1;
     this.smoothedLook = null;
     this.cleanCameraPos = null;
   }
@@ -242,6 +245,8 @@ export class Renderer {
     );
     const target = new pc.Vec3(f.x, y + 1, f.z);
     let eye: pc.Vec3, look: pc.Vec3;
+    let broadcastFov = 42;
+    let broadcastCut = false;
     if (this.menu) {
       this.orbit += dt * 0.025;
       eye = new pc.Vec3(
@@ -257,13 +262,33 @@ export class Renderer {
         .add(forward.mulScalar(15))
         .add(new pc.Vec3(0, -4, 0));
     } else if (this.cameraMode === 3) {
-      const zone = Math.floor(f.z / 75) * 75;
-      eye = new pc.Vec3(
-        -this.course.width * 0.7,
-        terrainHeight(0, zone + 35, this.course) + 7,
-        zone + 35,
+      // Recover Astra's original nine-shot TV camera. All positions are
+      // artistic, not surveyed Cortina broadcast camera locations.
+      const shot = broadcastFlightFraming(
+        planSuperGBroadcastShot(f.z, speed),
+        f.height, f.landingShock ?? 0,
       );
-      look = target;
+      broadcastCut = shot.id !== this.lastBroadcastShotId;
+      this.lastBroadcastShotId = shot.id;
+      broadcastFov = shot.fovDeg;
+      const forwardX = Math.sin(f.heading);
+      const forwardZ = Math.cos(f.heading);
+      const rightX = Math.cos(f.heading);
+      const rightZ = -Math.sin(f.heading);
+      const cx = f.x + rightX * shot.side * shot.lateralM -
+        forwardX * shot.trailingM;
+      const cz = f.z + rightZ * shot.side * shot.lateralM -
+        forwardZ * shot.trailingM;
+      eye = new pc.Vec3(
+        cx,
+        terrainHeight(cx, cz, this.course) + shot.heightAboveGroundM,
+        cz,
+      );
+      look = new pc.Vec3(
+        f.x + forwardX * shot.focusAheadM,
+        y + 0.9 + Math.max(0, f.height) * 0.15,
+        f.z + forwardZ * shot.focusAheadM,
+      );
     } else {
       const inStartHouse = this.course.id === "SG" && f.z < 12;
       // The published browser captures showed the athlete filling only ~10%
@@ -318,6 +343,7 @@ export class Renderer {
     // In normal 60Hz gameplay the position delta is only a few centimetres.
     const current = this.cleanCameraPos ?? this.camera.getPosition();
     const snap = !this.cameraReady ||
+      (broadcastCut && !crashCam) ||
       (crashCam && crashElapsed < 0.05) ||
       (this.cameraMode === 2 && !crashCam) ||
       (!this.menu && current.distance(eye) > 38);
@@ -354,7 +380,8 @@ export class Renderer {
     }
     const targetFov = this.menu ? 62 : this.cameraMode === 2
       ? (crashCam ? 56 : 76) :
-      crashCam ? 54 : speedFov(this.cameraMode === 0 ? 51 : 55, speed);
+      crashCam ? 54 : this.cameraMode === 3
+        ? broadcastFov : speedFov(this.cameraMode === 0 ? 51 : 55, speed);
     this.camera.camera!.fov += (targetFov - this.camera.camera!.fov) *
       (1 - Math.exp(-dt * 5));
     this.athlete.root.enabled = this.menu || this.cameraMode !== 2 || crashCam;
@@ -365,6 +392,7 @@ export class Renderer {
   changeCamera() {
     this.cameraMode = (this.cameraMode + 1) % CAMERAS.length;
     this.cameraReady = false;
+    this.lastBroadcastShotId = -1;
     return CAMERAS[this.cameraMode];
   }
 }
