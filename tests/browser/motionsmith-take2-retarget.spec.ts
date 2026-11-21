@@ -39,6 +39,7 @@ test("MotionSmith Take2 overlays the real athlete without moving ski contacts",a
       motion:info.pose.motionSource,weight:info.pose.sourceMotionWeight,
       sourceTime:info.pose.sourceMotionSeconds,
       pelvis:info.pose.pelvisWorld,
+      knees:[info.pose.leftKneeFlexionDeg,info.pose.rightKneeFlexionDeg],
       ankleErrors:[info.pose.leftAnkleTargetErrorM,info.pose.rightAnkleTargetErrorM],
       skiSoles:[info.pose.leftSkiBaseClearanceM,info.pose.rightSkiBaseClearanceM],
     };
@@ -48,6 +49,10 @@ test("MotionSmith Take2 overlays the real athlete without moving ski contacts",a
   expect(b.speed).toBeCloseTo(a.speed,4);
   expect(b.x).toBeCloseTo(a.x,4);
   expect(b.z).toBeCloseTo(a.z,4);
+  // Even the lower-body retargeted knee pole must make some measured
+  // difference, without sacrificing the left/right ski contact invariants.
+  expect(Math.max(...a.knees.map((v:number,i:number)=>Math.abs(v-b.knees[i]))))
+    .toBeGreaterThan(0.1);
   writeFileSync("test-results/motionsmith-take2-ab.json",
     JSON.stringify(observations,null,2));
   expect(errors).toEqual([]);
