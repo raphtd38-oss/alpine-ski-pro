@@ -523,9 +523,16 @@ export class SuperGRacePoseDirector {
       // still resolves the pelvis against BOTH real race ski bases.
       const speed = Number.isFinite(frame.vx) && Number.isFinite(frame.vz)
         ? Math.hypot(frame.vx!,frame.vz!) : pose.speed;
-      const strength=bounded((speed-5)/20,0,1)*0.35;
-      pose.pelvisHeightM += bounded(src.pelvisDeltaM[1]*strength,-0.04,0.035);
-      pose.pelvisShiftM -= bounded(src.pelvisDeltaM[0]*strength,-0.035,0.035);
+      // The source hip oscillates between 0.74m and 0.96m above the piste.
+      // Use the actual change of pose, not its raw forward travel. This
+      // creates the missing compression/extension through the 25-bone IK.
+      // Explicitly bound shifts so the two attached racing skis stay on snow.
+      const blend=0.55*bounded((speed-4)/13,0,1);
+      const sourceHipHeight=0.952 + src.pelvisDeltaM[1];
+      const sourceDesired=bounded(sourceHipHeight+0.02,0.74,0.98);
+      pose.pelvisHeightM += bounded((sourceDesired-pose.pelvisHeightM)*blend,
+        -0.065,0.105);
+      pose.pelvisShiftM -= bounded(src.pelvisDeltaM[0]*blend,-0.045,0.045);
     }
     this.lastPose = pose;
     const root = this.actor.root;
