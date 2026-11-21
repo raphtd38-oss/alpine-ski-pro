@@ -61,6 +61,110 @@ function parseGlb(path){
   const pos=20+n;const bin=buffer.subarray(pos+8,pos+8+buffer.readUInt32LE(pos));
   return {doc,bin};
 }
+/**
+ * Retain the photographer-approved original body silhouette and PBR UVs,
+ * but REBUILD the skinning topology. The first smooth-implicit sculpt looked
+ * like swollen capsules in 3/4 view; it was correctly REJECTED on inspection.
+ * The source itself is watertight with realistic anatomical contours.
+ *
+ * Vertex-level tangential fairing + joint-aware skin weight diffusion fixes
+ * deformation pinches without reintroducing stick-limb geometry.
+ */
+function getAccessor(doc,bin,index){
+  const a=doc.accessors[index],view=doc.bufferViews[a.bufferView];
+  const dimensions={SCALAR:1,VEC2:2,VEC3:3,VEC4:4}[a.type];
+  const bytes={5126:4,5125:4,5123:2,5121:1}[a.componentType];
+  if(!dimensions||!bytes)throw Error("Unsupported original GLB accessor");
+  const stride=view.byteStride??dimensions*bytes;
+  const offset=(view.byteOffset??0)+(a.byteOffset??0);
+  const reader=new DataView(bin.buffer,bin.byteOffset,bin.byteLength);
+  return Array.from({length:a.count},(_,i)=>Array.from({length:dimensions},(_,j)=>{
+    const at=offset+i*stride+j*bytes;
+    if(a.componentType===5126)return reader.getFloat32(at,true);
+    if(a.componentType===5125)return reader.getUint32(at,true);
+    if(a.componentType===5123)return reader.getUint16(at,true);
+    return reader.getUint8(at);
+  }));
+}
+function reconstructOriginalSurface(doc,bin,primitive,skin,rig){
+  const p=primitive.attributes;
+  const basePoints=getAccessor(doc,bin,p.POSITION);
+  const uv=getAccessor(doc,bin,p.TEXCOORD_0);
+  const normal=getAccessor(doc,bin,p.NORMAL);
+  const sourceJoints=getAccessor(doc,bin,p.JOINTS_0);
+  const sourceWeights=getAccessor(doc,bin,p.WEIGHTS_0);
+  const triangles=getAccessor(doc,bin,primitive.indices).map(row=>row[0]);
+  const adjacency=Array.from({length:basePoints.length},()=>new Set());
+  for(let i=0;i<triangles.length;i+=3){
+    const [a,b,c]=triangles.slice(i,i+3);
+    if(a>=adjacency.length||b>=adjacency.length||c>=adjacency.length)
+      throw Error("Source topology invalid");
+    for(const [x,y] of [[a,b],[b,c],[c,a]]){
+      adjacency[x].add(y);adjacency[y].add(x);
+    }
+  }
+  // Preserve anatomical outlines. Only a subtle tangential relax at
+  // transition skinning zones, so no shoulder bulbs or balloon thighs.
+  const points=basePoints.map((v,i)=>{
+    const n=normal[i];
+    const neighbors=adjacency[i];
+    if(neighbors.size===0)return [...v];
+    const blended=sourceWeights[i].filter(w=>w>.08).length>1;
+    if(!blended)return [...v];
+    const avg=[0,0,0];
+    for(const k of neighbors)for(let d=0;d<3;d++)avg[d]+=basePoints[k][d];
+    for(let d=0;d<3;d++)avg[d]/=neighbors.size;
+    const delta=sub(avg,v),along=dot(delta,n);
+    const tangential=sub(delta,mul(n,along));
+    return add(v,mul(tangential,.18));
+  });
+  // Smooth complex joints along the actual triangle connectivity, never
+  // through 3D proximity (which could confuse near-touching legs).
+  let weights=sourceJoints.map((js,i)=>{
+    const map=new Map();
+    for(let k=0;k<4;k++)
+      if(sourceWeights[i][k]>0)
+        map.set(js[k],(map.get(js[k])||0)+sourceWeights[i][k]);
+    return map;
+  });
+  for(let pass=0;pass<3;pass++){
+    const prev=weights;
+    weights=prev.map((old,i)=>{
+      const next=new Map();
+      const add=(j,w)=>next.set(j,(next.get(j)||0)+w);
+      const n=adjacency[i];
+      if(!n.size)return new Map(old);
+      const smooth=.22;
+      for(const [j,w] of old)add(j,w*(1-smooth));
+      const scale=smooth/n.size;
+      for(const neighbor of n)for(const [j,w] of prev[neighbor])add(j,w*scale);
+      return next;
+    });
+  }
+  const joints=[],normalized=[];
+  let countBlended=0;
+  for(let i=0;i<weights.length;i++){
+    const k=[...weights[i].entries()].filter(x=>x[1]>0)
+      .sort((a,b)=>b[1]-a[1]).slice(0,4);
+    const total=k.reduce((s,x)=>s+x[1],0);
+    const js=k.map(x=>x[0]),ws=k.map(x=>x[1]/(total||1));
+    while(js.length<4){js.push(0);ws.push(0);}
+    if(ws.filter(w=>w>.08).length>1)countBlended++;
+    joints.push(js);normalized.push(ws);
+  }
+  // Recompute the body normals in the same watertight topology. Accumulate
+  // from ORIGINAL face winding: unlike capsule SDF, skin folds are retained.
+  const normals=Array.from({length:points.length},()=>[0,0,0]);
+  for(let i=0;i<triangles.length;i+=3){
+    const [a,b,c]=triangles.slice(i,i+3);
+    const v=cross(sub(points[b],points[a]),sub(points[c],points[a]));
+    for(const k of [a,b,c])for(let d=0;d<3;d++)normals[k][d]+=v[d];
+  }
+  const smoothNormals=normals.map((v,i)=>length(v)>1e-6?norm(v):normal[i]);
+  return {points,normals:smoothNormals,triangles,uv,
+    influences:{indices:joints,weights:normalized},
+    sourceVertices:basePoints.length,skinBlend:countBlended};
+}
 function pose(doc){
   const par=new Map();
   doc.nodes.forEach((node,i)=>node.children?.forEach(c=>par.set(c,i)));
@@ -262,17 +366,23 @@ function createHumanGlb(variant){
   const original=doc.meshes[body.mesh];
   if(!original?.primitives?.length)throw Error("Original body primitives missing");
   const skin=doc.skins[body.skin];
-  const shapes=constructShapes(p);
-  const data=meshImplicit(shapes,variant==="mobile"?.036:.024,
-    variant==="mobile"?75000:160000);
+  const useCapsuleExperiment=process.env.REBUILD_SDF==="1";
+  const shapes=useCapsuleExperiment?constructShapes(p):null;
+  const data=useCapsuleExperiment?
+    meshImplicit(shapes,variant==="mobile"?.036:.024,
+      variant==="mobile"?75000:160000):
+    reconstructOriginalSurface(doc,bin,original.primitives[0],skin,p);
   const meshToLocal=inverseAffine(p.world[bodyNodeIndex]);
-  const points=data.points.map(v=>transform(meshToLocal,v));
-  const normals=data.normals.map(v=>transformNormalToLocal(p.world[bodyNodeIndex],v));
-  const uv=data.points.map((v,i)=>{
-    const angle=Math.atan2(v[2],v[0]);
-    return [(angle/(Math.PI*2)+.5),clamp((v[1]-.2)/1.7,0,1)];
-  });
-  const inf=skinVertices(data.points,shapes,p,skin);
+  const points=useCapsuleExperiment?
+    data.points.map(v=>transform(meshToLocal,v)):data.points;
+  const normals=useCapsuleExperiment?
+    data.normals.map(v=>transformNormalToLocal(p.world[bodyNodeIndex],v)):
+    data.normals;
+  const uv=useCapsuleExperiment?
+    data.points.map(v=>[(Math.atan2(v[2],v[0])/(Math.PI*2)+.5),
+      clamp((v[1]-.2)/1.7,0,1)]):data.uv;
+  const inf=useCapsuleExperiment?
+    skinVertices(data.points,shapes,p,skin):data.influences;
   const appended=[];let totalBytes=bin.length;
   const views=doc.bufferViews??[],access=doc.accessors??[];
   function pushBuffer(data,component,type,semantic){
@@ -308,13 +418,14 @@ function createHumanGlb(variant){
   const indices=pushBuffer(data.triangles,5125,"SCALAR");
   const material=original.primitives[0].material;
   original.primitives=[{attributes:attrs,indices,material,mode:4}];
-  original.name="Rebuilt human body — seamless anatomical skin 25 joints";
+  original.name="Rebuilt human body — sculpted source anatomy + repaired 25-bone skin";
   const old=body.name;
   body.name=old; // preserve every findByName call in PlayCanvas
   doc.asset={...doc.asset,generator:"Alpine Ski Pro anatomical 25-bone surface rebuild"};
   doc.extras={...doc.extras,humanRebuild:{
     version:1,variant,vertices:points.length,triangles:data.triangles.length/3,
-    joints:skin.joints.length,grid:data.grid,source:filename}};
+    joints:skin.joints.length,grid:data.grid??null,
+    source:filename,method:useCapsuleExperiment?"implicit-prototype":"anatomical-source-skin-reconstruction"}};
   doc.buffers[0].byteLength=totalBytes;
   const json=Buffer.from(JSON.stringify(doc));
   const jsonPad=(4-json.length%4)%4;
@@ -338,6 +449,7 @@ function createHumanGlb(variant){
   console.info("[HUMAN_MESH_REBUILT]",JSON.stringify({
     target,bytes:len,vertices:points.length,triangles:data.triangles.length/3,
     skinBlend:inf.weights.filter(w=>w.filter(v=>v>.08).length>1).length,
-    grid:data.grid,boneCount:skin.joints.length}));
+    method:useCapsuleExperiment?"implicit-prototype":"anatomical-source-skin-reconstruction",
+    grid:data.grid??null,boneCount:skin.joints.length}));
 }
 for(const variant of ["mobile","full"])createHumanGlb(variant);
