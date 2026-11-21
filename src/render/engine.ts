@@ -118,14 +118,23 @@ export class Renderer {
     this.alpineAssets = new AlpineAssets(this.app);
     await this.alpineAssets.load();
     const requested = new URLSearchParams(location.search).get("racer");
-    const mobile = requested === "mobile" ||
-      (requested !== "full" && (quality === "low" || quality === "medium" ||
+    const rebuilt = requested === "human" || requested === "human-full" ||
+      requested === "human-mobile";
+    const mobile = requested === "mobile" || requested === "human-mobile" ||
+      (requested !== "full" && requested !== "human-full" &&
+       (quality === "low" || quality === "medium" ||
         window.matchMedia("(pointer: coarse)").matches ||
         window.innerWidth < 840));
     if (requested !== "classic") {
       const variant = mobile ? "mobile" : "full";
-      const racer = new pc.Asset("Original seamless Super-G racer " + variant, "container", {
-        url: import.meta.env.BASE_URL + "assets/racer/seamless-" + variant + ".glb",
+      // Studio-only preview of a genuinely REBUILT anatomical body mesh.
+      // All skis, boots, 25 rig joints and physics remain unchanged. Never
+      // substitute it for the public racer without reviewing image sequences.
+      const prefix = rebuilt ? "seamless-human-" : "seamless-";
+      const racer = new pc.Asset(
+        (rebuilt ? "Rebuilt anatomical" : "Original seamless") + " Super-G racer " + variant,
+        "container", {
+        url: import.meta.env.BASE_URL + "assets/racer/" + prefix + variant + ".glb",
       });
       try {
         await new Promise<void>((resolve, reject) => {
