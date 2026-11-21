@@ -57,6 +57,47 @@ function readSamples(): Int8Array {
 export function take2PackedBytes(): Uint8Array {
   return new Uint8Array(readSamples().buffer);
 }
+/**
+ * The source mannequin's anatomical knee bend planes, sampled at 10 Hz.
+ * Source-world +Z points forward. We transfer ONLY the direction of each
+ * knee's hinge pole; the game's physical ski/boot positions stay unchanged.
+ * Original full-clip skeleton evaluated by forward kinematics before packing.
+ * Two components (x,y) per leg, signed byte = component * 127.
+ */
+const KNEE_POLES_B64=
+"BvQF9QPzA/b88Pj37+zv+Oz04PvtB9P//wmwCBUTpA0cILIGCx7HAAEJ1/8NAdUGKhHRCzIT0w8kDPQJHAgHACEKBgJHFwQNWxzxEUYY+Q4HCwoH5gMABvwB5gsgB9AQPg7eDUoT4gxIFOQOOBHuDyEM6wwRAfQIEwLxCBgC7wobAugNCfzRE/TxwRYG+8EZDQHLGAMA2BQSDusNKRbyCgoO7AwGC+cOCQ3mDxAPyhYhEbkNJxTT8SoW6OEwFOrjLA/l7xcK6v8QAwX9D/sB9wn0/fID8PnvAe/67wHv/O4C8P/uA/EA7wPyAfAE8wHxBPQB8Q==";
+let kneePoles: Int8Array|undefined;
+function readKneePoles():Int8Array {
+  if(!kneePoles){
+    const raw=atob(KNEE_POLES_B64),data=new Int8Array(raw.length);
+    for(let i=0;i<raw.length;i++)data[i]=raw.charCodeAt(i);
+    if(data.length!==TAKE2_FRAME_COUNT*4)
+      throw new Error("MotionSmith knee pole data incomplete");
+    kneePoles=data;
+  }
+  return kneePoles;
+}
+export function sampleTake2KneePoles(sec:number):readonly [
+  readonly [number,number,number],readonly [number,number,number]
+] {
+  const duration=TAKE2_DURATION_SEC;
+  const finite=Number.isFinite(sec)?Math.max(0,sec):0;
+  const cycle=finite%(2*duration);
+  const t=cycle>duration?2*duration-cycle:cycle;
+  const i=Math.min(59,Math.floor(t*10));
+  const t1=i/10,t2=i===59?duration:(i+1)/10;
+  const alpha=Math.max(0,Math.min(1,(t-t1)/Math.max(1e-6,t2-t1)));
+  const k=readKneePoles();
+  const pole=(side:number):readonly [number,number,number]=>{
+    const x=(k[i*4+side*2]*(1-alpha)+k[(i+1)*4+side*2]*alpha)/127;
+    const y=(k[i*4+side*2+1]*(1-alpha)+k[(i+1)*4+side*2+1]*alpha)/127;
+    const z=Math.sqrt(Math.max(0.002,1-x*x-y*y));
+    const l=Math.hypot(x,y,z);
+    return [x/l,y/l,z/l];
+  };
+  return [pole(0),pole(1)];
+}
+
 export interface Take2Frame {
   /** Rotvec world-axis components, in degrees, for each mapped bone. */
   rotationsDeg: ReadonlyArray<readonly [number,number,number]>;
