@@ -11,7 +11,7 @@ import {ALPINE_START_GATE} from "../game/start-gate";
 import {waitingAthletePose,startStaffPose} from "./worldcup-start-motion";
 
 export const START_HOUSE_DIMENSIONS=Object.freeze({
-  halfWidth:4.05,backZ:-3.55,frontZ:3.33,eaveHeight:3.18,ridgeHeight:3.26,
+  halfWidth:4.05,backZ:-1.12,frontZ:3.33,eaveHeight:3.18,ridgeHeight:3.26,
 });
 interface Staff {
   head:pc.GraphNode|null; leftArm:pc.GraphNode|null;
@@ -21,7 +21,7 @@ interface Staff {
 }
 interface Board {canvas:HTMLCanvasElement;texture:pc.Texture}
 export class WorldCupStartCompound {
-  readonly root=new pc.Entity("Cortina-style compact start-box · 8.10m × 6.88m");
+  readonly root=new pc.Entity("Cortina-style compact start-box · 8.10m × 4.45m");
   readonly materials:pc.StandardMaterial[]=[];
   readonly textures:pc.Texture[]=[];
   readonly wand:pc.Entity;
@@ -29,7 +29,7 @@ export class WorldCupStartCompound {
   readonly boards:Board[]=[];
   private anim=0;
   private lastClock="";
-  readonly stats={widthM:8.1,depthM:6.88,waitingRacers:0,
+  readonly stats={widthM:8.1,depthM:4.45,waitingRacers:0,
     coaches:0,officials:0,liveClocks:0,animatedRacers:0,
     animatedCoaches:0,waitingBeat:"wait",coachCue:"observe"};
   constructor(
@@ -85,7 +85,8 @@ export class WorldCupStartCompound {
     const a=START_HOUSE_DIMENSIONS.backZ;
     const b=START_HOUSE_DIMENSIONS.frontZ;
     const navy=this.mat("Opaque blue competition windproof vinyl","#151b44",0,.12);
-    const interior=this.mat("Matte navy start-tent inner wall","#111735",0,.09);
+    const interior=this.mat("Matte navy start-tent inner wall","#27305b",0,.12);
+    interior.emissive.set(.075,.082,.14);
     const olive=this.mat("Taut accent green vinyl","#7da845",0,.18);
     const edge=this.mat("Rubber framed competition entrance","#0c1526",.18,.22);
     const seams=this.mat("Start tent aluminium structural piping","#465061",.52,.28);
@@ -184,6 +185,15 @@ export class WorldCupStartCompound {
       "ALPINE SKI PRO","#14254e");
     this.box("Small understated start tent event plaque",
       2.37,h(2.37,b)+2.71,b+.091,1.92,.35,.022,plaque.m);
+    // The indoor tent needs a gentle cool fill: the previous capture had
+    // athletes against entirely black walls despite the open doorway.
+    const fill=new pc.Entity("Subtle cool interior athlete fill");
+    fill.addComponent("light",{
+      type:"omni",color:new pc.Color(.78,.85,1),intensity:.58,
+      range:5.2,castShadows:false,
+    });
+    fill.setPosition(0,h(0,1.1)+2.58,1.1);
+    this.root.addChild(fill);
     // The snow remains the real existing track geometry: NO duplicate floor.
   }
 
@@ -200,12 +210,12 @@ export class WorldCupStartCompound {
     }
     this.box("Official live splits monitor",x,y+1.28,z-.14,
       .53,.37,.048,blue);
-    const matX=1.85,matZ=-.86;
+    const matX=1.85,matZ=.38;
     this.box("One folded weatherproof athlete waiting mat",
       matX,this.h(matX,matZ)+.026,matZ,1.10,.043,.8,rubber);
     // Small accessory rack against the back wall, not rows of ten benches.
     const shelf=this.mat("Competition spare pole storage","#495469",.35,.28);
-    const rx=-3.30,rz=-2.38,ry=this.h(rx,rz);
+    const rx=-3.30,rz=-.52,ry=this.h(rx,rz);
     for(const z0 of [rz-.30,rz+.30])
       this.rod("Wall-mounted spare pole rack",
         new pc.Vec3(rx-.28,ry+.79,z0),
@@ -258,9 +268,7 @@ export class WorldCupStartCompound {
   private people(){
     // TV reference: principal racer fills the doorway; another competitor
     // warms up BEHIND, surrounded by close staff. There is NO 14m queue.
-    this.racer(.48,-1.12,41,12,0);
-    if(this.quality==="high"||this.quality==="ultra")
-      this.racer(-1.47,-2.65,52,-13,1);
+    this.racer(.48,-.02,41,12,0);
     const jobs=[
       {x:2.25,z:1.42,role:"coach" as const,p:1},
       {x:-2.22,z:.54,role:"coach" as const,p:2},
