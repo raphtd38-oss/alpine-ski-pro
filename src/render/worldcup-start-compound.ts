@@ -357,7 +357,7 @@ export class WorldCupStartCompound {
       rig.anim!.assignAnimation(name,track.resource);
       names.add(name);
     }
-    rig.anim!.baseLayer.play("Idle");
+    rig.anim?.baseLayer?.play("Idle");
     rig.anim!.speed=role==="coach"?.90:role==="referee"?.78:.75;
     for(const c of rig.findComponents("render"))
       (c as pc.RenderComponent).castShadows=this.quality==="ultra";
@@ -711,7 +711,7 @@ export class WorldCupStartCompound {
       const wanted=staffTVClip(real.role,real.phase,startPhase);
       const next=real.available.has(wanted)?wanted:"Idle";
       if(real.active!==next){
-        real.rig.anim?.baseLayer.transition(next,.20);
+        real.rig.anim?.baseLayer?.transition(next,.20);
         real.active=next;
       }
       if(real.role==="coach"){
