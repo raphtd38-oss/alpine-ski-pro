@@ -557,7 +557,7 @@ export class WorldCupStartCompound {
           extra.role==="racer"?"coach":extra.role,phase);
         extra.head?.setLocalEulerAngles(p.headPitch,p.headYaw,0);
         extra.leftArm?.setLocalEulerAngles(p.leftShoulder,0,-9);
-        extra.rightArm?.setLocalEulerAngles(p.rightShoulder,0,9);
+        extra.rightArm?.setLocalEulerAngles(p.rightShoulder,0,9+p.rightArmRaise);
         j?.torso?.setLocalEulerAngles(p.torsoPitch,0,0);
         j?.leftElbow?.setLocalEulerAngles(p.leftElbow,0,0);
         j?.rightElbow?.setLocalEulerAngles(p.rightElbow,0,0);
