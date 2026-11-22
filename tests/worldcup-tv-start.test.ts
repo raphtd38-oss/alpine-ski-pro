@@ -31,7 +31,10 @@ describe("World Cup television start area — shots and dimensions",()=>{
     expect(planStartBroadcast(-.5,10)).not.toBeNull();
     const launch0=planStartBroadcast(.5,0)!;
     const launch12=planStartBroadcast(.5,12)!;
-    expect(p.cameraZ).toBeCloseTo(9.4,2);
+    expect(p.cameraZ).toBeCloseTo(2.9,2);
+    expect(p.fovDeg).toBeLessThanOrEqual(35);
+    expect(planStartBroadcast(-1.65,0)!.name).toBe("coaches");
+    expect(planStartBroadcast(-1.65,0)!.fovDeg).toBeLessThan(36);
     expect(launch12.focusZ).toBeGreaterThan(launch0.focusZ);
     expect(launch12.cameraZ).toBeGreaterThan(launch0.cameraZ);
     expect(launch0.fovDeg).toBeGreaterThan(36);
