@@ -198,3 +198,8 @@ Les scripts de la nouvelle boîte à outils **n'ajoutent pas automatiquement de 
 
 - `src/render/cortina-sky-profile.ts` : palettes de gradients diurnes/sunset et couleurs d'horizon entièrement originales. Les surfaces et intensités déjà présentes dans PlayCanvas sont réutilisées ; aucun fichier de paysage, ciel photographique, HDRI ni texture tierce téléchargé.
 - Mode par défaut `daylight` inspiré des photos transmises ; ancien `sunset` disponible avec `?lighting=sunset`. Aucun changement des données de terrain, collision, interface de course ou skieur.
+
+
+## 22 novembre 2026 — habillage intérieur départ et figurants
+
+Le tissu bleu technique, les bandes d'assemblage, l'enseigne générique, les parements de parka et les animations du second coureur et du personnel sont créés **exclusivement par géométrie, matériaux et code originaux du projet**, sans fichier média tiers. Les réservistes réutilisent l'asset GLB 25 os déjà enregistré et ses matériaux partagés (source/autorisation détaillées dans la section V1.13 ci-dessus). La vidéo de référence ne sert ni de texture ni de piste audio ; marques et anneaux olympiques ne sont pas reproduits. La gestuelle procédurale n'est pas une motion capture licenciée.
