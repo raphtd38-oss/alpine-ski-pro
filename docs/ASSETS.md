@@ -1,3 +1,7 @@
+## 22 novembre 2026 — Zone de départ World Cup original
+
+`src/render/worldcup-start-compound.ts` : toit, cloisons larch/acier/verre, bancs, skis de réserve, écrans timing A/B, caméras/trépieds, protections et figurants staff entièrement dessinés en code ; tableaux et dossards fabriqués par Canvas au runtime, **aucun nouveau fichier tiers téléchargé ou intégré**. Figurants « concurrent en attente » : réutilisation du GLB skieur sous licence déjà existante, instancié de manière indépendante, avec dossards fictifs. Images d'épreuve FIS et sponsors étudiés uniquement comme références visuelles ; aucun logo/copier-coller de photos. `src/render/prestart-warmup.ts` : animation d'échauffement originale procédurale, **les deux fichiers de mocap utilisateur ne sont pas encore importés/retargetés**. Les normes/certifications et espaces décrits sont des inspirations, pas une homologation ou une reconstitution exacte de la cabane olympique réelle.
+
 ## V1.18 — roche photographique et éclairage, 19 novembre 2026
 
 - **Rock Face 03**, [Poly Haven](https://polyhaven.com/a/rock_face_03), photographie **Dario Barresi**, traitement **Rico Cilliers**. [Licence CC0](https://polyhaven.com/license) consultée le 19/11/2026. Recherche et métadonnées via l’API publique Poly Haven avec User-Agent identifié ; aucun achat ni compte créé.
