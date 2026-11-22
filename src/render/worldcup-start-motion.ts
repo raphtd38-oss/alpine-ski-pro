@@ -83,8 +83,8 @@ export function waitingAthletePose(
   const adjust = envelope(t, 7.06, 9.07);
   const breathing = Math.sin(safeSeconds * 2.10 + performer * 1.11);
   const scanYaw = scan * Math.sin((t - .3) * 2.1) * 26;
-  const shoulderRoll = shoulders * Math.sin((t - 2.1) * 5.1);
-  const bend = flex * (.5 - .5 * Math.cos((t - 3.75) * TAU * .97));
+  const shoulderRoll = shoulders * Math.sin((t - 2.1) * 2.2);
+  const bend = flex * (.5 - .5 * Math.cos((t - 3.75) * TAU * .43));
   const weight = transfer * Math.sin((t - 5.55) * 2.9);
   const handUp = adjust * (.5 - .5 * Math.cos((t - 7.06) * 3.2));
   const hipPitch = 8 + bend * 17;
@@ -122,11 +122,11 @@ export function waitingAthletePose(
   const loosen = envelope(u,.40,1.32,.18);
   const squat = envelope(u,1.13,2.36,.20);
   const settle = envelope(u,2.18,2.80,.16);
-  const cross = Math.sin(u * 6.1 + performer *.35);
-  const bounce = squat*(.5 - .5*Math.cos((u-1.13)*TAU*1.65));
+  const cross = Math.sin(u * 3.1 + performer *.35);
+  const bounce = squat*(.5 - .5*Math.cos((u-1.13)*TAU*.62));
   const hip = 9 + bounce*15;
   const knee = -13 - bounce*23;
-  const counter = loosen*Math.sin((u-.42)*TAU*1.5);
+  const counter = loosen*Math.sin((u-.42)*TAU*.78);
   const tilt = look*Math.sin(u*2.65)*18;
   const asymmetric = settle*Math.sin(u*4+performer)*4.2;
   return {
