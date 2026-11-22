@@ -383,3 +383,13 @@ Les coefficients sont des choix d'animation guidés par des séquences filmées,
 ## 21 novembre 2026 — PR #56 : reconstruction du mouvement humain du skieur
 
 Ajout d'un nouveau contrôleur de mouvement biomécanique multi-phases pour le skieur monobloc à 25 os, et réalignement de la chaîne ski-sol -> bassin -> jambes IK -> bras IK -> bâtons. L'ancien contrôleur est conservé via ?pose=human-v3 et l'historique via ?pose=legacy. Aucune acquisition de motion capture externe n'est revendiquée. Les nouveaux tests d'articulation et les captures A/B doivent être validés par CI et revue visuelle avant publication. Détails dans BIOMECHANICS_RECONSTRUCTION_2026-11-21.md.
+
+
+## 22 novembre 2026 — départ TV avec seconds coureurs et coaches articulés (PR #60, en revue)
+
+- Référence réellement inspectée : vidéo fournie de 74,17 s avec premier skieur sous habillage intérieur bleu foncé, personnel à proximité, entrée lumineuse sur neige, puis images de course. L'extérieur complet de la cabane ne peut pas être relevé précisément dans ce seul extrait.
+- Ajout de `src/render/worldcup-start-motion.ts` : performance squelettique indépendante des réservistes sur le GLB 25 os, avec rotation du cou, regard, épaules, buste, bassin, flexion genou/cheville, prise en main du matériel et attente. Les temps de mouvements sont désynchronisés entre acteurs. **Ce sont des mouvements procéduraux, pas une mocap humaine acquise.**
+- Le personnel 3D bénéficie désormais de pivots hiérarchiques épaule/coude, hanche/genou et buste ; un coach lève le bras avant la poussée, l'autre suit le chronométrage.
+- Décor de tissu coupe-vent bleu original ajouté à la cabine existante, sans logo olympique, ni ressource tierce. Réalisation TV étendue avec plan coaches, revenant ensuite aux caméras existantes.
+- Premier CI sur PR #60 : 203 tests unitaires réussis sur 204, défaut de temps `NaN/Infinity` détecté dans un mouvement respiratoire. Correctif appliqué puis nouvelle validation demandée. **La compilation, Playwright et la comparaison visuelle ne sont pas encore validés au moment de ce compte rendu**. Branche de travail non fusionnée : jeu public inchangé.
+- Aucun changement dans les 42 portes, les règles de contact, le moteur physique 120 Hz, la simulation de départ, les records ou replays.
