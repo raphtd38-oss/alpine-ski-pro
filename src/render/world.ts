@@ -62,6 +62,8 @@ export class World {
     public quality: Quality,
     public alpineAssets: AlpineAssets | null = null,
     public waitingRacerAsset: pc.Asset | null = null,
+    public startCoachAsset: pc.Asset | null = null,
+    public startStaticSkierAsset: pc.Asset | null = null,
   ) {
     app.root.addChild(this.root);
     this.snow = this.mat("Crystalline snow", "#e8f1f5", 0.03, 0.32);
@@ -663,7 +665,7 @@ export class World {
   superGStartBooth() {
     const production = new WorldCupStartCompound(
       this.app, this.root, this.course, this.quality,
-      this.waitingRacerAsset,
+      this.waitingRacerAsset,this.startCoachAsset,this.startStaticSkierAsset,
     );
     this.worldCupStart = production;
     this.startBooth = production.root;
