@@ -348,20 +348,51 @@ export class WorldCupStartCompound {
       if(part)part.enabled=garment==="Outfit_formal"||
         garment==="Skin_formal";
     }
-    // Navy technical parka appearance, retaining the real skinned cloth
-    // normals/texture instead of drawing a solid primitive torso.
+    // Real skinned long-sleeve jacket/trousers remain, but their source
+    // business-suit texture includes a PURPLE TIE: unacceptable on snow.
+    // Re-skin the outfit ONLY with an original matte weatherproof fabric.
+    // Preserve face, hands, shoes, PBR normals, motion and anatomy.
+    const coatCanvas=document.createElement("canvas");
+    coatCanvas.width=512;coatCanvas.height=512;
+    const cx=coatCanvas.getContext("2d")!;
+    const fabricBase=role==="referee"?"#4a3137":
+      phase===1?"#293c47":"#36454b";
+    cx.fillStyle=fabricBase;cx.fillRect(0,0,512,512);
+    let seed=phase*617+19;
+    const rand=()=>{
+      seed=(seed*1664525+1013904223)>>>0;
+      return seed/4294967296;
+    };
+    for(let n=0;n<3200;n++){
+      const x=rand()*512,y=rand()*512;
+      cx.fillStyle=rand()>.5?"rgba(200,221,226,.027)":
+        "rgba(5,12,20,.052)";
+      cx.fillRect(x,y,1+rand()*2,1+rand()*3);
+    }
+    for(let y=52;y<512;y+=82){
+      cx.strokeStyle="rgba(0,9,16,.095)";
+      cx.lineWidth=5;cx.beginPath();
+      cx.moveTo(0,y);cx.bezierCurveTo(180,y-3,320,y+4,512,y);
+      cx.stroke();
+      cx.strokeStyle="rgba(180,209,215,.08)";
+      cx.lineWidth=1;cx.beginPath();
+      cx.moveTo(0,y+5);cx.lineTo(512,y+5);cx.stroke();
+    }
+    const coatTexture=new pc.Texture(this.app.graphicsDevice,{
+      name:"Original weatherproof fabric on the Rocketbox skinned parka "+phase,
+      mipmaps:true,
+    });
+    coatTexture.setSource(coatCanvas);this.textures.push(coatTexture);
     const outer=rig.findByName("Outfit_formal") as pc.Entity|null;
     if(outer){
       for(const component of outer.findComponents("render")){
         for(const instance of (component as pc.RenderComponent).meshInstances){
           if(!(instance.material instanceof pc.StandardMaterial))continue;
           const jacket=instance.material.clone();
-          const tint=phase===1?
-            new pc.Color(.35,.46,.54):
-            role==="referee"?new pc.Color(.43,.29,.33):
-              new pc.Color(.42,.47,.50);
-          jacket.diffuse.copy(tint);
-          jacket.gloss=.17;
+          jacket.diffuseMap=coatTexture;
+          jacket.diffuse.set(1,1,1);
+          jacket.gloss=.12;
+          jacket.useMetalness=false;
           jacket.update();
           instance.material=jacket;
           this.materials.push(jacket);
