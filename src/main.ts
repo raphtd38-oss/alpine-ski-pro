@@ -629,6 +629,7 @@ async function boot() {
           guideActive: Boolean(renderer.world.trainingGuide?.enabled),
           startArchVisible: Boolean(renderer.world.startArch?.enabled),
           startHouse: Boolean(renderer.world.startBooth),
+          worldCupStart: renderer.world.getStartProductionStats(),
           timingWands: renderer.world.startWands.length,
           startGateOpened: race.startGateOpened,
           startGateImpulseTime: race.startGateImpulseTime,
