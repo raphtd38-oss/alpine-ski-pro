@@ -35,6 +35,7 @@ export interface StartStaffPose {
   torsoPitch: number;
   leftShoulder: number;
   rightShoulder: number;
+  rightArmRaise: number;
   leftElbow: number;
   rightElbow: number;
   leftHip: number;
@@ -109,25 +110,30 @@ export function startStaffPose(
   const glance = Math.sin(t * (.73 + performer * .11) + performer);
   const watch = role === "referee";
   const coach = role === "coach";
+  const leadCoach = coach && performer < 1.5;
+  const tacticalCoach = coach && !leadCoach;
   // The starter's raised hand is the short pre-launch signal.
   const beforeLaunch = startPhase !== undefined &&
     startPhase > -.72 && startPhase < .65;
   const signal = beforeLaunch ? smooth((startPhase! + .72) / .3) *
     (1 - smooth((startPhase! - .23) / .42)) : 0;
-  const encourage = coach ? Math.pow(.5 + .5 * Math.sin(t * 2.3 + performer), 2) : 0;
+  const encourage = leadCoach ? Math.pow(.5 + .5 * Math.sin(t * 2.3 + performer), 2) : 0;
   return {
     headYaw: glance * (watch ? 8 : 15),
-    headPitch: watch ? 16 + idle * 3 : -4 + idle * 4,
-    torsoPitch: watch ? 9 : coach ? 5 + encourage * 4 : -3,
-    leftShoulder: watch ? -32 + idle * 4 : -17 + idle * 7,
-    rightShoulder: coach ? -22 - encourage * 14 - signal * 72 :
-      watch ? -42 + idle * 4 : -24 + idle * 5,
-    leftElbow: watch ? -63 : -18 - encourage * 14,
-    rightElbow: coach ? -42 - signal * 38 : watch ? -68 : -28,
+    headPitch: watch || tacticalCoach ? 16 + idle * 3 : -4 + idle * 4,
+    torsoPitch: watch || tacticalCoach ? 9 : leadCoach ? 5 + encourage * 4 : -3,
+    leftShoulder: watch || tacticalCoach ? -32 + idle * 4 : -17 + idle * 7,
+    rightShoulder: leadCoach ? -22 - encourage * 14 - signal * 35 :
+      watch || tacticalCoach ? -42 + idle * 4 : -24 + idle * 5,
+    rightArmRaise: leadCoach ? signal * 126 : 0,
+    leftElbow: watch || tacticalCoach ? -63 : -18 - encourage * 14,
+    rightElbow: leadCoach ? -42 - signal * 38 :
+      watch || tacticalCoach ? -68 : -28,
     leftHip: -2 + idle * 2,
     rightHip: 2 - idle * 2,
     leftKnee: 3 + Math.max(0, idle) * 4,
     rightKnee: 3 + Math.max(0, -idle) * 4,
-    cue: watch ? "work" : coach ? (signal > .3 ? "signal" : "encourage") : "observe",
+    cue: watch || tacticalCoach ? "work" :
+      leadCoach ? (signal > .3 ? "signal" : "encourage") : "observe",
   };
 }
