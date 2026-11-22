@@ -20,6 +20,7 @@ import { AdaptiveQuality } from "../game/performance";
 import { cameraShake, speedFov } from "../game/camera-rig";
 import { planSuperGBroadcastShot, broadcastFlightFraming } from "./superg-broadcast-shot";
 import { planStartBroadcast } from "./worldcup-start-broadcast";
+import { HUMAN_START_ASSETS } from "./start-human-actors";
 export const CAMERAS = ["Poursuite", "Rapprochée", "Subjective", "Télévision"];
 export class Renderer {
   app: pc.Application;
@@ -34,6 +35,8 @@ export class Renderer {
   effects!: SnowEffects;
   asset!: pc.Asset;
   seamlessAsset: pc.Asset | null = null;
+  realCoachAsset: pc.Asset | null = null;
+  assetSmithWaitingSkierAsset: pc.Asset | null = null;
   racerVariant: "classic" | "mobile" | "full" = "classic";
   course!: Course;
   cameraMode = 0;
@@ -156,6 +159,26 @@ export class Renderer {
         this.racerVariant = "classic";
       }
     }
+    // Stage performers are deliberately optional: a corrupt GLB or network
+    // error must not prevent the racing simulator from loading.
+    const loadStartActor = async (name: string, url: string): Promise<pc.Asset | null> => {
+      const file = new pc.Asset(name,"container",{
+        url: import.meta.env.BASE_URL + url,
+      });
+      return new Promise((resolve) => {
+        file.ready(()=>resolve(file));
+        file.once("error", (err:unknown)=>{
+          console.warn("Start actor GLB unavailable, keep visual fallback:",name,err);
+          resolve(null);
+        });
+        this.app.assets.add(file);
+        this.app.assets.load(file);
+      });
+    };
+    [this.realCoachAsset,this.assetSmithWaitingSkierAsset] = await Promise.all([
+      loadStartActor("Ethan 80-bone Rocketbox coach",HUMAN_START_ASSETS.coach),
+      loadStartActor("Owner AssetSmith static waiting skier",HUMAN_START_ASSETS.skier),
+    ]);
   }
   build(c: Course, e: Equipment, quality: Quality, weather: Weather, adaptive = true) {
     this.physics?.destroy();
@@ -196,7 +219,8 @@ export class Renderer {
     this.sun.light!.color = color(weather === "clear"
       ? (day ? "#fff3db" : "#ffd5ad") : "#dce4f5");
     this.world = new World(this.app, c, quality, this.alpineAssets,
-      this.seamlessAsset ?? this.asset);
+      this.seamlessAsset ?? this.asset,
+      this.realCoachAsset,this.assetSmithWaitingSkierAsset);
     if (this.ammoEnabled) this.physics = new AmmoGateSensors(this.app, c);
     this.athlete = new Athlete(this.app, this.seamlessAsset ?? this.asset, e);
     this.ghost = new Athlete(this.app, this.asset, e, true);
