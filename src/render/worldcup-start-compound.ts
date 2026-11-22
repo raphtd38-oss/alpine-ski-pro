@@ -350,7 +350,7 @@ export class WorldCupStartCompound {
     }
     // Navy technical parka appearance, retaining the real skinned cloth
     // normals/texture instead of drawing a solid primitive torso.
-    const outer=rig.findByName("Outfit_formal");
+    const outer=rig.findByName("Outfit_formal") as pc.Entity|null;
     if(outer){
       for(const component of outer.findComponents("render")){
         for(const instance of (component as pc.RenderComponent).meshInstances){
