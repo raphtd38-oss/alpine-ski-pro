@@ -22,7 +22,7 @@ const shots: ReadonlyArray<StartBroadcastShot> = [
     focusAboveSnowM:1.9,fovDeg:51},
   // 2. The NEXT competitor and independent 25-bone warm-up behind the racer.
   {id:1,name:"athlete-queue",cameraX:-1.26,cameraZ:1.15,
-    heightAboveSnowM:1.94,focusX:.48,focusZ:-1.12,
+    heightAboveSnowM:1.94,focusX:.48,focusZ:-.02,
     focusAboveSnowM:1.50,fovDeg:48},
   // 3. Coach encourages and follows starter signal from the right of lane.
   {id:2,name:"coaches",cameraX:-.52,cameraZ:2.04,
