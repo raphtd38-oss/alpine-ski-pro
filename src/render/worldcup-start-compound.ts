@@ -341,8 +341,32 @@ export class WorldCupStartCompound {
       "Top_shirt","Top_tee","Skin_shirt","Skin_tee","Trousers","Shoes",
     ]){
       const part=rig.findByName(garment);
-      if(part)part.enabled=garment==="Outfit_original"||
-        garment==="Skin_original";
+      // The owner's real Ethan ships with a striped polo + SHORTS!
+      // That outfit was visibly wrong for a winter race in the first
+      // browser screenshot. His skinned FORMAL jacket has long sleeves and
+      // trousers and can be recolored as a sober technical outer layer.
+      if(part)part.enabled=garment==="Outfit_formal"||
+        garment==="Skin_formal";
+    }
+    // Navy technical parka appearance, retaining the real skinned cloth
+    // normals/texture instead of drawing a solid primitive torso.
+    const outer=rig.findByName("Outfit_formal");
+    if(outer){
+      for(const component of outer.findComponents("render")){
+        for(const instance of (component as pc.RenderComponent).meshInstances){
+          if(!(instance.material instanceof pc.StandardMaterial))continue;
+          const jacket=instance.material.clone();
+          const tint=phase===1?
+            new pc.Color(.35,.46,.54):
+            role==="referee"?new pc.Color(.43,.29,.33):
+              new pc.Color(.42,.47,.50);
+          jacket.diffuse.copy(tint);
+          jacket.gloss=.17;
+          jacket.update();
+          instance.material=jacket;
+          this.materials.push(jacket);
+        }
+      }
     }
     const idle=tracks.find(t=>t.resource?.name==="Idle");
     const cheer=tracks.find(t=>t.resource?.name==="Cheer");
