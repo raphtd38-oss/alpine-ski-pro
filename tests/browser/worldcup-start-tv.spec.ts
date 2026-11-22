@@ -22,6 +22,8 @@ test("real World Cup start paddock stages television cameras, people and live ti
   expect(compound.coaches).toBeGreaterThanOrEqual(1);
   expect(compound.officials).toBeGreaterThanOrEqual(1);
   expect(compound.liveClocks).toBe(2);
+  expect(compound.animatedRacers).toBeGreaterThanOrEqual(2);
+  expect(compound.animatedCoaches).toBeGreaterThanOrEqual(1);
   expect(state.timingWands).toBe(1);
   expect(state.startGateOpened).toBe(false);
   const tv=page.locator("#worldcup-tv-start-lowerthird");
@@ -33,7 +35,12 @@ test("real World Cup start paddock stages television cameras, people and live ti
   await page.waitForTimeout(400);
   await expect(tv).toContainText("ATHLETE QUEUE");
   await page.screenshot({path:"test-results/worldcup-start-tv-athletes-queue.png"});
-  await page.evaluate(()=>(window as any).__ski.step(132,
+  await page.evaluate(()=>(window as any).__ski.step(25,
+    {steer:0,tuck:false,brake:false,jump:false}));
+  await page.waitForTimeout(400);
+  await expect(tv).toContainText("COACHES");
+  await page.screenshot({path:"test-results/worldcup-start-tv-coach-encouragement.png"});
+  await page.evaluate(()=>(window as any).__ski.step(107,
     {steer:0,tuck:false,brake:false,jump:false}));
   await page.waitForTimeout(400);
   await expect(tv).toContainText("STARTER CLOSEUP");
