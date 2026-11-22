@@ -3,12 +3,12 @@ import {START_HOUSE_DIMENSIONS} from "../src/render/worldcup-start-compound";
 import {planStartBroadcast} from "../src/render/worldcup-start-broadcast";
 
 describe("World Cup television start area — shots and dimensions",()=>{
-  it("stages five broadcast shots in deterministic countdown/launch order",()=>{
-    const timeline=[-3,-2,-1.20,-.46,.4].map(x=>
+  it("stages waiting racer, coach, technical, close-up and launch shots",()=>{
+    const timeline=[-3,-2,-1.65,-1.20,-.46,.4].map(x=>
       planStartBroadcast(x,0)?.name);
     expect(timeline).toEqual([
-      "establishing","athlete-queue","technical-timing",
-      "starter-closeup","launch",
+      "establishing","athlete-queue","coaches",
+      "technical-timing","starter-closeup","launch",
     ]);
   });
   it("has a broad, deep competition start house with physical launch bay",()=>{
