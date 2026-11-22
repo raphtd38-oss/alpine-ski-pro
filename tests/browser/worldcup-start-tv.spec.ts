@@ -33,7 +33,7 @@ test("real World Cup start paddock stages television cameras, people and live ti
   await page.waitForTimeout(400);
   await expect(tv).toContainText("ATHLETE QUEUE");
   await page.screenshot({path:"test-results/worldcup-start-tv-athletes-queue.png"});
-  await page.evaluate(()=>(window as any).__ski.step(100,
+  await page.evaluate(()=>(window as any).__ski.step(132,
     {steer:0,tuck:false,brake:false,jump:false}));
   await page.waitForTimeout(400);
   await expect(tv).toContainText("STARTER CLOSEUP");
