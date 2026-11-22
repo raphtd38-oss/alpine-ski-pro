@@ -33,6 +33,16 @@ jobs:
         run: npm run assets:audit -- --require-pack
       - name: Compile playable, static test
         run: npm run build
+      - name: Install Chromium for focused start-camera smoke tests
+        run: npx playwright install --with-deps chromium
+      - name: Validate playable start scene and coach/athlete framing
+        run: npx playwright test tests/browser/worldcup-start-tv.spec.ts tests/browser/worldcup-start-mobile.spec.ts --workers=1
+      - name: Preserve exact World Cup TV screenshots for review
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: visual-start-evidence
+          path: test-results/worldcup-start-*.png
       - name: Archive preview HTML/assets for independent download
         uses: actions/upload-artifact@v4
         with:
