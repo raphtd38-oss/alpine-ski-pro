@@ -57,10 +57,13 @@ export class WorldCupStartCompound {
     const ctx=canvas.getContext("2d")!;
     ctx.fillStyle=bg;ctx.fillRect(0,0,1024,256);
     ctx.textAlign="center";ctx.textBaseline="middle";
-    ctx.fillStyle="#86cbe4";ctx.font="bold 33px Arial";
+    const lightBackground=bg==="#ecf3f6";
+    ctx.fillStyle=lightBackground?"#226180":"#86cbe4";
+    ctx.font="bold 33px Arial";
     ctx.fillText("ALPINE SKI PRO  •  CORTINA SUPER-G",512,55);
     ctx.fillStyle="#ef674c";ctx.fillRect(80,91,864,7);
-    ctx.fillStyle="#f8fbfd";ctx.font="bold 80px Arial";
+    ctx.fillStyle=lightBackground?"#11334d":"#f8fbfd";
+    ctx.font="bold 80px Arial";
     ctx.fillText(text,512,171);
     const texture=new pc.Texture(this.app.graphicsDevice,{name,mipmaps:true});
     texture.setSource(canvas);this.textures.push(texture);
@@ -72,7 +75,29 @@ export class WorldCupStartCompound {
   private structure(){
     const w=START_HOUSE_DIMENSIONS.halfWidth;
     const a=START_HOUSE_DIMENSIONS.backZ,b=START_HOUSE_DIMENSIONS.frontZ;
-    const larch=this.mat("World Cup real larch cladding","#6e5542");
+    const larch=this.mat("World Cup real larch cladding","#98775b");
+    // Authored timber albedo: grain and warm rough-hewn wood.
+    const woodCanvas=document.createElement("canvas");
+    woodCanvas.width=woodCanvas.height=256;
+    const wc=woodCanvas.getContext("2d")!;
+    wc.fillStyle="#927657";wc.fillRect(0,0,256,256);
+    for(let x=0;x<256;x+=32){
+      wc.fillStyle=x%64===0?"#957657":"#a88b69";
+      wc.fillRect(x+2,0,29,256);
+      wc.fillStyle="#40372d";wc.fillRect(x,0,2,256);
+      for(let j=0;j<22;j++){
+        const xx=x+4+(j*17)%25, yy=(j*43+x*3)%256;
+        wc.fillStyle=j%4===0?"rgba(24,20,14,.22)":"rgba(234,219,191,.22)";
+        wc.fillRect(xx,yy,1,10+j%6*4);
+      }
+    }
+    const woodMap=new pc.Texture(this.app.graphicsDevice,{
+      name:"Authored World Cup solid larch boardgrain",mipmaps:true,
+    });
+    woodMap.setSource(woodCanvas);
+    woodMap.addressU=woodMap.addressV=pc.ADDRESS_REPEAT;
+    this.textures.push(woodMap);
+    larch.diffuseMap=woodMap;larch.cull=pc.CULLFACE_NONE;larch.update();
     const trim=this.mat("Warm oak joinery","#b18e6c");
     const frame=this.mat("Steel start-house gantry","#495b69",.65,.53);
     const roof=this.mat("Standing seam cold metal roof","#8a9ba8",.5,.35);
@@ -134,7 +159,8 @@ export class WorldCupStartCompound {
       }
       if(j)for(let k=0;k<2;k++){
         const prev=(j-1)*3+k,next=j*3+k;
-        indices.push(prev,prev+1,next,prev+1,next+1,next);
+        // Z cross X = positive Y, so roof faces sunlight.
+        indices.push(prev,next,prev+1,prev+1,next,next+1);
       }
     }
     meshEntity(this.app.graphicsDevice,this.root,
@@ -157,8 +183,21 @@ export class WorldCupStartCompound {
     this.box("Large broadcast visible 3D front house sign",
       0,this.h(0,b)+3.33,b+.18,
       8.5,.62,.15,badge.m);
-    this.box("Interior timber roof ridge beam",
-      0,this.h(0,-5)+4.72,-5,.26,.21,17,trim);
+    // Continuous sloped ridge tie, not a level beam sticking through roof.
+    for(let z=a;z<b-2.5;z+=2.5){
+      const zz=z+2.5;
+      this.rod("Slope-conforming interior roof ridge tie",
+        new pc.Vec3(0,this.h(0,z)+5.03,z),
+        new pc.Vec3(0,this.h(0,zz)+5.03,zz),.09,trim);
+    }
+    const holding=this.panel("Athlete holding-area wall banner",
+      "ATHLETES  /  HOLDING AREA","#183d58");
+    this.box("Waiting lineup large wall display",
+      -3.55,this.h(-3.55,a)+2.18,a+.17,3.8,.76,.05,holding.m);
+    const next=this.panel("Skier order display",
+      "BIBS  41  ·  52  ·  63","#12394f");
+    this.box("Rear service wall timed athlete roster",
+      3.5,this.h(3.5,a)+2.18,a+.17,3.8,.76,.05,next.m);
   }
   private furniture(){
     const wood=this.mat("Alpine maintenance benches","#b6a082");
@@ -267,7 +306,7 @@ export class WorldCupStartCompound {
       {x:1.55,z:-12.0,num:52,yaw:-17},
       {x:-1.4,z:-14.4,num:63,yaw:12},
     ];
-    const count=this.quality==="low"?1:this.quality==="medium"?2:3;
+    const count=this.quality==="low"?2:this.quality==="medium"?2:3;
     for(let i=0;i<count;i++){
       const r=racers[i];this.racer(r.x,r.z,r.num,r.yaw,i);
     }
