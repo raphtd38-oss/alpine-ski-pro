@@ -259,3 +259,12 @@ Le but est un simulateur de ski de grande qualité, amélioré sur le même dép
 - [x] Ajouter tests de phases et capture A/B au même point du parcours.
 - [ ] Valider toutes les captures face/profil/poursuite, sur ordinateur et mobile, et rejeter les poses artificielles restantes.
 - [ ] Importer légalement une véritable motion capture de ski à haute fréquence, retargeter le squelette 25 os et valider le skinning sous charge.
+
+
+## Production TV de départ — PR #60 (22 novembre 2026)
+
+**Implémenté sur branche de travail** : décor intérieur bleu foncé, six plans d'avant-départ (extérieur, réservistes, entraîneurs, technique, proche, lancement), réservistes GLB articulés sur plusieurs chaînes, personnages techniques articulés et indépendants. Conservation intégrale de la piste, des 42 portes et de la simulation.
+
+**Conditions avant publication** : CI vert comprenant tests de squelette, `npm run build`, Chromium desktop et mobile ; captures TV revues à des moments clés, skis en appui et absence d'interpénétrations ; comparaison visuelle sérieuse avec la vidéo du propriétaire. En cas d'échec, corriger avant fusion. La vidéo ne fournit pas de relevé dimensionnel extérieur, donc la toiture n'est pas une copie géométrique certifiée.
+
+**À poursuivre après** : vraies captures mocap de skieurs autorisées commercialement, retarget et IK deux pieds/deux mains plus robustes, patrouille d'officiels avec props synchronisés, transition caméra plus longue si une phase de présentation dédiée est ajoutée au moteur de départ. Ne pas revendiquer « photoréaliste AAA » sans preuve visuelle et benchmark matériel.
