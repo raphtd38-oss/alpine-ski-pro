@@ -33,9 +33,9 @@ const shots: ReadonlyArray<StartBroadcastShot> = [
     heightAboveSnowM:2.55,focusX:-1.8,focusZ:3.15,
     focusAboveSnowM:1.5,fovDeg:54},
   // 5. Real player concentration behind the contact wand.
-  {id:4,name:"starter-closeup",cameraX:2.60,cameraZ:2.90,
-    heightAboveSnowM:1.98,focusX:0,focusZ:.15,
-    focusAboveSnowM:1.42,fovDeg:34},
+  {id:4,name:"starter-closeup",cameraX:1.0,cameraZ:6.9,
+    heightAboveSnowM:2.35,focusX:0,focusZ:3.0,
+    focusAboveSnowM:1.48,fovDeg:35},
   // 6. Crossing the real wand and the first two push cycles.
   {id:5,name:"launch",cameraX:-7.9,cameraZ:10.4,
     heightAboveSnowM:3.25,focusX:0,focusZ:4.05,
