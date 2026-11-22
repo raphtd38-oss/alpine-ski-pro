@@ -10,6 +10,7 @@ import {material,shape,meshEntity,beam} from "./geometry";
 import {ALPINE_START_GATE} from "../game/start-gate";
 import {waitingAthletePose,startStaffPose} from "./worldcup-start-motion";
 import {staffTVClip,type HumanTVClip,type StaffTVRole} from "./start-human-actors";
+import {addRealSkiWinterUniform} from "./winter-rig-outfit";
 
 export const START_HOUSE_DIMENSIONS=Object.freeze({
   halfWidth:4.05,backZ:-1.12,frontZ:3.33,eaveHeight:3.18,ridgeHeight:3.26,
@@ -40,7 +41,7 @@ export class WorldCupStartCompound {
     coaches:0,officials:0,liveClocks:0,animatedRacers:0,
     animatedCoaches:0,waitingBeat:"wait",coachCue:"observe",
     realCoaches:0,realOfficials:0,staticSkierModels:0,
-    staffMocapClips:0,coachClip:"Idle"};
+    staffMocapClips:0,coachClip:"Idle",winterOutfits:0};
   constructor(
     readonly app:pc.Application,parent:pc.Entity,
     readonly course:Course,readonly quality:Quality,
@@ -281,7 +282,11 @@ export class WorldCupStartCompound {
     // AssetSmith owner's STATIC skiing pose adds authentic ski equipment,
     // but cannot be bent or retargeted (no nodes, skin or animation in source).
     this.racer(.48,-.17,41,12,0);
-    this.userSuppliedSkier(-1.25,-.56);
+    // Owner AssetSmith file contains a single unrigged statue with no joints.
+    // It looks worse than our existing 25-bone racer, therefore hide it from
+    // the actual broadcast. Keep an opt-in forensic preview, never default.
+    if(new URLSearchParams(window.location.search).has("debug-assetsmith"))
+      this.userSuppliedSkier(-1.25,-.56);
     const jobs=[
       {x:2.25,z:1.42,role:"coach" as const,p:1},
       {x:-2.22,z:.54,role:"coach" as const,p:2},
@@ -341,64 +346,16 @@ export class WorldCupStartCompound {
       "Top_shirt","Top_tee","Skin_shirt","Skin_tee","Trousers","Shoes",
     ]){
       const part=rig.findByName(garment);
-      // The owner's real Ethan ships with a striped polo + SHORTS!
-      // That outfit was visibly wrong for a winter race in the first
-      // browser screenshot. His skinned FORMAL jacket has long sleeves and
-      // trousers and can be recolored as a sober technical outer layer.
-      if(part)part.enabled=garment==="Outfit_formal"||
-        garment==="Skin_formal";
+      // No SUIT, TIE or FORMAL SHOES should ever render in a ski race.
+      // Real face, hair and exposed hands keep the character human.
+      if(part)part.enabled=garment==="Skin_formal";
     }
-    // Real skinned long-sleeve jacket/trousers remain, but their source
-    // business-suit texture includes a PURPLE TIE: unacceptable on snow.
-    // Re-skin the outfit ONLY with an original matte weatherproof fabric.
-    // Preserve face, hands, shoes, PBR normals, motion and anatomy.
-    const coatCanvas=document.createElement("canvas");
-    coatCanvas.width=512;coatCanvas.height=512;
-    const cx=coatCanvas.getContext("2d")!;
-    const fabricBase=role==="referee"?"#4a3137":
-      phase===1?"#293c47":"#36454b";
-    cx.fillStyle=fabricBase;cx.fillRect(0,0,512,512);
-    let seed=phase*617+19;
-    const rand=()=>{
-      seed=(seed*1664525+1013904223)>>>0;
-      return seed/4294967296;
-    };
-    for(let n=0;n<3200;n++){
-      const x=rand()*512,y=rand()*512;
-      cx.fillStyle=rand()>.5?"rgba(200,221,226,.027)":
-        "rgba(5,12,20,.052)";
-      cx.fillRect(x,y,1+rand()*2,1+rand()*3);
-    }
-    for(let y=52;y<512;y+=82){
-      cx.strokeStyle="rgba(0,9,16,.095)";
-      cx.lineWidth=5;cx.beginPath();
-      cx.moveTo(0,y);cx.bezierCurveTo(180,y-3,320,y+4,512,y);
-      cx.stroke();
-      cx.strokeStyle="rgba(180,209,215,.08)";
-      cx.lineWidth=1;cx.beginPath();
-      cx.moveTo(0,y+5);cx.lineTo(512,y+5);cx.stroke();
-    }
-    const coatTexture=new pc.Texture(this.app.graphicsDevice,{
-      name:"Original weatherproof fabric on the Rocketbox skinned parka "+phase,
-      mipmaps:true,
-    });
-    coatTexture.setSource(coatCanvas);this.textures.push(coatTexture);
-    const outer=rig.findByName("Outfit_formal") as pc.Entity|null;
-    if(outer){
-      for(const component of outer.findComponents("render")){
-        for(const instance of (component as pc.RenderComponent).meshInstances){
-          if(!(instance.material instanceof pc.StandardMaterial))continue;
-          const jacket=instance.material.clone();
-          jacket.diffuseMap=coatTexture;
-          jacket.diffuse.set(1,1,1);
-          jacket.gloss=.12;
-          jacket.useMetalness=false;
-          jacket.update();
-          instance.material=jacket;
-          this.materials.push(jacket);
-        }
-      }
-    }
+    // New real-joint-following 3D parka/pants hide the formal tailoring
+    // instead of merely recoloring its lapels and purple tie.
+    const winter=addRealSkiWinterUniform(
+      this.app,rig,role,phase);
+    this.materials.push(...winter.materials);
+    if(winter.parts>0)this.stats.winterOutfits++;
     const idle=tracks.find(t=>t.resource?.name==="Idle");
     const cheer=tracks.find(t=>t.resource?.name==="Cheer");
     if(!idle?.resource||!cheer?.resource){
@@ -413,7 +370,8 @@ export class WorldCupStartCompound {
       names.add(name);
     }
     rig.anim?.baseLayer?.play("Idle");
-    rig.anim!.speed=role==="coach"?.90:role==="referee"?.78:.75;
+    // Deliberate live human movements, not a rapid-fire cheer/wave.
+    rig.anim!.speed=role==="coach"?.34:role==="referee"?.29:.27;
     for(const c of rig.findComponents("render"))
       (c as pc.RenderComponent).castShadows=this.quality==="ultra";
     this.realStaff.push({rig,role,phase,active:"Idle",available:names});
@@ -702,8 +660,10 @@ export class WorldCupStartCompound {
     for(const extra of this.extras){
       const j=extra.joints;
       if(extra.role==="racer" && j){
-        const p=waitingAthletePose(this.anim,extra.phase,
-          startPhase);
+        const reducedPhase=startPhase===undefined ? undefined :
+          startPhase<0 ? -3+(startPhase+3)*.58 : startPhase;
+        const p=waitingAthletePose(this.anim*.58,extra.phase,
+          reducedPhase);
         const set=(bone:string,x:number,y=0,z=0)=>
           j[bone]?.setLocalEulerAngles(x,y,z);
         const pelvis=j.Hips??j.Pelvis;
@@ -766,7 +726,7 @@ export class WorldCupStartCompound {
       const wanted=staffTVClip(real.role,real.phase,startPhase);
       const next=real.available.has(wanted)?wanted:"Idle";
       if(real.active!==next){
-        real.rig.anim?.baseLayer?.transition(next,.20);
+        real.rig.anim?.baseLayer?.transition(next,.42);
         real.active=next;
       }
       if(real.role==="coach"){
