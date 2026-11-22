@@ -1,0 +1,44 @@
+name: Stage user-approved 3D actors (temporary)
+on:
+  push:
+    branches: [feature/worldcup-start-human-tv-20261122]
+    paths: [.github/workflows/stage-start-actors.yml]
+permissions:
+  contents: write
+jobs:
+  stage:
+    if: github.repository == 'raphtd38-oss/alpine-ski-pro'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Download the exact owner-uploaded Ethan GLB from its MIT-licensed public source
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p public/assets/start
+          curl --fail --location --retry 3 --connect-timeout 20 --max-time 220 \
+            -o public/assets/start/coach-ethan.glb \
+            https://raw.githubusercontent.com/memoriesrohit/avatar-studio/main/models/ethan_casual.glb
+          echo "88b282a080bc1d35d17f9b428afdd14404abda84e0f651424db4fa7e1dbb6ce5  public/assets/start/coach-ethan.glb" | sha256sum --check
+      - name: Download cleaned AssetSmith skier supplied by the owner
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 3 --connect-timeout 20 --max-time 180 \
+            -o /tmp/user-start-skier.zip "https://at.adobe.com/0hMerByphiAKBAFz"
+          file /tmp/user-start-skier.zip
+          unzip -t /tmp/user-start-skier.zip
+          unzip -p /tmp/user-start-skier.zip waiting-skier-assetsmith-clean.glb > public/assets/start/waiting-skier-assetsmith.glb
+          echo "4bede6e0266f5343fd375868c1c8a0e5a4840ddff19290e136a620951300dd66  public/assets/start/waiting-skier-assetsmith.glb" | sha256sum --check
+      - name: Push these exact validated binaries onto this working branch only
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "Alpine Ski Pro CI"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/assets/start/coach-ethan.glb public/assets/start/waiting-skier-assetsmith.glb
+          git commit -m "assets(start): integrate licensed Ethan and owner-prepared AssetSmith skier [skip ci]"
+          git push origin HEAD:refs/heads/feature/worldcup-start-human-tv-20261122
