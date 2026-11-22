@@ -263,6 +263,7 @@ export class Renderer {
       this.course.id === "SG" && f.fallen <= 0
       ? planStartBroadcast(f.startPhase, f.z) : null;
     const previousStartShot = this.lastTVStartShotId;
+    document.body.classList.toggle("tv-start-active", Boolean(tvStart));
     if (tvStart) {
       this.lastTVStartShotId = tvStart.id;
       broadcastCut = previousStartShot !== tvStart.id;
