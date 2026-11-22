@@ -52,7 +52,7 @@ export function planStartBroadcast(
     return null;
   const phase=clamp(startPhase,-3,2.1);
   const shot=phase< -2.58 ? shots[0] :
-    phase< -1.91 ? shots[1] :
+    phase< -1.78 ? shots[1] :
     phase< -1.37 ? shots[2] :
     phase< -.84 ? shots[3] :
     phase<0 ? shots[4] : shots[5];
