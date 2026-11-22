@@ -348,10 +348,38 @@ export class WorldCupStartCompound {
       const part=rig.findByName(garment);
       // No SUIT, TIE or FORMAL SHOES should ever render in a ski race.
       // Real face, hair and exposed hands keep the character human.
-      if(part)part.enabled=garment==="Skin_formal";
+      if(part)part.enabled=garment==="Outfit_formal"||
+        garment==="Skin_formal"||garment==="Shoes";
     }
-    // New real-joint-following 3D parka/pants hide the formal tailoring
-    // instead of merely recoloring its lapels and purple tie.
+    // Keep the true skinned sleeves, legs, fabric folds and anatomy:
+    // the former rigid tubular ski arms looked like an inflated mannequin.
+    // Strip the source business-shirt/tie diffuse artwork and tint the suit
+    // base uniformly; a close-fitting exterior technical zip shell will
+    // cover the lapel and neck geometry completely.
+    const originalCoat=rig.findByName("Outfit_formal") as pc.Entity|null;
+    if(originalCoat){
+      for(const renderer of originalCoat.findComponents("render"))
+        for(const mesh of (renderer as pc.RenderComponent).meshInstances){
+          if(!(mesh.material instanceof pc.StandardMaterial))continue;
+          const winterMaterial=mesh.material.clone();
+          winterMaterial.name="Muted ski-jacket base shell without tie "+
+            role+" "+phase;
+          winterMaterial.diffuseMap=null;
+          winterMaterial.emissiveMap=null;
+          winterMaterial.diffuse.set(
+            role==="referee"?.45:phase===1?.23:.29,
+            role==="referee"?.23:phase===1?.34:.39,
+            role==="referee"?.27:phase===1?.40:.45);
+          winterMaterial.gloss=.13;
+          winterMaterial.useMetalness=false;
+          winterMaterial.update();
+          mesh.material=winterMaterial;
+          this.materials.push(winterMaterial);
+        }
+    }
+    // The fitted outer parka hides all formal lapels, collar and tie.
+    // It moves with the real 80-bone human rather than giant cylinders.
+
     const winter=addRealSkiWinterUniform(
       this.app,rig,role,phase);
     this.materials.push(...winter.materials);
