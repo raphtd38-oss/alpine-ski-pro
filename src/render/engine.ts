@@ -302,6 +302,20 @@ export class Renderer {
         tvStart.focusZ,
       );
       broadcastFov = tvStart.fovDeg;
+      // A portrait iPhone has less than half the horizontal framing of a
+      // landscape TV camera. The previous 390px screenshot showed only the
+      // navy side wall; widen this shot WITHOUT moving the player or physics.
+      const portrait = this.canvas.clientHeight >
+        this.canvas.clientWidth * 1.16;
+      if (portrait) {
+        if (tvStart.name === "establishing") {
+          const outward = eye.clone().sub(look);
+          eye = look.clone().add(outward.mulScalar(2.25));
+          broadcastFov = 58;
+        } else {
+          broadcastFov = Math.min(68, tvStart.fovDeg + 11);
+        }
+      }
     } else if (this.cameraMode === 2) {
       eye = target.clone().add(new pc.Vec3(0, 0.45, 0.2));
       look = eye
