@@ -29,6 +29,21 @@ for (const variant of [
     max: variant.bytes,
   });
 }
+// Owner-approved real-human World Cup start cast.
+manifest.set("public/assets/start/coach-ethan.glb", {
+  source: "https://github.com/memoriesrohit/avatar-studio/models/ethan_casual.glb (derived from Microsoft Rocketbox)",
+  license: "MIT (Microsoft Rocketbox; see docs/licenses/Rocketbox-MIT.txt)",
+  exact: 13_101_540,
+  max: 13_101_540,
+  sha256: "88b282a080bc1d35d17f9b428afdd14404abda84e0f651424db4fa7e1dbb6ce5",
+});
+manifest.set("public/assets/start/waiting-skier-assetsmith.glb", {
+  source: "User-provided AssetSmith static skier 22/11/2026; floor trimmed & texture reduced, no skeleton",
+  license: "Owner-provided; verify AssetSmith distribution terms before commercial sale",
+  exact: 3_919_020,
+  max: 3_919_020,
+  sha256: "4bede6e0266f5343fd375868c1c8a0e5a4840ddff19290e136a620951300dd66",
+});
 for (const model of pack.models) manifest.set(
   "public/assets/alpine/" + model.key + ".glb",
   { source: pack.source + " (model " + model.id + ")", license: pack.license,
@@ -111,6 +126,9 @@ for (const name of files) {
     if (registered.md5)
       assert.equal(createHash("md5").update(readFileSync(name)).digest("hex"),
         registered.md5, "Texture content differs from the audited source");
+    if (registered.sha256)
+      assert.equal(createHash("sha256").update(readFileSync(name)).digest("hex"),
+        registered.sha256,"3D model content differs from owner-verified SHA-256");
     const asset = { path: name, bytes: size, license: registered.license,
       source: registered.source };
     if (name.endsWith(".glb"))
