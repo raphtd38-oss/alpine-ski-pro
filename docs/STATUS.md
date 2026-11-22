@@ -1,3 +1,13 @@
+## 22 novembre 2026 — Nouvelle zone de départ World Cup TV (PR de développement)
+
+La petite cabane a été remplacée dans le code par une **start arena de 11,3 × 21,6 m** (toit à pans, vitrages, préparation intérieure, bancs, casiers, skis de réserve, bureau jury, monitors timing A/B, caméras de reportage, garde-corps), générée par `src/render/worldcup-start-compound.ts`. Les 1–3 skieurs en attente sont des instanciations du modèle de course déjà licencié si disponible (dossards fictifs 41, 52, 63), complétés par deux coachs, officiel de départ et technicien caméra selon le niveau de détails. **La zone de portillon reste dégagée**, l'unique tige de départ utilise toujours les constantes et le simulateur 120 Hz.
+
+`src/render/worldcup-start-broadcast.ts` crée cinq plans TV déterministes, depuis le panoramique de la zone jusqu'à la poussée de départ. Le chrono est affiché sur deux panneaux 3D et dans un habillage TV adaptatif ; la caméra revient à la sélection habituelle après la zone de départ. Animation d'échauffement visuelle à 3 secondes sur le rig 25 os, sans altérer la pose des skis/chrono. Références d'ambiance : manuel de production [FIS broadcaster](https://assets.fis-ski.com/f/252177/1d4272fa7d/fis-broadcaster-manual-ski-alpine.pdf), guide d'accès/espaces [FIS](https://assets.fis-ski.com/f/252177/x/cb4d4a9b00/access-to-restricted-areas-at-fis-alpine-world-cup-events-guidelines.pdf). Reconstruction libre, pas relevé CAD officiel de Cortina. L'absence de véritables personnages humanoïdes de production pour les coachs et du mocap retargeté reste une limite esthétique explicite.
+
+Validation CI et captures de la PR à vérifier avant toute publication.
+
+---
+
 # 21 novembre 2026 — correction des commandes et des jambes, PR #47
 
 Le chantier interrompu dans ChatGPT Work a été reconstruit à partir des symptômes et captures fournis ; les modifications locales privées de Work n'étaient pas accessibles directement. [PR #47](https://github.com/raphtd38-oss/alpine-ski-pro/pull/47) fusionnée avec le commit `a5a5a27691b1e25cbdd302ff6791ce5314cfaf92`, après **179 tests unitaires et 7 tests navigateur Chromium** réussis, build Vite/TypeScript et audit d'assets réussis ([CI de la PR](https://github.com/raphtd38-oss/alpine-ski-pro/actions/runs/44930885998)). [CI / déploiement main](https://github.com/raphtd38-oss/alpine-ski-pro/actions/runs/44931329312) à consulter pour la publication.
