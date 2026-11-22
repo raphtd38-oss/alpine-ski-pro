@@ -30,7 +30,10 @@ test("real World Cup start paddock stages television cameras, people and live ti
   expect(compound.realCoaches).toBeGreaterThanOrEqual(2);
   expect(compound.realOfficials).toBeGreaterThanOrEqual(1);
   expect(compound.staffMocapClips).toBeGreaterThanOrEqual(13);
-  expect(compound.staticSkierModels).toBe(1);
+  // Static unrigged AssetSmith statue must not appear in live ski scene.
+  expect(compound.staticSkierModels).toBe(0);
+  // The real humans must wear joint-following ski kit, not a tinted suit.
+  expect(compound.winterOutfits).toBeGreaterThanOrEqual(3);
   expect(state.timingWands).toBe(1);
   expect(state.startGateOpened).toBe(false);
   const tv=page.locator("#worldcup-tv-start-lowerthird");
