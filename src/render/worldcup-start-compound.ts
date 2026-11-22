@@ -288,9 +288,11 @@ export class WorldCupStartCompound {
     if(new URLSearchParams(window.location.search).has("debug-assetsmith"))
       this.userSuppliedSkier(-1.25,-.56);
     const jobs=[
-      {x:2.25,z:1.42,role:"coach" as const,p:1},
+      // Lead coach takes the clearly visible left-side position formerly
+      // occupied by the official. Camera can now frame his REAL face.
+      {x:-2.82,z:2.20,role:"coach" as const,p:1},
       {x:-2.22,z:.54,role:"coach" as const,p:2},
-      {x:-2.82,z:2.20,role:"referee" as const,p:0},
+      {x:2.25,z:1.42,role:"referee" as const,p:0},
       {x:4.65,z:4.36,role:"camera" as const,p:3},
     ];
     const count=this.quality==="low"?3:4;
@@ -333,8 +335,8 @@ export class WorldCupStartCompound {
     parent.setPosition(x,this.h(x,z),z);
     // Real source faces +Z. Lead coach should look toward the real skier AND
     // toward the coach TV camera at x=-.52, z=2.04; +105 turned his BACK.
-    const yaw=role==="coach"?(x>0?-68:58):
-      role==="referee"?38: -35;
+    const yaw=role==="coach"?(phase===1?125:x>0?-68:58):
+      role==="referee"?-68: -35;
     parent.setLocalEulerAngles(0,yaw,0);
     const scale=role==="referee"?1.03:phase===2?.974:1;
     parent.setLocalScale(scale,scale,scale);
@@ -424,15 +426,9 @@ export class WorldCupStartCompound {
     if(rig.findByName("LeftUpLeg"))rig.setLocalEulerAngles(0,180,0);
     for(const renderer of rig.findComponents("render"))
       (renderer as pc.RenderComponent).castShadows=false;
-    const chest=rig.findByName("Chest") as pc.Entity|null;
-    if(chest){
-      const sign=this.panel("White bib of waiting racer "+num,
-        "BIB "+num,"#ecf3f6");
-      // Actual cloth follows the same chest bone as the athlete.
-      const cloth=this.box("Reserve competitor numbered bib "+num,
-        0,-.07,-.214,.43,.48,.016,sign.m,chest);
-      cloth.render!.castShadows=false;
-    }
+    // The old flat 43cm "BIB 41" box was attached backwards to the
+    // shoulder and looked like a giant white billboard. Real equipment
+    // already exists on the original licensed skier; no fake board here.
     const joints:Record<string,pc.GraphNode|null>={};
     // These names are the actual bone names in seamless-mobile/full GLB.
     // The classic fallback is still tolerated for older devices.
