@@ -8,6 +8,7 @@ import type {Course,Quality} from "../game/types";
 import {terrainHeight} from "../game/course";
 import {material,shape,meshEntity,beam} from "./geometry";
 import {ALPINE_START_GATE} from "../game/start-gate";
+import {waitingAthletePose,startStaffPose} from "./worldcup-start-motion";
 
 export const START_HOUSE_DIMENSIONS=Object.freeze({
   halfWidth:5.65,backZ:-16.4,frontZ:5.2,eaveHeight:3.74,ridgeHeight:5.32,
@@ -15,6 +16,8 @@ export const START_HOUSE_DIMENSIONS=Object.freeze({
 interface Staff {
   head:pc.GraphNode|null; leftArm:pc.GraphNode|null;
   rightArm:pc.GraphNode|null; phase:number; role:"racer"|"coach"|"referee"|"camera";
+  joints?:Record<string,pc.GraphNode|null>;
+  pelvisRest?:pc.Vec3;
 }
 interface Board {canvas:HTMLCanvasElement;texture:pc.Texture}
 export class WorldCupStartCompound {
@@ -27,7 +30,8 @@ export class WorldCupStartCompound {
   private anim=0;
   private lastClock="";
   readonly stats={widthM:11.3,depthM:21.6,waitingRacers:0,
-    coaches:0,officials:0,liveClocks:0};
+    coaches:0,officials:0,liveClocks:0,animatedRacers:0,
+    animatedCoaches:0,waitingBeat:"wait",coachCue:"observe"};
   constructor(
     readonly app:pc.Application,parent:pc.Entity,
     readonly course:Course,readonly quality:Quality,
@@ -198,6 +202,28 @@ export class WorldCupStartCompound {
       "BIBS  41  ·  52  ·  63","#12394f");
     this.box("Rear service wall timed athlete roster",
       3.5,this.h(3.5,a)+2.18,a+.17,3.8,.76,.05,next.m);
+    // The provided television reference uses a DARK-BLUE windproof staging
+    // interior. The structural wood/metal cabin survives outside: these
+    // fabric liners form the competition-specific indoor camera background.
+    const fabric=this.mat("Original navy technical canvas tent lining","#122655",0,.14);
+    const stitch=this.mat("Weather-sealed fabric blue piping","#3f628d",0,.22);
+    for(const side of [-1,1]){
+      const x=side*(w-.19);
+      for(const [z,d] of [[-12.9,6.0],[-6.4,5.6]] as const){
+        this.box("Blue windbreak fabric backdrop, television holding bay",
+          x,this.h(x,z)+2.03,z,.045,2.90,d,fabric);
+        this.box("Vertical stitched canvas tensioning strip",
+          x-side*.04,this.h(x,z)+1.98,z-d*.5,.07,3.0,.055,stitch);
+      }
+      this.box("Insulated navy fabric back wall near athlete entry",
+        side*3.7,this.h(side*3.7,a)+1.85,a+.12,
+        3.5,2.8,.044,fabric);
+    }
+    const logo=this.panel("Original graphic panel for TV holding lane",
+      "CORTINA   /   START","#112552");
+    this.box("Navy blue wall competition graphic no licensed branding",
+      -3.20,this.h(-3.20,-10.2)+2.38,-10.2,
+      3.4,.60,.09,logo.m);
   }
   private furniture(){
     const wood=this.mat("Alpine maintenance benches","#b6a082");
@@ -343,10 +369,21 @@ export class WorldCupStartCompound {
         0,-.07,-.214,.43,.48,.016,sign.m,chest);
       cloth.render!.castShadows=false;
     }
-    this.extras.push({head:rig.findByName("Head"),
-      leftArm:rig.findByName("LeftUpperArm")??rig.findByName("LeftShoulder"),
-      rightArm:rig.findByName("RightUpperArm")??rig.findByName("RightShoulder"),
-      phase,role:"racer"});
+    const joints:Record<string,pc.GraphNode|null>={};
+    // These names are the actual bone names in seamless-mobile/full GLB.
+    // The classic fallback is still tolerated for older devices.
+    for(const name of ["Hips","Pelvis","Spine","Chest","Neck","Head",
+      "LeftUpLeg","RightUpLeg","LeftLeg","RightLeg",
+      "LeftAnkle","RightAnkle","LeftShoulder","RightShoulder",
+      "LeftUpperArm","RightUpperArm","LeftForeArm","RightForeArm",
+      "LeftHand","RightHand"]){
+      joints[name]=rig.findByName(name);
+    }
+    const pelvis=joints.Hips??joints.Pelvis;
+    this.extras.push({head:joints.Head??null,
+      leftArm:joints.LeftUpperArm??joints.LeftShoulder??null,
+      rightArm:joints.RightUpperArm??joints.RightShoulder??null,
+      pelvisRest:pelvis?.getLocalPosition().clone(),joints,phase,role:"racer"});
     this.stats.waitingRacers++;
   }
   private crew(x:number,z:number,role:"coach"|"referee"|"camera",phase:number){
@@ -361,12 +398,24 @@ export class WorldCupStartCompound {
     const cap=this.mat("Thermal staff headwear","#293f4e");
     const glove=this.mat("Insulated official glove","#1e2b32");
     const boot=this.mat("Alpine insulated staff boot","#343d42",.10);
+    const hips:pc.Entity[]=[],knees:pc.Entity[]=[];
+    // Real pivot hierarchy rather than rotating static trouser cylinders:
+    // Hips -> knee -> shin + boot, with two independent weight-bearing legs.
     for(const side of [-1,1]){
-      shape(root,"capsule","Human proportioned trouser leg",
-        [side*.14,.48,0],[.21,.79,.22],pants);
-      this.box("Proper snow boots",
-        side*.14,.12,-.07,.27,.22,.40,boot,root);
+      const hip=new pc.Entity(side<0?"Crew left hip":"Crew right hip");
+      hip.setLocalPosition(side*.14,.83,0);root.addChild(hip);
+      shape(hip,"capsule","Upper trouser articulated thigh",
+        [0,-.20,0],[.20,.46,.21],pants);
+      const knee=new pc.Entity(side<0?"Crew left knee":"Crew right knee");
+      knee.setLocalPosition(0,-.41,0);hip.addChild(knee);
+      shape(knee,"capsule","Lower trouser articulated shin",
+        [0,-.17,0],[.18,.36,.19],pants);
+      shape(knee,"box","Crew planted winter boot",
+        [0,-.30,-.07],[.27,.22,.4],boot);
+      hips.push(hip);knees.push(knee);
     }
+    const torso=new pc.Entity("Staff articulated thorax");
+    torso.setLocalPosition(0,.84,0);root.addChild(torso);
     // Tapered technical parka made from 14-sided rings.
     const p:number[]=[],idx:number[]=[],segments=14;
     const rings=[[.82,.24,.16],[1.1,.33,.21],[1.42,.35,.22],
@@ -374,7 +423,7 @@ export class WorldCupStartCompound {
     for(const [height,rx,rz] of rings)
       for(let i=0;i<segments;i++){
         const t=i*Math.PI*2/segments;
-        p.push(Math.cos(t)*rx,height,Math.sin(t)*rz);
+        p.push(Math.cos(t)*rx,height-.84,Math.sin(t)*rz);
       }
     for(let i=0;i<rings.length-1;i++)
       for(let j=0;j<segments;j++){
@@ -382,29 +431,44 @@ export class WorldCupStartCompound {
         const c=(i+1)*segments+j,d=(i+1)*segments+(j+1)%segments;
         idx.push(a,c,b,b,c,d);
       }
-    meshEntity(this.app.graphicsDevice,root,
+    meshEntity(this.app.graphicsDevice,torso,
       "Tailored ergonomic winter coat jacket",p,idx,coat);
+    // Distinct seams / reflective jacket detailing authored as geometry.
+    this.box("Insulated jacket center zipper",0,.34,-.225,
+      .018,.54,.014,this.mat("Winter jacket zipper strip","#a6bac6"),torso);
+    for(const side of [-1,1])
+      this.box("Reflective winter parka arm patch",side*.29,.57,-.18,
+        .09,.10,.018,this.mat("Hi vis crew shoulder patch","#dbe5d6"),torso);
     const head=new pc.Entity("Crew human head joint");
-    head.setLocalPosition(0,1.63,0);root.addChild(head);
+    head.setLocalPosition(0,1.63-.84,0);torso.addChild(head);
     shape(head,"sphere","Human face",
       [0,.09,-.025],[.25,.30,.23],face);
     shape(head,"sphere","Thermal wool beanie",
       [0,.255,0],[.29,.15,.26],cap);
-    const left=new pc.Entity("Left coach animated arm"),
-      right=new pc.Entity("Right coach animated arm");
+    const left=new pc.Entity("Left staff shoulder joint"),
+      right=new pc.Entity("Right staff shoulder joint");
+    const elbows:pc.Entity[]=[];
     for(const [side,arm]of [[-1,left],[1,right]] as const){
-      arm.setLocalPosition(side*.32,1.40,0);root.addChild(arm);
-      shape(arm,"capsule","Insulated articulated sleeve",
-        [side*.04,-.25,0],[.18,.48,.19],coat);
-      shape(arm,"sphere","Warm fabric glove",
-        [side*.05,-.53,0],[.18,.18,.18],glove);
+      arm.setLocalPosition(side*.32,1.40-.84,0);torso.addChild(arm);
+      shape(arm,"capsule","Upper articulated jacket sleeve",
+        [side*.012,-.20,0],[.18,.41,.19],coat);
+      const elbow=new pc.Entity(side<0?"Left elbow joint":"Right elbow joint");
+      elbow.setLocalPosition(side*.012,-.37,0);arm.addChild(elbow);
+      shape(elbow,"capsule","Forearm articulated jacket sleeve",
+        [0,-.15,0],[.165,.32,.18],coat);
+      shape(elbow,"sphere","Warm fabric mitten glove",
+        [0,-.33,0],[.17,.18,.18],glove);
+      elbows.push(elbow);
     }
     if(role==="coach"||role==="referee"){
       this.box(role==="coach"?"Coach's race split tablet":
-        "Start marshal checks clipboard",-.19,.97,-.29,
-        .34,.32,.035,cap,root);
+        "Start marshal checks clipboard",-.19,.97-.84,-.29,
+        .34,.32,.035,cap,torso);
     }
-    this.extras.push({head,leftArm:left,rightArm:right,phase,role});
+    this.extras.push({head,leftArm:left,rightArm:right,phase,role,
+      joints:{torso,leftElbow:elbows[0],rightElbow:elbows[1],
+        leftHip:hips[0],rightHip:hips[1],leftKnee:knees[0],
+        rightKnee:knees[1]}});
     if(role==="coach")this.stats.coaches++;
     else this.stats.officials++;
   }
@@ -456,14 +520,58 @@ export class WorldCupStartCompound {
       }
     }
     this.anim+=Math.max(0,Math.min(.07,dt));
+    let animatedRacers=0,animatedCoaches=0;
     for(const extra of this.extras){
-      const x=this.anim*1.9+extra.phase;
-      const sway=Math.sin(x);
-      extra.head?.setLocalEulerAngles(1.2*sway,3*sway,0);
-      extra.leftArm?.setLocalEulerAngles(
-        extra.role==="coach"?-24+8*sway:-13+7*sway,0,-9);
-      extra.rightArm?.setLocalEulerAngles(
-        extra.role==="referee"?-28-8*sway:-10-6*sway,0,9);
+      const j=extra.joints;
+      if(extra.role==="racer" && j){
+        const p=waitingAthletePose(this.anim,extra.phase);
+        const set=(bone:string,x:number,y=0,z=0)=>
+          j[bone]?.setLocalEulerAngles(x,y,z);
+        const pelvis=j.Hips??j.Pelvis;
+        if(pelvis && extra.pelvisRest)
+          pelvis.setLocalPosition(extra.pelvisRest.x,
+            extra.pelvisRest.y+p.pelvisY,extra.pelvisRest.z);
+        set("Hips",0,0,p.pelvisRoll);set("Pelvis",0,0,p.pelvisRoll);
+        set("Spine",p.spinePitch,0,p.spineRoll);
+        set("Chest",0,p.chestYaw,0);
+        set("Neck",0,p.neckYaw,0);
+        set("Head",p.headPitch,p.headYaw,0);
+        for(const side of ["Left","Right"] as const){
+          const left=side==="Left";
+          set(side+"UpLeg",p.hipPitch,0,
+            (left?1:-1)*p.pelvisRoll*.23);
+          set(side+"Leg",p.kneePitch);
+          set(side+"Ankle",p.anklePitch);
+          set(side+"Shoulder",
+            left?p.leftShoulderPitch*.34:p.rightShoulderPitch*.34);
+          set(side+"UpperArm",
+            left?p.leftShoulderPitch:p.rightShoulderPitch,
+            0,left?p.leftShoulderRoll:p.rightShoulderRoll);
+          set(side+"ForeArm",left?p.leftElbow:p.rightElbow);
+          set(side+"Hand",left?p.leftWrist:p.rightWrist);
+        }
+        this.stats.waitingBeat=p.beat;
+        animatedRacers++;
+      }else{
+        const p=startStaffPose(this.anim,extra.phase,
+          extra.role==="racer"?"coach":extra.role,phase);
+        extra.head?.setLocalEulerAngles(p.headPitch,p.headYaw,0);
+        extra.leftArm?.setLocalEulerAngles(p.leftShoulder,0,-9);
+        extra.rightArm?.setLocalEulerAngles(p.rightShoulder,0,9);
+        j?.torso?.setLocalEulerAngles(p.torsoPitch,0,0);
+        j?.leftElbow?.setLocalEulerAngles(p.leftElbow,0,0);
+        j?.rightElbow?.setLocalEulerAngles(p.rightElbow,0,0);
+        j?.leftHip?.setLocalEulerAngles(p.leftHip,0,0);
+        j?.rightHip?.setLocalEulerAngles(p.rightHip,0,0);
+        j?.leftKnee?.setLocalEulerAngles(p.leftKnee,0,0);
+        j?.rightKnee?.setLocalEulerAngles(p.rightKnee,0,0);
+        if(extra.role==="coach"){
+          animatedCoaches++;
+          this.stats.coachCue=p.cue;
+        }
+      }
     }
+    this.stats.animatedRacers=animatedRacers;
+    this.stats.animatedCoaches=animatedCoaches;
   }
 }
