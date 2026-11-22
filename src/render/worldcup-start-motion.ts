@@ -58,13 +58,14 @@ const cycle = (seconds: number, shift: number, length: number) =>
 /** Independently animates neck, spine, 2 x clavicle/arm/elbow/wrist and
  *  2 x hip/knee/ankle chains, not a rigid whole-body rotation. */
 export function waitingAthletePose(seconds: number, performer: number): WaitingAthletePose {
-  const t = cycle(seconds, performer * 2.17, 10.7);
+  const safeSeconds = Number.isFinite(seconds) ? Math.max(0, seconds) : 0;
+  const t = cycle(safeSeconds, performer * 2.17, 10.7);
   const scan = envelope(t, .15, 2.24);
   const shoulders = envelope(t, 2.03, 4.12);
   const flex = envelope(t, 3.75, 5.87);
   const transfer = envelope(t, 5.51, 7.30);
   const adjust = envelope(t, 7.06, 9.07);
-  const breathing = Math.sin(seconds * 2.10 + performer * 1.11);
+  const breathing = Math.sin(safeSeconds * 2.10 + performer * 1.11);
   const scanYaw = scan * Math.sin((t - .3) * 2.1) * 26;
   const shoulderRoll = shoulders * Math.sin((t - 2.1) * 5.1);
   // Two unhurried distinct squats and a heel-weight exchange.
