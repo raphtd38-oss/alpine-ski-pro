@@ -18,8 +18,8 @@ test("real World Cup start paddock stages television cameras, people and live ti
   expect(compound).toBeTruthy();
   expect(compound.widthM).toBeGreaterThan(7);
   expect(compound.widthM).toBeLessThan(9);
-  expect(compound.depthM).toBeGreaterThan(5);
-  expect(compound.depthM).toBeLessThan(8);
+  expect(compound.depthM).toBeGreaterThan(4);
+  expect(compound.depthM).toBeLessThan(5);
   expect(compound.waitingRacers).toBeGreaterThanOrEqual(1);
   expect(compound.coaches).toBeGreaterThanOrEqual(1);
   expect(compound.officials).toBeGreaterThanOrEqual(1);
