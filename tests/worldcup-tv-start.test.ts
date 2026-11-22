@@ -11,13 +11,17 @@ describe("World Cup television start area — shots and dimensions",()=>{
       "technical-timing","starter-closeup","launch",
     ]);
   });
-  it("has a broad, deep competition start house with physical launch bay",()=>{
-    expect(START_HOUSE_DIMENSIONS.halfWidth*2).toBeGreaterThan(10);
-    expect(START_HOUSE_DIMENSIONS.frontZ-
-      START_HOUSE_DIMENSIONS.backZ).toBeGreaterThan(20);
-    expect(START_HOUSE_DIMENSIONS.eaveHeight).toBeGreaterThan(3.4);
-    expect(START_HOUSE_DIMENSIONS.ridgeHeight).toBeGreaterThan(
-      START_HOUSE_DIMENSIONS.eaveHeight+.8);
+  it("matches the reference's COMPACT flat-topped start booth, not a 22m chalet",()=>{
+    const w=START_HOUSE_DIMENSIONS.halfWidth*2;
+    const d=START_HOUSE_DIMENSIONS.frontZ-START_HOUSE_DIMENSIONS.backZ;
+    expect(w).toBeGreaterThan(7);
+    expect(w).toBeLessThan(9);
+    expect(d).toBeGreaterThan(5);
+    expect(d).toBeLessThan(8);
+    expect(START_HOUSE_DIMENSIONS.eaveHeight).toBeLessThan(3.7);
+    expect(START_HOUSE_DIMENSIONS.ridgeHeight-
+      START_HOUSE_DIMENSIONS.eaveHeight).toBeLessThan(.2);
+    expect(START_HOUSE_DIMENSIONS.frontZ).toBeLessThan(4.05);
   });
   it("returns null after 16m and allows standard broadcast/chase to resume",()=>{
     for(const t of [-4,2.1,7])
@@ -34,7 +38,7 @@ describe("World Cup television start area — shots and dimensions",()=>{
     expect(p.cameraZ).toBeCloseTo(6.9,2);
     expect(p.focusZ).toBeCloseTo(3,2);
     // Player spawn position comes from initialState().z = 3.0, not z = 0.
-    expect(p.cameraZ-p.focusZ).toBeLessThan(4);
+    expect(p.cameraZ-p.focusZ).toBeLessThan(4);\n    expect(planStartBroadcast(-2,0)!.focusZ).toBeGreaterThan(-2);
     expect(p.fovDeg).toBeLessThanOrEqual(35);
     expect(planStartBroadcast(-1.65,0)!.name).toBe("coaches");
     expect(planStartBroadcast(-1.65,0)!.fovDeg).toBeLessThan(36);
