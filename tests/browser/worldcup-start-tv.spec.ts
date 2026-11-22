@@ -26,6 +26,11 @@ test("real World Cup start paddock stages television cameras, people and live ti
   expect(compound.liveClocks).toBe(2);
   expect(compound.animatedRacers).toBeGreaterThanOrEqual(1);
   expect(compound.animatedCoaches).toBeGreaterThanOrEqual(1);
+  // This is the REAL GLB, not the former capsule-based mannequins.
+  expect(compound.realCoaches).toBeGreaterThanOrEqual(2);
+  expect(compound.realOfficials).toBeGreaterThanOrEqual(1);
+  expect(compound.staffMocapClips).toBeGreaterThanOrEqual(13);
+  expect(compound.staticSkierModels).toBe(1);
   expect(state.timingWands).toBe(1);
   expect(state.startGateOpened).toBe(false);
   const tv=page.locator("#worldcup-tv-start-lowerthird");
@@ -44,6 +49,7 @@ test("real World Cup start paddock stages television cameras, people and live ti
   await page.screenshot({path:"test-results/worldcup-start-tv-coach-encouragement.png"});
   const cheer=await page.evaluate(()=>(window as any).__ski.getState().worldCupStart);
   expect(cheer.coachCue).toBe("encourage");
+  expect(cheer.coachClip).toBe("Cheer");
   await page.evaluate(()=>(window as any).__ski.step(107,
     {steer:0,tuck:false,brake:false,jump:false}));
   await page.waitForTimeout(400);
