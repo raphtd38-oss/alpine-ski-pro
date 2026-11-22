@@ -25,9 +25,9 @@ const shots: ReadonlyArray<StartBroadcastShot> = [
     heightAboveSnowM:1.94,focusX:.48,focusZ:-.02,
     focusAboveSnowM:1.50,fovDeg:48},
   // 3. Coach encourages and follows starter signal from the right of lane.
-  {id:2,name:"coaches",cameraX:.62,cameraZ:1.94,
-    heightAboveSnowM:2.20,focusX:2.25,focusZ:1.42,
-    focusAboveSnowM:1.55,fovDeg:34},
+  {id:2,name:"coaches",cameraX:-1.26,cameraZ:1.15,
+    heightAboveSnowM:2.20,focusX:-2.82,focusZ:2.20,
+    focusAboveSnowM:1.48,fovDeg:34},
   // 4. Official control table, live A+B display and true start wand.
   {id:3,name:"technical-timing",cameraX:-.75,cameraZ:4.91,
     heightAboveSnowM:2.30,focusX:-3.12,focusZ:3.45,
