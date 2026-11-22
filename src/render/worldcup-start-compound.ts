@@ -552,6 +552,7 @@ export class WorldCupStartCompound {
       }
     }
     this.anim+=Math.max(0,Math.min(.07,dt));
+    this.stats.coachCue="observe";
     let animatedRacers=0,animatedCoaches=0;
     for(const extra of this.extras){
       const j=extra.joints;
