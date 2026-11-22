@@ -213,6 +213,7 @@ export class WorldCupStartCompound {
   }
 
   private production(){
+    const b=START_HOUSE_DIMENSIONS.frontZ;
     const black=this.mat("Official dark timing box frame","#131b29",.24,.36);
     const silver=this.mat("ENG camera technical aluminium","#606e73",.63,.43);
     const glass=this.mat("Professional dark camera lens","#121f29",.38,.79);
