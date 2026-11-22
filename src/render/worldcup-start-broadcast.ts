@@ -15,20 +15,20 @@ const clamp=(v:number,a:number,b:number)=>Math.max(a,Math.min(b,
 const shots:ReadonlyArray<StartBroadcastShot>=[
   // Side of house, crowd and roof: wide establishing camera.
   {id:0,name:"establishing",cameraX:9.3,cameraZ:12.5,
-    heightAboveSnowM:7.8,focusX:0,focusZ:-6,
-    focusAboveSnowM:3.25,fovDeg:55},
+    heightAboveSnowM:5.0,focusX:0,focusZ:-1.7,
+    focusAboveSnowM:1.7,fovDeg:58},
   // Look across the waiting racers and coat rack from the start lane.
   {id:1,name:"athlete-queue",cameraX:.1,cameraZ:-5.4,
     heightAboveSnowM:2.45,focusX:-1.1,focusZ:-11.8,
     focusAboveSnowM:1.2,fovDeg:53},
   // Start official with main timer wall and athlete visible at the gate.
-  {id:2,name:"technical-timing",cameraX:1.2,cameraZ:3.25,
-    heightAboveSnowM:2.0,focusX:-1.15,focusZ:1.0,
-    focusAboveSnowM:1.55,fovDeg:54},
+  {id:2,name:"technical-timing",cameraX:1.25,cameraZ:8.1,
+    heightAboveSnowM:2.55,focusX:-1.8,focusZ:3.15,
+    focusAboveSnowM:1.5,fovDeg:54},
   // Telephoto close-up down the ski track, athlete visibly warming up.
-  {id:3,name:"starter-closeup",cameraX:.45,cameraZ:6.8,
-    heightAboveSnowM:2.55,focusX:0,focusZ:.15,
-    focusAboveSnowM:1.20,fovDeg:36},
+  {id:3,name:"starter-closeup",cameraX:.52,cameraZ:9.4,
+    heightAboveSnowM:2.75,focusX:0,focusZ:.15,
+    focusAboveSnowM:1.35,fovDeg:40},
   // Angle on actual wand release and first pole strokes.
   {id:4,name:"launch",cameraX:-7.9,cameraZ:10.4,
     heightAboveSnowM:3.25,focusX:0,focusZ:4.05,
