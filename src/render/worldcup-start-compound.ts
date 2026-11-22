@@ -439,12 +439,43 @@ export class WorldCupStartCompound {
     for(const side of [-1,1])
       this.box("Reflective winter parka arm patch",side*.29,.57,-.18,
         .09,.10,.018,this.mat("Hi vis crew shoulder patch","#dbe5d6"),torso);
+    // Volume and material breakup on visible close-up: insulated collar,
+    // stitched baffling, tapered side pockets and weatherproof zipper.
+    const darker=this.mat("Tonal panel seam on winter jacket",
+      role==="coach"?"#a73540":"#263d4e",0,.18);
+    const reflective=this.mat("Silver jacket reflective tape","#aec6ce",.12,.27);
+    for(const y of [.13,.30,.47]){
+      this.box("Padded winter parka stitched baffle",0,y,-.209,
+        .43,.023,.018,darker,torso);
+    }
+    for(const side of [-1,1]){
+      this.box("Coat side zipper pocket",side*.21,.16,-.15,
+        .075,.17,.024,darker,torso);
+      this.box("Reflective curved jacket chest emblem stripe",
+        side*.19,.50,-.169,.17,.023,.02,reflective,torso);
+    }
+    shape(torso,"cylinder","Insulated neck gaiter collar",
+      [0,.75,0],[.23,.16,.23],cap);
     const head=new pc.Entity("Crew human head joint");
     head.setLocalPosition(0,1.63-.84,0);torso.addChild(head);
     shape(head,"sphere","Human face",
       [0,.09,-.025],[.25,.30,.23],face);
     shape(head,"sphere","Thermal wool beanie",
       [0,.255,0],[.29,.15,.26],cap);
+    const glasses=this.mat("Dark UV race-side snow sunglasses","#14262e",.24,.64);
+    const glassesFrame=this.mat("Protective eyewear bridge","#354e58",.3,.52);
+    const nose=this.mat("Natural nose skin shading","#936d55");
+    for(const side of [-1,1]){
+      shape(head,"sphere","Winter crew protective sunglass lens",
+        [side*.085,.12,-.139],[.125,.087,.028],glasses);
+      shape(head,"sphere","Small insulated ear covering",
+        [side*.125,.13,.0],[.073,.11,.12],cap);
+    }
+    this.box("Small sunglasses bridge",0,.12,-.15,.048,.022,.036,glassesFrame,head);
+    shape(head,"sphere","Crew face nose profile",
+      [0,.055,-.153],[.075,.085,.070],nose);
+    shape(head,"capsule","Fitted wool beanie rim",
+      [0,.231,-.034],[.27,.056,.23],cap);
     const left=new pc.Entity("Left staff shoulder joint"),
       right=new pc.Entity("Right staff shoulder joint");
     const elbows:pc.Entity[]=[];
@@ -461,9 +492,16 @@ export class WorldCupStartCompound {
       elbows.push(elbow);
     }
     if(role==="coach"||role==="referee"){
-      this.box(role==="coach"?"Coach's race split tablet":
-        "Start marshal checks clipboard",-.19,.97-.84,-.29,
-        .34,.32,.035,cap,torso);
+      // Equipment moves with the hand/elbow, never floats in torso space.
+      const prop=this.mat("Protective radio tablet graphite","#1c2733",.42,.40);
+      this.box(role==="coach"?"Coach's handheld radio / splits":
+        "Timing official's handheld tablet",-.012,-.27,-.17,
+        .16,.23,.048,prop,elbows[0]);
+      this.box("Official equipment display strip",-.012,-.27,-.198,
+        .12,.12,.008,reflective,elbows[0]);
+      if(role==="coach")
+        this.box("Short handheld UHF antenna",.04,-.11,-.17,
+          .016,.17,.016,prop,elbows[0]);
     }
     this.extras.push({head,leftArm:left,rightArm:right,phase,role,
       joints:{torso,leftElbow:elbows[0],rightElbow:elbows[1],
