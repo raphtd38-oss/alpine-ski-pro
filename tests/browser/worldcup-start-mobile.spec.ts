@@ -15,6 +15,8 @@ test("mobile-sized start TV retains next skier, staff and responsive lower-third
   const state=await page.evaluate(()=>(window as any).__ski.getState());
   expect(state.athleteVariant).toBe("mobile");
   expect(state.worldCupStart.waitingRacers).toBeGreaterThanOrEqual(1);
+  expect(state.worldCupStart.winterOutfits).toBeGreaterThanOrEqual(3);
+  expect(state.worldCupStart.staticSkierModels).toBe(0);
   expect(state.worldCupStart.liveClocks).toBe(2);
   await expect(page.locator("#worldcup-tv-start-lowerthird")).toHaveClass(/active/);
   await page.screenshot({path:"test-results/worldcup-start-tv-mobile-390px.png"});
