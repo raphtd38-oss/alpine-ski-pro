@@ -1,0 +1,62 @@
+name: Build isolated playable test (no GitHub Pages deployment)
+
+on:
+  push:
+    branches:
+      - feature/worldcup-start-human-tv-20261122
+  workflow_dispatch:
+
+# The production Github Pages release workflow is NEVER invoked here.
+permissions:
+  contents: write
+
+concurrency:
+  group: alpine-human-tv-preview
+  cancel-in-progress: true
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Prepare licensed alpine textures and model pack
+        run: npm run assets:alpine
+      - name: Verify provenance of required environment resources
+        run: npm run assets:audit -- --require-pack
+      - name: Compile playable, static test
+        run: npm run build
+      - name: Archive preview HTML/assets for independent download
+        uses: actions/upload-artifact@v4
+        with:
+          name: alpine-ski-pro-playable-preview
+          path: dist/
+          if-no-files-found: error
+          retention-days: 14
+      - name: Write preview to an isolated branch (NOT GitHub Pages)
+        shell: bash
+        env:
+          RELEASE_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/alpine-human-tv-static"
+          cp -a dist/. "$RUNNER_TEMP/alpine-human-tv-static/"
+          cd "$GITHUB_WORKSPACE"
+          git config user.name "alpine-ski-preview[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout --orphan preview-worldcup-human-tv
+          git rm -rf . || true
+          git clean -fdx
+          cp -a "$RUNNER_TEMP/alpine-human-tv-static/." .
+          touch .nojekyll
+          printf '%s\n' "Test only from feature/worldcup-start-human-tv-20261122" "Source commit: $RELEASE_SHA" "DO NOT deploy to GitHub Pages or merge this binary branch into main." > PREVIEW_INFO.txt
+          git add -A
+          git commit -m "test: static playable World Cup human TV preview from $RELEASE_SHA"
+          git push --force origin HEAD:refs/heads/preview-worldcup-human-tv
