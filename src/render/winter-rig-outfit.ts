@@ -1,12 +1,13 @@
 /**
- * Real joint-following ski clothing for the owner's native Rocketbox character.
- * Prevents displaying the formal suit, tie, lapels, and business shoes.
- * Each original geometry tube is anchored to the matching 80-bone skeleton
- * node and moves with its authored mocap, without altering the motion clips.
- * No third-party textures, brand marks or external runtime downloads.
+ * Fitted technical alpine jacket for the real Rocketbox 80-bone human.
+ * Keep the ORIGINAL skinned sleeves, real human limb proportions and fabric
+ * folds. Overlay ONLY a thin zip-up winter shell over suit lapels/tie.
+ *
+ * Earlier tubular replacement limbs looked like inflated action figures.
+ * They are deliberately NOT built here. Everything follows actual mocap.
  */
 import * as pc from "playcanvas";
-import {meshEntity,shape,material} from "./geometry";
+import {material,meshEntity} from "./geometry";
 
 export interface WinterUniform {
   materials:pc.StandardMaterial[];
@@ -14,60 +15,53 @@ export interface WinterUniform {
 }
 const TAU=Math.PI*2;
 
-function tube(
-  app:pc.Application,parent:pc.Entity,name:string,
-  rings:readonly [number,number,number][],
-  mat:pc.Material,segments=16,
-):pc.Entity {
-  const positions:number[]=[],uvs:number[]=[],indices:number[]=[];
-  for(let r=0;r<rings.length;r++){
-    const [offset,width,depth]=rings[r];
-    for(let k=0;k<segments;k++){
-      const t=k*TAU/segments;
-      positions.push(offset,Math.cos(t)*width,Math.sin(t)*depth);
-      uvs.push(k/segments,r/(rings.length-1));
-    }
-  }
-  for(let r=0;r<rings.length-1;r++)
-    for(let k=0;k<segments;k++){
-      const a=r*segments+k,b=r*segments+(k+1)%segments;
-      const c=(r+1)*segments+k,d=(r+1)*segments+(k+1)%segments;
-      // Tube runs along the bone local +X; outward-facing normals.
-      indices.push(a,b,c,b,d,c);
-    }
-  return meshEntity(app.graphicsDevice,parent,name,positions,indices,mat,
-    undefined,uvs);
-}
-
-/** Loft in human body (model) coordinates, but owned by the real spine joint:
- * turning, leaning and breathing therefore move this jacket naturally. */
-function jacket(
-  app:pc.Application,rig:pc.Entity,spine:pc.Entity,
-  mat:pc.Material,
-):pc.Entity {
+export function addRealSkiWinterUniform(
+  app:pc.Application,rig:pc.Entity,
+  role:"coach"|"referee"|"camera",phase:number,
+):WinterUniform {
+  const materials:pc.StandardMaterial[]=[];
+  const make=(label:string,color:string,metal=0,gloss=.12)=>{
+    const m=material("Fitted alpine "+label+" "+role+" "+phase,
+      color,metal,gloss);
+    m.cull=pc.CULLFACE_NONE;
+    m.update();
+    materials.push(m);
+    return m;
+  };
+  const cloth=make("woven coat shell",
+    role==="referee"?"#934752":phase===1?"#405767":"#506475");
+  const collar=make("soft charcoal neck gaiter","#273541");
+  const zipper=make("sealed waterproof jacket zipper","#8b9ba2",.09,.15);
+  const stitching=make("subtle winter jacket baffles","#41525c");
+  const spine=rig.findByName("mixamorig:Spine1") as pc.Entity|null;
+  if(!spine)return {materials,parts:0};
+  // Preserve the real Rocketbox silhouette below; just cover the sewn tie.
+  // Loft uses body-space coordinates mapped into *this* tracked spine joint.
   rig.syncHierarchy();
-  const modelToWorld=rig.getWorldTransform().clone();
-  const worldToSpine=spine.getWorldTransform().clone().invert();
-  const rings:[number,number,number,number][]=[
-    [.795,.246,.179,.006],
-    [.853,.274,.202,.010],
-    [1.01,.279,.213,.010],
-    [1.20,.291,.221,.009],
-    [1.39,.314,.231,.010],
-    [1.485,.285,.208,.007],
-    [1.563,.174,.166,.006],
+  const toWorld=rig.getWorldTransform().clone();
+  const toBone=spine.getWorldTransform().clone().invert();
+  const pos=(x:number,y:number,z:number)=>{
+    const p=toBone.transformPoint(
+      toWorld.transformPoint(new pc.Vec3(x,y,z)));
+    return [p.x,p.y,p.z] as const;
+  };
+  const rings:readonly [number,number,number,number][]=[
+    [.803,.232,.178,.022],
+    [.871,.263,.192,.025],
+    [1.045,.264,.205,.025],
+    [1.245,.276,.214,.028],
+    [1.415,.289,.217,.026],
+    [1.505,.263,.192,.024],
+    [1.568,.139,.145,.014],
   ];
-  const positions:number[]=[],indices:number[]=[],uvs:number[]=[];
+  const vertices:number[]=[],uvs:number[]=[],indices:number[]=[];
   const sides=24;
   for(let r=0;r<rings.length;r++){
-    const [height,rx,rz,forward]=rings[r];
+    const [y,rx,rz,zShift]=rings[r];
     for(let k=0;k<sides;k++){
-      const a=k*TAU/sides;
-      const local=new pc.Vec3(Math.cos(a)*rx,height,
-        Math.sin(a)*rz+forward);
-      const point=worldToSpine.transformPoint(
-        modelToWorld.transformPoint(local));
-      positions.push(point.x,point.y,point.z);
+      const angle=k*TAU/sides;
+      vertices.push(...pos(Math.cos(angle)*rx,y,
+        Math.sin(angle)*rz+zShift));
       uvs.push(k/sides,r/(rings.length-1));
     }
   }
@@ -77,86 +71,61 @@ function jacket(
       const c=(r+1)*sides+k,d=(r+1)*sides+(k+1)%sides;
       indices.push(a,c,b,b,c,d);
     }
-  return meshEntity(app.graphicsDevice,spine,
-    "Insulated ski parka covering formal suit silhouette",
-    positions,indices,mat,undefined,uvs);
-}
+  meshEntity(app.graphicsDevice,spine,
+    "Seamless fitted ski-jacket shell hiding lapels and tie",
+    vertices,indices,cloth,undefined,uvs);
 
-export function addRealSkiWinterUniform(
-  app:pc.Application,rig:pc.Entity,
-  role:"coach"|"referee"|"camera",phase:number,
-):WinterUniform {
-  const materials:pc.StandardMaterial[]=[];
-  const make=(name:string,hex:string,metal=0,gloss=.17)=>{
-    const m=material("Winter "+name+" "+role+" "+phase,hex,metal,gloss);
-    m.cull=pc.CULLFACE_NONE;m.update();
-    materials.push(m);return m;
-  };
-  const coat=make("matte stretch weatherproof jacket",
-    role==="referee"?"#853b42":phase===1?"#293d49":"#425560");
-  const undercoat=make("deep charcoal hood liner","#1b2734");
-  const stitching=make("subtle insulated seam","#627984");
-  const pants=make("reinforced alpine staff snow trousers","#202936");
-  const gaiter=make("snowproof gloves","#202933");
-  const boots=make("insulated snow boots","#19232a",.04,.21);
-  const highlight=make("tiny reflective parka piping","#9bafb4",.16,.32);
-  let parts=0;
+  // Small weatherproof zipper, slightly in front of curved shell.
+  const strip:number[]=[],stripeUV:number[]=[];
+  for(const [y,z] of [[.867,.226],[1.04,.239],[1.245,.250],
+    [1.413,.254],[1.505,.241]] as const){
+    strip.push(...pos(-.010,y,z+.005),...pos(.010,y,z+.005));
+    stripeUV.push(0,y,1,y);
+  }
+  const faces:number[]=[];
+  for(let i=0;i<4;i++){
+    const a=i*2;
+    faces.push(a,a+2,a+1,a+1,a+2,a+3);
+  }
+  meshEntity(app.graphicsDevice,spine,
+    "Fine waterproof zipper on zip-up ski jacket",strip,faces,zipper,
+    undefined,stripeUV);
 
-  const spine=rig.findByName("mixamorig:Spine1") as pc.Entity|null;
-  if(spine){
-    jacket(app,rig,spine,coat);parts++;
-    // The raised collar closes the neckline and entirely hides the tie.
-    // It follows the upper spine rather than hovering at a fixed world y.
-    const chest=rig.findByName("mixamorig:Spine2") as pc.Entity|null;
-    if(chest){
-      const collar=tube(app,chest,
-        "Parka high collar fixed to upper thorax",
-        [[.055,.169,.161],[.102,.174,.161],[.155,.151,.155]],undercoat,20);
-      collar.render!.castShadows=false;parts++;
+  // Discreet matte baffle lines — no chunky cylinder bands.
+  for(const y of [1.07,1.29]){
+    const verts:number[]=[],inds:number[]=[];
+    const count=13;
+    for(let k=0;k<count;k++){
+      const angle=Math.PI*.10+k*Math.PI*.80/(count-1);
+      const x=Math.cos(angle)*.270;
+      const z=Math.sin(angle)*.213+.028+.005;
+      verts.push(...pos(x,y-.004,z),...pos(x,y+.004,z));
     }
+    for(let k=0;k<count-1;k++){
+      const a=k*2;
+      inds.push(a,a+2,a+1,a+1,a+2,a+3);
+    }
+    meshEntity(app.graphicsDevice,spine,
+      "Fitted technical parka subtle horizontal seams",verts,inds,stitching);
   }
-  for(const side of ["Left","Right"] as const){
-    const upper=rig.findByName("mixamorig:"+side+"Arm") as pc.Entity|null;
-    const lower=rig.findByName("mixamorig:"+side+"ForeArm") as pc.Entity|null;
-    const wrist=rig.findByName("mixamorig:"+side+"Hand") as pc.Entity|null;
-    const hip=rig.findByName("mixamorig:"+side+"UpLeg") as pc.Entity|null;
-    const shin=rig.findByName("mixamorig:"+side+"Leg") as pc.Entity|null;
-    const foot=rig.findByName("mixamorig:"+side+"Foot") as pc.Entity|null;
-    if(upper){
-      tube(app,upper,"Fitted 3D ski-parka articulated upper sleeve "+side,
-        [[-.029,.132,.143],[.027,.171,.165],[.148,.166,.159],
-         [.272,.145,.147],[.310,.145,.145]],coat);parts++;
+
+  const neck=rig.findByName("mixamorig:Spine2") as pc.Entity|null;
+  if(neck){
+    const p:number[]=[],ids:number[]=[],N=18;
+    const layers:[[number,number,number],[number,number,number]]=[
+      [.072,.147,.146],[.154,.131,.135]];
+    for(const [x,ry,rz] of layers)
+      for(let k=0;k<N;k++){
+        const a=TAU*k/N;
+        p.push(x,ry*Math.cos(a),rz*Math.sin(a));
+      }
+    for(let k=0;k<N;k++){
+      const a=k,b=(k+1)%N,c=k+N,d=(k+1)%N+N;
+      ids.push(a,b,c,b,d,c);
     }
-    if(lower){
-      tube(app,lower,"Fitted articulated snow-jacket forearm "+side,
-        [[-.014,.144,.145],[.041,.146,.147],[.20,.129,.132],
-         [.281,.116,.116]],coat);parts++;
-      tube(app,lower,"Matte jacket sleeve cuff "+side,
-        [[.259,.12,.123],[.294,.112,.116]],undercoat,16);parts++;
-    }
-    if(wrist){
-      tube(app,wrist,"Thermal insulated alpine staff glove "+side,
-        [[-.017,.088,.086],[.034,.103,.103],[.136,.093,.095],
-         [.186,.061,.074]],gaiter);parts++;
-    }
-    if(hip){
-      tube(app,hip,"Full-length articulated winter ski trousers "+side,
-        [[-.031,.166,.176],[.035,.171,.186],[.20,.167,.18],
-         [.366,.148,.163],[.420,.148,.164]],pants);parts++;
-    }
-    if(shin){
-      tube(app,shin,"Waterproof ski trousers below knee "+side,
-        [[-.018,.144,.155],[.02,.149,.160],[.24,.141,.149],
-         [.395,.129,.145],[.431,.135,.15]],pants);parts++;
-    }
-    if(foot){
-      tube(app,foot,"High ankle staff winter boots "+side,
-        [[-.03,.145,.165],[.045,.155,.167],[.16,.149,.174],
-        [.24,.118,.147]],boots);parts++;
-    }
+    meshEntity(app.graphicsDevice,neck,
+      "Close-fitting technical fleece neck collar",
+      p,ids,collar);
   }
-  // We deliberately DO NOT recreate any of Ethan's original formal suit,
-  // tie, polo shorts or leather shoes. Only real face/hair and the motion
-  // skeleton are reused from the actor's licensed 3D asset.
-  return {materials,parts};
+  return {materials,parts:5};
 }
