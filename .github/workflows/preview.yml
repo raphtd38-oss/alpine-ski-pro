@@ -75,7 +75,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          BASE="https://raw.githack.com/raphtd38-oss/alpine-ski-pro/preview-worldcup-human-tv"
+          # Force-pushed branch paths may be cached by GitHack while old
+          # JavaScript hashes disappear: use the immutable build commit.
+          PREVIEW_SHA="$(git rev-parse HEAD)"
+          BASE="https://raw.githack.com/raphtd38-oss/alpine-ski-pro/$PREVIEW_SHA"
           for try in 1 2 3 4 5; do
             if curl -fL --connect-timeout 10 --max-time 35 -sS "$BASE/index.html" -o "$RUNNER_TEMP/test-preview.html"; then
               if grep -q '<canvas id="game"' "$RUNNER_TEMP/test-preview.html"; then
