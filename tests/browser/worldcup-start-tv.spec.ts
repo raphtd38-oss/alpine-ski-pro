@@ -18,7 +18,7 @@ test("real World Cup start paddock stages television cameras, people and live ti
   expect(compound).toBeTruthy();
   expect(compound.widthM).toBeGreaterThan(10);
   expect(compound.depthM).toBeGreaterThan(20);
-  expect(compound.waitingRacers).toBeGreaterThanOrEqual(1);
+  expect(compound.waitingRacers).toBeGreaterThanOrEqual(2);
   expect(compound.coaches).toBeGreaterThanOrEqual(1);
   expect(compound.officials).toBeGreaterThanOrEqual(1);
   expect(compound.liveClocks).toBe(2);
@@ -45,7 +45,8 @@ test("real World Cup start paddock stages television cameras, people and live ti
   await page.screenshot({path:"test-results/worldcup-start-tv-launch.png"});
   const launched=await page.evaluate(()=>(window as any).__ski.getState());
   expect(launched.phase).toBe("racing");
-  expect(launched.startGateOpened).toBe(false); // opens at its real 20° contact
+  expect(launched.startGateOpened).toBe(true); // actual 20° wand triggered by this point
+  expect(launched.startGateImpulseTime).not.toBeNull();
   await page.evaluate(()=>(window as any).__ski.step(500,
     {steer:0,tuck:true,brake:false,jump:false}));
   await page.waitForTimeout(300);
