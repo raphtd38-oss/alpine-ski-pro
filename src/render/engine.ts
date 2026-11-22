@@ -305,13 +305,19 @@ export class Renderer {
       // A portrait iPhone has less than half the horizontal framing of a
       // landscape TV camera. The previous 390px screenshot showed only the
       // navy side wall; widen this shot WITHOUT moving the player or physics.
-      const portrait = this.canvas.clientHeight >
-        this.canvas.clientWidth * 1.16;
+      const portrait = window.innerHeight > window.innerWidth * 1.16;
       if (portrait) {
         if (tvStart.name === "establishing") {
-          const outward = eye.clone().sub(look);
-          eye = look.clone().add(outward.mulScalar(2.25));
-          broadcastFov = 58;
+          // Straight-on camera like the owner's reference wide shot.
+          // Do not use the oblique broadcast angle on portrait viewports:
+          // even an extreme zoom-out framed only the booth's right wall.
+          eye = new pc.Vec3(
+            0, terrainHeight(0, 19.5, this.course) + 8.25, 19.5,
+          );
+          look = new pc.Vec3(
+            0, terrainHeight(0, 2.65, this.course) + 1.8, 2.65,
+          );
+          broadcastFov = 65;
         } else {
           broadcastFov = Math.min(68, tvStart.fovDeg + 11);
         }
