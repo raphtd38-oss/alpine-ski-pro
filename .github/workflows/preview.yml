@@ -60,3 +60,28 @@ jobs:
           git add -A
           git commit -m "test: static playable World Cup human TV preview from $RELEASE_SHA"
           git push --force origin HEAD:refs/heads/preview-worldcup-human-tv
+
+      - name: Check that the independent playable URL and JS really load
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="https://raw.githack.com/raphtd38-oss/alpine-ski-pro/preview-worldcup-human-tv"
+          for try in 1 2 3 4 5; do
+            if curl -fL --connect-timeout 10 --max-time 35 -sS "$BASE/index.html" -o "$RUNNER_TEMP/test-preview.html"; then
+              if grep -q '<canvas id="game"' "$RUNNER_TEMP/test-preview.html"; then
+                break
+              fi
+            fi
+            if [ "$try" = "5" ]; then
+              echo "Preview HTML was not accessible as the real game" >&2
+              exit 1
+            fi
+            sleep 8
+          done
+          SCRIPT="$(sed -n 's@.*src="./assets/\([^"]*\.js\)".*@\1@p' "$RUNNER_TEMP/test-preview.html" | head -1)"
+          test -n "$SCRIPT"
+          curl -fL --connect-timeout 10 --max-time 50 -sS "$BASE/assets/$SCRIPT" -o "$RUNNER_TEMP/test-preview.js"
+          test "$(wc -c < "$RUNNER_TEMP/test-preview.js")" -gt 100000
+          curl -fL --connect-timeout 10 --max-time 80 -sS "$BASE/assets/start/coach-ethan.glb" -o "$RUNNER_TEMP/test-coach.glb"
+          test "$(wc -c < "$RUNNER_TEMP/test-coach.glb")" -gt 10000000
+          echo "Verified real HTML, JS and 13 MB human GLB from: $BASE/index.html"
