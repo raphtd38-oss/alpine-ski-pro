@@ -28,7 +28,7 @@ describe("World Cup television start area — shots and dimensions",()=>{
   });
   it("tracks the physically simulated exit only during launch, not prestart",()=>{
     const p=planStartBroadcast(-.5,0)!;
-    expect(planStartBroadcast(-.5,10)).toBeNull()===false;
+    expect(planStartBroadcast(-.5,10)).not.toBeNull();
     const launch0=planStartBroadcast(.5,0)!;
     const launch12=planStartBroadcast(.5,12)!;
     expect(p.cameraZ).toBeCloseTo(6.8,2);
