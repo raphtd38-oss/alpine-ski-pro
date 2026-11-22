@@ -19,6 +19,7 @@ import { cortinaLightingMode, cortinaHorizonHex } from "./cortina-sky-profile";
 import { AdaptiveQuality } from "../game/performance";
 import { cameraShake, speedFov } from "../game/camera-rig";
 import { planSuperGBroadcastShot, broadcastFlightFraming } from "./superg-broadcast-shot";
+import { planStartBroadcast } from "./worldcup-start-broadcast";
 export const CAMERAS = ["Poursuite", "Rapprochée", "Subjective", "Télévision"];
 export class Renderer {
   app: pc.Application;
@@ -38,6 +39,8 @@ export class Renderer {
   cameraMode = 0;
   cameraReady = false;
   private lastBroadcastShotId = -1;
+  private lastTVStartShotId = -1;
+  private readonly startTVOverlay: HTMLDivElement;
   smoothedLook: pc.Vec3 | null = null;
   /** Camera world position before local chatter offset, to avoid shake drift. */
   cleanCameraPos: pc.Vec3 | null = null;
@@ -87,6 +90,10 @@ export class Renderer {
     });
     this.camera.camera!.toneMapping = pc.TONEMAP_ACES;
     this.app.root.addChild(this.camera);
+    this.startTVOverlay = document.createElement("div");
+    this.startTVOverlay.id = "worldcup-tv-start-lowerthird";
+    this.startTVOverlay.setAttribute("aria-hidden", "true");
+    document.body.appendChild(this.startTVOverlay);
     this.sun.addComponent("light", {
       type: "directional",
       color: color(lightingMode === "daylight" ? "#fff2d8" : "#ffd5ad"),
@@ -188,7 +195,8 @@ export class Renderer {
       ? (day ? 1.54 : 1.70) : 0.8;
     this.sun.light!.color = color(weather === "clear"
       ? (day ? "#fff3db" : "#ffd5ad") : "#dce4f5");
-    this.world = new World(this.app, c, quality, this.alpineAssets);
+    this.world = new World(this.app, c, quality, this.alpineAssets,
+      this.seamlessAsset ?? this.asset);
     if (this.ammoEnabled) this.physics = new AmmoGateSensors(this.app, c);
     this.athlete = new Athlete(this.app, this.seamlessAsset ?? this.asset, e);
     this.ghost = new Athlete(this.app, this.asset, e, true);
@@ -197,6 +205,8 @@ export class Renderer {
     configureWeather(this.app, this.camera, weather);
     this.cameraReady = false;
     this.lastBroadcastShotId = -1;
+    this.lastTVStartShotId = -1;
+    this.startTVOverlay.classList.remove("active");
     this.smoothedLook = null;
     this.cleanCameraPos = null;
   }
@@ -225,8 +235,10 @@ export class Renderer {
     this.athlete.update(f, this.course, dt);
     this.world.updateCortinaLights(f.z);
     this.physics?.sync(f, this.course);
-    if (this.course.id === "SG")
+    if (this.course.id === "SG") {
       this.world.updateStartWands(f.startGateAngle ?? 0, dt);
+      this.world.updateStartProduction(f.startPhase, f.t, dt);
+    }
     // Keep the banner visible on the start line, hide it once accelerating
     // so it cannot obstruct the chase view; restore it for the next start.
     if (this.world.startArch)
@@ -247,6 +259,26 @@ export class Renderer {
     let eye: pc.Vec3, look: pc.Vec3;
     let broadcastFov = 42;
     let broadcastCut = false;
+    const tvStart = !this.menu && this.cameraMode !== 2 &&
+      this.course.id === "SG" && f.fallen <= 0
+      ? planStartBroadcast(f.startPhase, f.z) : null;
+    const previousStartShot = this.lastTVStartShotId;
+    if (tvStart) {
+      this.lastTVStartShotId = tvStart.id;
+      broadcastCut = previousStartShot !== tvStart.id;
+      this.startTVOverlay.classList.add("active");
+      const countdown = f.startPhase !== undefined && f.startPhase < 0;
+      const timerText = countdown
+        ? "T − " + Math.max(0, Math.ceil(-f.startPhase!))
+        : "+" + Math.max(0, f.t).toFixed(2);
+      this.startTVOverlay.textContent =
+        "● DIRECT   SUPER-G  |  CORTINA    DOSSARD 27    " + timerText +
+        "   •   " + tvStart.name.toUpperCase().replace(/-/g, " ");
+    } else {
+      this.lastTVStartShotId = -1;
+      if (previousStartShot >= 0) broadcastCut = true;
+      this.startTVOverlay.classList.remove("active");
+    }
     if (this.menu) {
       this.orbit += dt * 0.025;
       eye = new pc.Vec3(
@@ -255,6 +287,20 @@ export class Renderer {
         -19,
       );
       look = new pc.Vec3(-5, -9, 44);
+    } else if (tvStart) {
+      eye = new pc.Vec3(
+        tvStart.cameraX,
+        terrainHeight(tvStart.cameraX, tvStart.cameraZ, this.course) +
+          tvStart.heightAboveSnowM,
+        tvStart.cameraZ,
+      );
+      look = new pc.Vec3(
+        tvStart.focusX,
+        terrainHeight(tvStart.focusX, tvStart.focusZ, this.course) +
+          tvStart.focusAboveSnowM,
+        tvStart.focusZ,
+      );
+      broadcastFov = tvStart.fovDeg;
     } else if (this.cameraMode === 2) {
       eye = target.clone().add(new pc.Vec3(0, 0.45, 0.2));
       look = eye
@@ -380,7 +426,7 @@ export class Renderer {
     }
     const targetFov = this.menu ? 62 : this.cameraMode === 2
       ? (crashCam ? 56 : 76) :
-      crashCam ? 54 : this.cameraMode === 3
+      crashCam ? 54 : (tvStart || this.cameraMode === 3)
         ? broadcastFov : speedFov(this.cameraMode === 0 ? 51 : 55, speed);
     this.camera.camera!.fov += (targetFov - this.camera.camera!.fov) *
       (1 - Math.exp(-dt * 5));
