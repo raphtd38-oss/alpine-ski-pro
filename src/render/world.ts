@@ -15,6 +15,7 @@ import { FlexiblePoleMesh } from "./flexible-pole";
 import { RealisticSuperGGate } from "./realistic-gates";
 import { SUPER_G_ROLLERS, superGSector } from "../game/superg";
 import { WorldCupStartCompound } from "./worldcup-start-compound";
+import { ALPINE_START_GATE } from "../game/start-gate";
 import { addCortinaScenery } from "./cortina-scenery";
 import { createCortinaAtmosphere } from "./cortina-atmosphere";
 import { addCortinaCinematicDetails } from "./cortina-cinematic-detail";
