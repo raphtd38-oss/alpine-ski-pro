@@ -42,6 +42,8 @@ test("real World Cup start paddock stages television cameras, people and live ti
   await page.waitForTimeout(400);
   await expect(tv).toContainText("COACHES");
   await page.screenshot({path:"test-results/worldcup-start-tv-coach-encouragement.png"});
+  const cheer=await page.evaluate(()=>(window as any).__ski.getState().worldCupStart);
+  expect(cheer.coachCue).toBe("encourage");
   await page.evaluate(()=>(window as any).__ski.step(107,
     {steer:0,tuck:false,brake:false,jump:false}));
   await page.waitForTimeout(400);
