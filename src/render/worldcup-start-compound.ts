@@ -321,7 +321,11 @@ export class WorldCupStartCompound {
   }
   private crew(x:number,z:number,role:"coach"|"referee"|"camera",phase:number){
     const root=new pc.Entity("Live paddock "+role+" staff member");
-    root.setPosition(x,this.h(x,z),z);root.setLocalEulerAngles(0,20,0);
+    root.setPosition(x,this.h(x,z),z);
+    // Crew faces the racer and the TV camera, not the tent back wall.
+    const facing=role==="coach"?(x>0?105:-105):
+      role==="referee"?-105:28;
+    root.setLocalEulerAngles(0,facing,0);
     this.root.addChild(root);
     const coat=this.mat(role+" snow technical puffer coat",
       role==="coach"?"#c5404c":
