@@ -1,3 +1,9 @@
+## 22 novembre 2026 — Start house télévision World Cup
+
+Nouveau compound de départ, 5 caméras planifiées, 2 tableaux de chrono, skieurs d'attente avec dossards, entraîneurs/staff : suivre la PR World Cup TV et inspecter les captures Playwright à chaque niveau de qualité. Suite à améliorer après cette intégration : vrais coachs et personnel riggés en GLB, variations de combinaisons, lèvres/blendshapes et vrai retarget d'animations FBX/GLB envoyées par le propriétaire, ambiance sonore du pré-départ (radio, vent, starter) sous licences vérifiées ; optimiser le nombre de draw calls sur iPhone réel. Les prises de vue sont artistiques et non mesurées de l'installation olympique.
+
+---
+
 # Après PR #47 — améliorer le skieur sans casser l'IK (21 novembre 2026)
 
 Les commandes à l'écran, la contre-angulation et le calcul 3D des appuis ont fait l'objet de la [PR #47](https://github.com/raphtd38-oss/alpine-ski-pro/pull/47), avec tests réussis. La pose visible dans les captures navigateur est **encore trop stylisée** pour l'objectif de simulation de Super-G ; ne pas présenter ce résultat comme AAA ou biomécaniquement validé.
