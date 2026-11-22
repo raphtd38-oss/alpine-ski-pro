@@ -42,7 +42,9 @@ describe("World Cup television start area — shots and dimensions",()=>{
     expect(planStartBroadcast(-2,0)!.focusZ).toBeGreaterThan(-.5);
     expect(p.fovDeg).toBeLessThanOrEqual(35);
     expect(planStartBroadcast(-1.65,0)!.name).toBe("coaches");
-    expect(planStartBroadcast(-1.65,0)!.fovDeg).toBeLessThan(36);
+    // The backup shoulder-level angle is deliberately wider: the former
+    // closeup cut was occluded by an opaque tent panel in actual screenshots.
+    expect(planStartBroadcast(-1.65,0)!.fovDeg).toBeLessThan(50);
     expect(launch12.focusZ).toBeGreaterThan(launch0.focusZ);
     expect(launch12.cameraZ).toBeGreaterThan(launch0.cameraZ);
     expect(launch0.fovDeg).toBeGreaterThan(36);
