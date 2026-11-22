@@ -41,6 +41,8 @@ describe("articulated World Cup start-area actors",()=>{
     expect(cue.cue).toBe("signal");
     expect(cue.rightShoulder).toBeLessThan(before.rightShoulder-20);
     expect(cue.rightElbow).toBeLessThan(before.rightElbow-10);
+    expect(cue.rightArmRaise).toBeGreaterThan(100);
+    expect(startStaffPose(1,2,"coach",-.2).cue).toBe("work");
     expect(official.cue).toBe("work");
     expect(official.headPitch).toBeGreaterThan(10);
     expect(official.leftElbow).not.toBe(cue.leftElbow);
