@@ -319,134 +319,191 @@ export class WorldCupStartCompound {
       pelvisRest:pelvis?.getLocalPosition().clone(),joints,phase,role:"racer"});
     this.stats.waitingRacers++;
   }
+  /**
+   * Original anatomical all-weather staff: layered slim ski parkas, realistic
+   * hood and ONE wraparound mirrored ski goggle, natural face and warm gaiter.
+   * 12 independent joints (2 hips, knees, shoulders, elbows and wrists,
+   * chest, head). NO toy googly eyes or bulbous coat boxes.
+   *
+   * All geometry is locally authored: no proprietary broadcast model used.
+   */
   private crew(x:number,z:number,role:"coach"|"referee"|"camera",phase:number){
-    const root=new pc.Entity("Live paddock "+role+" staff member");
+    const root=new pc.Entity(
+      "Articulated technical snow staff: "+role+" "+phase);
     root.setPosition(x,this.h(x,z),z);
-    // Crew faces the racer and the TV camera, not the tent back wall.
     const facing=role==="coach"?(x>0?105:-105):
       role==="referee"?-105:28;
     root.setLocalEulerAngles(0,facing,0);
     this.root.addChild(root);
-    const coat=this.mat(role+" snow technical puffer coat",
-      role==="coach"?"#c5404c":
-        role==="referee"?"#37617d":"#d68536");
-    const pants=this.mat("Snow-insulated dark crew trousers","#22303a");
-    const face=this.mat("Crew lifelike warm facial skin","#ad866e");
-    const cap=this.mat("Thermal staff headwear","#293f4e");
-    const glove=this.mat("Insulated official glove","#1e2b32");
-    const boot=this.mat("Alpine insulated staff boot","#343d42",.10);
+    const colour=role==="coach"?(phase===1?"#333e42":"#465158"):
+      role==="referee"?"#8b3038":"#3f4d50";
+    const coat=this.mat("Staff charcoal ski parka shell "+role+" "+phase,
+      colour,0,.12);
+    const undercoat=this.mat("Matte parka hood lining "+phase,
+      role==="referee"?"#502630":"#202d36",0,.08);
+    const pants=this.mat("Insulated charcoal ski trousers "+phase,
+      "#222b34",0,.09);
+    const seams=this.mat("Subtle winter-jacket seams "+phase,
+      role==="referee"?"#b55d67":"#627780",0,.10);
+    const reflective=this.mat("Small reflective tape for staff "+phase,
+      "#a5afb2",.12,.28);
+    const skin=this.mat("Warm realistic face skin "+phase,
+      phase%2?"#a77d64":"#b48e77",0,.14);
+    const balaclava=this.mat("Fleece neck gaiter and gloves "+phase,
+      "#22292e",0,.10);
+    const beanie=this.mat("Knitted ribbed alpine beanie "+phase,
+      phase%2?"#263944":"#293039",0,.07);
+    const glasses=this.mat("Single smoked professional ski goggle "+phase,
+      phase%2?"#344f5c":"#242e39",.45,.66);
+    const glassesRim=this.mat("Slim rubber goggle frame "+phase,
+      "#161d25",0,.13);
+    const boot=this.mat("Winter boot technical rubber "+phase,
+      "#1c232b",.02,.12);
+    const metal=this.mat("Black radio & insulated stopwatch "+phase,
+      "#25353b",.24,.27);
     const hips:pc.Entity[]=[],knees:pc.Entity[]=[];
-    // Real pivot hierarchy rather than rotating static trouser cylinders:
-    // Hips -> knee -> shin + boot, with two independent weight-bearing legs.
+    const wrists:pc.Entity[]=[],elbows:pc.Entity[]=[];
+    const shoulder:pc.Entity[]=[];
+
+    // 87cm inseam and planted footwear; two true pivoted leg chains.
     for(const side of [-1,1]){
-      const hip=new pc.Entity(side<0?"Crew left hip":"Crew right hip");
-      hip.setLocalPosition(side*.14,.83,0);root.addChild(hip);
-      shape(hip,"capsule","Upper trouser articulated thigh",
-        [0,-.20,0],[.20,.46,.21],pants);
-      const knee=new pc.Entity(side<0?"Crew left knee":"Crew right knee");
-      knee.setLocalPosition(0,-.41,0);hip.addChild(knee);
-      shape(knee,"capsule","Lower trouser articulated shin",
-        [0,-.17,0],[.18,.36,.19],pants);
-      shape(knee,"box","Crew planted winter boot",
-        [0,-.30,-.07],[.27,.22,.4],boot);
+      const hip=new pc.Entity(side<0?"Left hip joint":"Right hip joint");
+      hip.setLocalPosition(side*.135,.83,0);root.addChild(hip);
+      shape(hip,"capsule","Tapered quilted ski-pant upper leg",
+        [0,-.20,0],[.167,.43,.175],pants);
+      const knee=new pc.Entity(side<0?"Left knee joint":"Right knee joint");
+      knee.setLocalPosition(0,-.41,.013);hip.addChild(knee);
+      shape(knee,"capsule","Anatomical lower leg and snow trousers",
+        [0,-.15,0],[.145,.34,.152],pants);
+      shape(knee,"box","Grounded alpine insulated shoe",
+        [0,-.315,-.052],[.246,.167,.339],boot);
+      this.box("Low-contrast soft boot buckle",
+        0,-.247,-.207,.12,.018,.012,seams,knee);
       hips.push(hip);knees.push(knee);
     }
-    const torso=new pc.Entity("Staff articulated thorax");
-    torso.setLocalPosition(0,.84,0);root.addChild(torso);
-    // Tapered technical parka made from 14-sided rings.
-    const p:number[]=[],idx:number[]=[],segments=14;
-    const rings=[[.82,.24,.16],[1.1,.33,.21],[1.42,.35,.22],
-      [1.58,.26,.17]];
-    for(const [height,rx,rz] of rings)
-      for(let i=0;i<segments;i++){
-        const t=i*Math.PI*2/segments;
-        p.push(Math.cos(t)*rx,height-.84,Math.sin(t)*rz);
+
+    const torso=new pc.Entity("Staff independently rotating upper body");
+    torso.setLocalPosition(0,.835,0);root.addChild(torso);
+    // Body contour: natural waist taper, broad shoulder, short collar.
+    const p:number[]=[],tri:number[]=[],sides=24;
+    const rings=[
+      [.77,.245,.168],[.87,.263,.185],[1.10,.282,.195],
+      [1.34,.296,.206],[1.46,.270,.186],[1.56,.205,.150],
+    ];
+    for(const [absoluteHeight,rx,rz] of rings)
+      for(let k=0;k<sides;k++){
+        const theta=k*Math.PI*2/sides;
+        p.push(Math.cos(theta)*rx,absoluteHeight-.835,
+          Math.sin(theta)*rz);
       }
     for(let i=0;i<rings.length-1;i++)
-      for(let j=0;j<segments;j++){
-        const a=i*segments+j,b=i*segments+(j+1)%segments;
-        const c=(i+1)*segments+j,d=(i+1)*segments+(j+1)%segments;
-        idx.push(a,c,b,b,c,d);
+      for(let k=0;k<sides;k++){
+        const a=i*sides+k,b=i*sides+(k+1)%sides;
+        const c=(i+1)*sides+k,d=(i+1)*sides+(k+1)%sides;
+        tri.push(a,c,b,b,c,d);
       }
-    meshEntity(this.app.graphicsDevice,torso,
-      "Tailored ergonomic winter coat jacket",p,idx,coat);
-    // Distinct seams / reflective jacket detailing authored as geometry.
-    this.box("Insulated jacket center zipper",0,.34,-.225,
-      .018,.54,.014,this.mat("Winter jacket zipper strip","#a6bac6"),torso);
+    const coatShell=meshEntity(this.app.graphicsDevice,torso,
+      "Round-section anatomical technical snow parka",p,tri,coat);
+    coatShell.render!.castShadows=this.quality!=="low";
+
+    // No giant white patches. Weatherproof zipper, chest logo-free badge,
+    // stitched pocket lips and restrained bands at sleeve hems.
+    for(const y of [.14,.31,.49]){
+      this.box("Matte horizontal insulated baffle",
+        0,y,-.200,.39,.013,.010,undercoat,torso);
+    }
+    this.box("Fine concealed technical jacket zipper",
+      0,.38,-.214,.012,.62,.012,seams,torso);
+    for(const side of [-1,1]){
+      this.box("Weather-proof diagonal parka pocket",
+        side*.174,.16,-.172,.111,.014,.012,seams,torso);
+      this.box("Discreet reflective accreditation strip",
+        side*.170,.53,-.160,.13,.028,.015,reflective,torso);
+    }
+    shape(torso,"cylinder","Raised black protective parka collar",
+      [0,.72,0],[.222,.16,.23],undercoat);
+
+    const head=new pc.Entity("Hooded snow staff 3-axis head joint");
+    head.setLocalPosition(0,.82,0);torso.addChild(head);
+    // Slightly recessed insulated parka hood behind the face. At camera
+    // distance it reads as a real technical ski hood, not a round cartoon cap.
+    shape(head,"sphere","Parka hood volume around neck and ears",
+      [0,.057,.082],[.303,.334,.248],undercoat);
+    shape(head,"sphere","Anatomical cheekbone and forehead",
+      [0,.054,-.071],[.205,.244,.195],skin);
+    shape(head,"sphere","Natural jaw and chin taper",
+      [0,-.084,-.099],[.166,.112,.145],skin);
+    shape(head,"sphere","Textile neck gaiter over lower half of face",
+      [0,-.061,-.182],[.182,.103,.062],balaclava);
+    // A single continuous mirrored goggle rather than two oversized
+    // side-by-side circular bug eyes.
+    this.box("Fitted goggle frame",0,.106,-.239,
+      .376,.126,.037,glassesRim,head);
+    this.box("Smoked wraparound ski goggle visor",0,.106,-.262,
+      .348,.102,.018,glasses,head);
     for(const side of [-1,1])
-      this.box("Reflective winter parka arm patch",side*.29,.57,-.18,
-        .09,.10,.018,this.mat("Hi vis crew shoulder patch","#dbe5d6"),torso);
-    // Volume and material breakup on visible close-up: insulated collar,
-    // stitched baffling, tapered side pockets and weatherproof zipper.
-    const darker=this.mat("Tonal panel seam on winter jacket",
-      role==="coach"?"#a73540":"#263d4e",0,.18);
-    const reflective=this.mat("Silver jacket reflective tape","#aec6ce",.12,.27);
-    for(const y of [.13,.30,.47]){
-      this.box("Padded winter parka stitched baffle",0,y,-.209,
-        .43,.023,.018,darker,torso);
-    }
+      this.box("Short winter goggle retaining strap",side*.197,.10,-.084,
+        .014,.058,.184,glassesRim,head);
+    shape(head,"sphere","Snow beanie sloped crown",
+      [0,.241,-.025],[.240,.125,.217],beanie);
+    shape(head,"cylinder","Fitted beanie fabric brim",
+      [0,.207,-.034],[.247,.055,.224],beanie);
+    // Micro-ribbing: few thin dark grooves, not colored circles.
+    for(const dx of [-.150,-.077,0,.077,.150])
+      this.box("Subtle knitted vertical wool rib",
+        dx,.265,-.227,.009,.058,.007,undercoat,head);
+
+    // Separate pivot hierarchy shoulders > elbows > wrists. Slim sleeves
+    // taper toward gloves: the previous huge vertical capsule-arms
+    // looked like a rigid inflatable mascot.
     for(const side of [-1,1]){
-      this.box("Coat side zipper pocket",side*.21,.16,-.15,
-        .075,.17,.024,darker,torso);
-      this.box("Reflective curved jacket chest emblem stripe",
-        side*.19,.50,-.169,.17,.023,.02,reflective,torso);
+      const arm=new pc.Entity(side<0?
+        "Left clavicle/shoulder rotation":"Right clavicle/shoulder rotation");
+      arm.setLocalPosition(side*.281,.525,0);torso.addChild(arm);
+      shape(arm,"capsule","Tapered technical snow-jacket upper sleeve",
+        [side*.008,-.176,0],[.157,.367,.164],coat);
+      const elbow=new pc.Entity(side<0?"Left elbow hinge":"Right elbow hinge");
+      elbow.setLocalPosition(side*.014,-.343,0);arm.addChild(elbow);
+      shape(elbow,"capsule","Tapered winter sleeve forearm",
+        [0,-.155,0],[.140,.323,.147],coat);
+      this.box("Dark elastic parka wrist gaiter",
+        0,-.285,0,.222,.07,.233,undercoat,elbow);
+      const wrist=new pc.Entity(side<0?
+        "Left gloved wrist articulation":"Right gloved wrist articulation");
+      wrist.setLocalPosition(0,-.321,0);elbow.addChild(wrist);
+      shape(wrist,"capsule","Snowproof five-finger mitten silhouette",
+        [0,-.057,-.017],[.117,.163,.113],balaclava);
+      shoulder.push(arm);elbows.push(elbow);wrists.push(wrist);
     }
-    shape(torso,"cylinder","Insulated neck gaiter collar",
-      [0,.75,0],[.23,.16,.23],cap);
-    const head=new pc.Entity("Crew human head joint");
-    head.setLocalPosition(0,1.63-.84,0);torso.addChild(head);
-    shape(head,"sphere","Human face",
-      [0,.09,-.025],[.25,.30,.23],face);
-    shape(head,"sphere","Thermal wool beanie",
-      [0,.255,0],[.29,.15,.26],cap);
-    const glasses=this.mat("Dark UV race-side snow sunglasses","#14262e",.24,.64);
-    const glassesFrame=this.mat("Protective eyewear bridge","#354e58",.3,.52);
-    const nose=this.mat("Natural nose skin shading","#936d55");
-    for(const side of [-1,1]){
-      shape(head,"sphere","Winter crew protective sunglass lens",
-        [side*.085,.12,-.139],[.125,.087,.028],glasses);
-      shape(head,"sphere","Small insulated ear covering",
-        [side*.125,.13,.0],[.073,.11,.12],cap);
-    }
-    this.box("Small sunglasses bridge",0,.12,-.15,.048,.022,.036,glassesFrame,head);
-    shape(head,"sphere","Crew face nose profile",
-      [0,.055,-.153],[.075,.085,.070],nose);
-    shape(head,"capsule","Fitted wool beanie rim",
-      [0,.231,-.034],[.27,.056,.23],cap);
-    const left=new pc.Entity("Left staff shoulder joint"),
-      right=new pc.Entity("Right staff shoulder joint");
-    const elbows:pc.Entity[]=[];
-    for(const [side,arm]of [[-1,left],[1,right]] as const){
-      arm.setLocalPosition(side*.32,1.40-.84,0);torso.addChild(arm);
-      shape(arm,"capsule","Upper articulated jacket sleeve",
-        [side*.012,-.20,0],[.18,.41,.19],coat);
-      const elbow=new pc.Entity(side<0?"Left elbow joint":"Right elbow joint");
-      elbow.setLocalPosition(side*.012,-.37,0);arm.addChild(elbow);
-      shape(elbow,"capsule","Forearm articulated jacket sleeve",
-        [0,-.15,0],[.165,.32,.18],coat);
-      shape(elbow,"sphere","Warm fabric mitten glove",
-        [0,-.33,0],[.17,.18,.18],glove);
-      elbows.push(elbow);
-    }
+
     if(role==="coach"||role==="referee"){
-      // Equipment moves with the hand/elbow, never floats in torso space.
-      const prop=this.mat("Protective radio tablet graphite","#1c2733",.42,.40);
-      this.box(role==="coach"?"Coach's handheld radio / splits":
-        "Timing official's handheld tablet",-.012,-.27,-.17,
-        .16,.23,.048,prop,elbows[0]);
-      this.box("Official equipment display strip",-.012,-.27,-.198,
-        .12,.12,.008,reflective,elbows[0]);
+      // Small hand-held UHF/race-time instrument moves with wrist.
+      const holder=wrists[0];
+      this.box(role==="referee"?
+        "Race official electronic timer":"Coach radio and split-time remote",
+        0,-.076,-.135,.122,.172,.049,metal,holder);
+      this.box("Small luminous instrument strip",
+        0,-.066,-.167,.078,.061,.008,reflective,holder);
       if(role==="coach")
-        this.box("Short handheld UHF antenna",.04,-.11,-.17,
-          .016,.17,.016,prop,elbows[0]);
+        this.box("Hand radio retractable antenna",
+          .047,.046,-.133,.010,.130,.010,metal,holder);
     }
-    this.extras.push({head,leftArm:left,rightArm:right,phase,role,
+    if(role==="camera"){
+      const holder=wrists[1];
+      this.box("Handheld producer comms",0,-.065,-.128,
+        .14,.11,.16,metal,holder);
+    }
+    this.extras.push({
+      head,leftArm:shoulder[0],rightArm:shoulder[1],phase,role,
       joints:{torso,leftElbow:elbows[0],rightElbow:elbows[1],
-        leftHip:hips[0],rightHip:hips[1],leftKnee:knees[0],
-        rightKnee:knees[1]}});
+        leftWrist:wrists[0],rightWrist:wrists[1],
+        leftHip:hips[0],rightHip:hips[1],
+        leftKnee:knees[0],rightKnee:knees[1]},
+    });
     if(role==="coach")this.stats.coaches++;
     else this.stats.officials++;
   }
+
   private makeWand(){
     const g=ALPINE_START_GATE,x=g.postX,z=g.z;
     const y=this.h(x,z)+g.height;
@@ -499,7 +556,8 @@ export class WorldCupStartCompound {
     for(const extra of this.extras){
       const j=extra.joints;
       if(extra.role==="racer" && j){
-        const p=waitingAthletePose(this.anim,extra.phase);
+        const p=waitingAthletePose(this.anim,extra.phase,
+          startPhase);
         const set=(bone:string,x:number,y=0,z=0)=>
           j[bone]?.setLocalEulerAngles(x,y,z);
         const pelvis=j.Hips??j.Pelvis;
@@ -513,9 +571,11 @@ export class WorldCupStartCompound {
         set("Head",p.headPitch,p.headYaw,0);
         for(const side of ["Left","Right"] as const){
           const left=side==="Left";
-          set(side+"UpLeg",p.hipPitch,0,
+          set(side+"UpLeg",p.hipPitch+
+            (left?p.leftHipOffset:p.rightHipOffset),0,
             (left?1:-1)*p.pelvisRoll*.23);
-          set(side+"Leg",p.kneePitch);
+          set(side+"Leg",p.kneePitch+
+            (left?p.leftKneeOffset:p.rightKneeOffset));
           set(side+"Ankle",p.anklePitch);
           set(side+"Shoulder",
             left?p.leftShoulderPitch*.34:p.rightShoulderPitch*.34);
@@ -530,19 +590,27 @@ export class WorldCupStartCompound {
       }else{
         const p=startStaffPose(this.anim,extra.phase,
           extra.role==="racer"?"coach":extra.role,phase);
-        extra.head?.setLocalEulerAngles(p.headPitch,p.headYaw,0);
-        extra.leftArm?.setLocalEulerAngles(p.leftShoulder,0,-9);
-        extra.rightArm?.setLocalEulerAngles(p.rightShoulder,0,9+p.rightArmRaise);
-        j?.torso?.setLocalEulerAngles(p.torsoPitch,0,0);
+        extra.head?.setLocalEulerAngles(
+          p.headPitch,p.headYaw,p.neckRoll);
+        extra.leftArm?.setLocalEulerAngles(
+          p.leftShoulder,0,p.leftShoulderRoll);
+        extra.rightArm?.setLocalEulerAngles(
+          p.rightShoulder,0,p.rightShoulderRoll+p.rightArmRaise);
+        j?.torso?.setLocalEulerAngles(
+          p.torsoPitch,p.torsoYaw,p.torsoRoll);
         j?.leftElbow?.setLocalEulerAngles(p.leftElbow,0,0);
         j?.rightElbow?.setLocalEulerAngles(p.rightElbow,0,0);
+        j?.leftWrist?.setLocalEulerAngles(p.leftWrist,0,-7);
+        j?.rightWrist?.setLocalEulerAngles(p.rightWrist,0,7);
         j?.leftHip?.setLocalEulerAngles(p.leftHip,0,0);
         j?.rightHip?.setLocalEulerAngles(p.rightHip,0,0);
         j?.leftKnee?.setLocalEulerAngles(p.leftKnee,0,0);
         j?.rightKnee?.setLocalEulerAngles(p.rightKnee,0,0);
         if(extra.role==="coach"){
           animatedCoaches++;
-          this.stats.coachCue=p.cue;
+          if(p.cue==="signal"||p.cue==="encourage"||
+            this.stats.coachCue==="observe")
+            this.stats.coachCue=p.cue;
         }
       }
     }
