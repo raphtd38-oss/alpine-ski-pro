@@ -9,6 +9,7 @@ import {terrainHeight} from "../game/course";
 import {material,shape,meshEntity,beam} from "./geometry";
 import {ALPINE_START_GATE} from "../game/start-gate";
 import {waitingAthletePose,startStaffPose} from "./worldcup-start-motion";
+import {staffTVClip,type HumanTVClip,type StaffTVRole} from "./start-human-actors";
 
 export const START_HOUSE_DIMENSIONS=Object.freeze({
   halfWidth:4.05,backZ:-1.12,frontZ:3.33,eaveHeight:3.18,ridgeHeight:3.26,
@@ -20,6 +21,10 @@ interface Staff {
   pelvisRest?:pc.Vec3;
 }
 interface Board {canvas:HTMLCanvasElement;texture:pc.Texture}
+interface RiggedTVStaff {
+  rig:pc.Entity; role:StaffTVRole; phase:number;
+  active:HumanTVClip; available:Set<string>;
+}
 export class WorldCupStartCompound {
   readonly root=new pc.Entity("Cortina-style compact start-box · 8.10m × 4.45m");
   readonly materials:pc.StandardMaterial[]=[];
@@ -27,15 +32,21 @@ export class WorldCupStartCompound {
   readonly wand:pc.Entity;
   readonly extras:Staff[]=[];
   readonly boards:Board[]=[];
+  readonly realStaff:RiggedTVStaff[]=[];
+  readonly staticSkierModels:pc.Entity[]=[];
   private anim=0;
   private lastClock="";
   readonly stats={widthM:8.1,depthM:4.45,waitingRacers:0,
     coaches:0,officials:0,liveClocks:0,animatedRacers:0,
-    animatedCoaches:0,waitingBeat:"wait",coachCue:"observe"};
+    animatedCoaches:0,waitingBeat:"wait",coachCue:"observe",
+    realCoaches:0,realOfficials:0,staticSkierModels:0,
+    staffMocapClips:0,coachClip:"Idle"};
   constructor(
     readonly app:pc.Application,parent:pc.Entity,
     readonly course:Course,readonly quality:Quality,
     readonly racerAsset:pc.Asset|null,
+    readonly coachHumanAsset:pc.Asset|null=null,
+    readonly userSkierAsset:pc.Asset|null=null,
   ){
     parent.addChild(this.root);
     this.structure();
@@ -266,9 +277,11 @@ export class WorldCupStartCompound {
   }
 
   private people(){
-    // TV reference: principal racer fills the doorway; another competitor
-    // warms up BEHIND, surrounded by close staff. There is NO 14m queue.
-    this.racer(.48,-.02,41,12,0);
+    // Athlete with true skinning continues to warm up in the compact booth.
+    // AssetSmith owner's STATIC skiing pose adds authentic ski equipment,
+    // but cannot be bent or retargeted (no nodes, skin or animation in source).
+    this.racer(.48,-.17,41,12,0);
+    this.userSuppliedSkier(-1.25,-.56);
     const jobs=[
       {x:2.25,z:1.42,role:"coach" as const,p:1},
       {x:-2.22,z:.54,role:"coach" as const,p:2},
@@ -276,7 +289,84 @@ export class WorldCupStartCompound {
       {x:4.65,z:4.36,role:"camera" as const,p:3},
     ];
     const count=this.quality==="low"?3:4;
-    for(const s of jobs.slice(0,count))this.crew(s.x,s.z,s.role,s.p);
+    for(const job of jobs.slice(0,count)){
+      if(!this.humanStaff(job.x,job.z,job.role,job.p))
+        this.crew(job.x,job.z,job.role,job.p);
+    }
+  }
+
+  /** The actual owner-supplied AssetSmith statue is a phototextured,
+   * UNSKINNED GLB. Do not invent a skeleton or promise human bending.
+   * The separate existing 25-bone queue skier does the moving warm-up. */
+  private userSuppliedSkier(x:number,z:number){
+    if(!this.userSkierAsset)return;
+    const parent=new pc.Entity("OWNER AssetSmith static human skier (no skeleton)");
+    parent.setPosition(x,this.h(x,z),z);
+    parent.setLocalEulerAngles(0,22,0);
+    this.root.addChild(parent);
+    const model=(this.userSkierAsset.resource as pc.ContainerResource)
+      .instantiateRenderEntity();
+    parent.addChild(model);
+    for(const c of model.findComponents("render"))
+      (c as pc.RenderComponent).castShadows=this.quality!=="low";
+    this.staticSkierModels.push(parent);
+    this.stats.staticSkierModels++;
+    this.stats.waitingRacers++;
+  }
+
+  /** Native 80-bone Rocketbox human and authentic motion capture. Swapping
+   * wardrobe nodes avoids rendering the 4 overlapping outfits packaged in
+   * Ethan's GLB. Face, hair and skin are the actual model, never primitives. */
+  private humanStaff(
+    x:number,z:number,role:StaffTVRole,phase:number,
+  ):boolean{
+    if(!this.coachHumanAsset)return false;
+    const resource=this.coachHumanAsset.resource as pc.ContainerResource;
+    const tracks=resource.animations;
+    if(!tracks?.length)return false;
+    const parent=new pc.Entity("REAL Rocketbox human "+role+" "+phase);
+    parent.setPosition(x,this.h(x,z),z);
+    // Real source faces +Z. Lead coach should look toward the real skier AND
+    // toward the coach TV camera at x=-.52, z=2.04; +105 turned his BACK.
+    const yaw=role==="coach"?(x>0?-68:58):
+      role==="referee"?38: -35;
+    parent.setLocalEulerAngles(0,yaw,0);
+    const scale=role==="referee"?1.03:phase===2?.974:1;
+    parent.setLocalScale(scale,scale,scale);
+    this.root.addChild(parent);
+    const rig=resource.instantiateRenderEntity();
+    parent.addChild(rig);
+    for(const garment of [
+      "Outfit_formal","Outfit_original","Skin_formal","Skin_original",
+      "Top_shirt","Top_tee","Skin_shirt","Skin_tee","Trousers","Shoes",
+    ]){
+      const part=rig.findByName(garment);
+      if(part)part.enabled=garment==="Outfit_original"||
+        garment==="Skin_original";
+    }
+    const idle=tracks.find(t=>t.resource?.name==="Idle");
+    const cheer=tracks.find(t=>t.resource?.name==="Cheer");
+    if(!idle?.resource||!cheer?.resource){
+      parent.destroy();return false;
+    }
+    rig.addComponent("anim",{activate:true});
+    const names=new Set<string>();
+    for(const track of tracks){
+      if(!track.resource)continue;
+      const name=track.resource.name;
+      rig.anim!.assignAnimation(name,track.resource);
+      names.add(name);
+    }
+    rig.anim!.baseLayer.play("Idle");
+    rig.anim!.speed=role==="coach"?.90:role==="referee"?.78:.75;
+    for(const c of rig.findComponents("render"))
+      (c as pc.RenderComponent).castShadows=this.quality==="ultra";
+    this.realStaff.push({rig,role,phase,active:"Idle",available:names});
+    this.stats.staffMocapClips=Math.max(
+      this.stats.staffMocapClips,names.size);
+    if(role==="coach")this.stats.coaches++,this.stats.realCoaches++;
+    else this.stats.officials++,this.stats.realOfficials++;
+    return true;
   }
   private racer(x:number,z:number,num:number,yaw:number,phase:number){
     if(!this.racerAsset){
@@ -612,6 +702,24 @@ export class WorldCupStartCompound {
           if(p.cue==="signal"||p.cue==="encourage"||
             this.stats.coachCue==="observe")
             this.stats.coachCue=p.cue;
+        }
+      }
+    }
+    // Real 80-bone humans play the actual supplied GLB motion capture.
+    // No handcrafted capsule or shoulder-angle animation is applied to them.
+    for(const real of this.realStaff){
+      const wanted=staffTVClip(real.role,real.phase,startPhase);
+      const next=real.available.has(wanted)?wanted:"Idle";
+      if(real.active!==next){
+        real.rig.anim?.baseLayer.transition(next,.20);
+        real.active=next;
+      }
+      if(real.role==="coach"){
+        animatedCoaches++;
+        if(real.phase===1){
+          this.stats.coachClip=real.active;
+          this.stats.coachCue=real.active==="Cheer"?"encourage":
+            real.active==="Wave"?"signal":"observe";
         }
       }
     }
