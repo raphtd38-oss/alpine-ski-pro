@@ -25,17 +25,17 @@ const shots: ReadonlyArray<StartBroadcastShot> = [
     heightAboveSnowM:2.45,focusX:-1.4,focusZ:-10.0,
     focusAboveSnowM:1.40,fovDeg:49},
   // 3. Coach encourages and follows starter signal from the right of lane.
-  {id:2,name:"coaches",cameraX:-.1,cameraZ:-3.05,
-    heightAboveSnowM:2.25,focusX:3.65,focusZ:-7.0,
-    focusAboveSnowM:1.17,fovDeg:44},
+  {id:2,name:"coaches",cameraX:1.15,cameraZ:-5.4,
+    heightAboveSnowM:2.16,focusX:3.65,focusZ:-7.0,
+    focusAboveSnowM:1.32,fovDeg:34},
   // 4. Official control table, live A+B display and true start wand.
   {id:3,name:"technical-timing",cameraX:1.25,cameraZ:8.1,
     heightAboveSnowM:2.55,focusX:-1.8,focusZ:3.15,
     focusAboveSnowM:1.5,fovDeg:54},
   // 5. Real player concentration behind the contact wand.
-  {id:4,name:"starter-closeup",cameraX:.52,cameraZ:9.4,
-    heightAboveSnowM:2.75,focusX:0,focusZ:.15,
-    focusAboveSnowM:1.35,fovDeg:40},
+  {id:4,name:"starter-closeup",cameraX:2.60,cameraZ:2.90,
+    heightAboveSnowM:1.98,focusX:0,focusZ:.15,
+    focusAboveSnowM:1.42,fovDeg:34},
   // 6. Crossing the real wand and the first two push cycles.
   {id:5,name:"launch",cameraX:-7.9,cameraZ:10.4,
     heightAboveSnowM:3.25,focusX:0,focusZ:4.05,
