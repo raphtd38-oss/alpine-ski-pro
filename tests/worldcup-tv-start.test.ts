@@ -16,8 +16,8 @@ describe("World Cup television start area — shots and dimensions",()=>{
     const d=START_HOUSE_DIMENSIONS.frontZ-START_HOUSE_DIMENSIONS.backZ;
     expect(w).toBeGreaterThan(7);
     expect(w).toBeLessThan(9);
-    expect(d).toBeGreaterThan(5);
-    expect(d).toBeLessThan(8);
+    expect(d).toBeGreaterThan(4);
+    expect(d).toBeLessThan(5);
     expect(START_HOUSE_DIMENSIONS.eaveHeight).toBeLessThan(3.7);
     expect(START_HOUSE_DIMENSIONS.ridgeHeight-
       START_HOUSE_DIMENSIONS.eaveHeight).toBeLessThan(.2);
@@ -39,7 +39,7 @@ describe("World Cup television start area — shots and dimensions",()=>{
     expect(p.focusZ).toBeCloseTo(3,2);
     // Player spawn position comes from initialState().z = 3.0, not z = 0.
     expect(p.cameraZ-p.focusZ).toBeLessThan(4);
-    expect(planStartBroadcast(-2,0)!.focusZ).toBeGreaterThan(-2);
+    expect(planStartBroadcast(-2,0)!.focusZ).toBeGreaterThan(-.5);
     expect(p.fovDeg).toBeLessThanOrEqual(35);
     expect(planStartBroadcast(-1.65,0)!.name).toBe("coaches");
     expect(planStartBroadcast(-1.65,0)!.fovDeg).toBeLessThan(36);
