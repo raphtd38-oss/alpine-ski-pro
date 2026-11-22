@@ -17,29 +17,29 @@ const clamp = (v: number, a: number, b: number) =>
 
 const shots: ReadonlyArray<StartBroadcastShot> = [
   // 1. Wide 3/4 view across roof, finishward facade and personnel.
-  {id:0,name:"establishing",cameraX:9.3,cameraZ:12.5,
-    heightAboveSnowM:5.0,focusX:0,focusZ:-1.7,
-    focusAboveSnowM:1.7,fovDeg:58},
+  {id:0,name:"establishing",cameraX:9.2,cameraZ:11.2,
+    heightAboveSnowM:4.4,focusX:0,focusZ:2.18,
+    focusAboveSnowM:1.9,fovDeg:51},
   // 2. The NEXT competitor and independent 25-bone warm-up behind the racer.
-  {id:1,name:"athlete-queue",cameraX:.1,cameraZ:-5.4,
-    heightAboveSnowM:2.45,focusX:-1.4,focusZ:-10.0,
-    focusAboveSnowM:1.40,fovDeg:49},
+  {id:1,name:"athlete-queue",cameraX:-1.26,cameraZ:1.15,
+    heightAboveSnowM:1.94,focusX:.48,focusZ:-1.12,
+    focusAboveSnowM:1.50,fovDeg:48},
   // 3. Coach encourages and follows starter signal from the right of lane.
-  {id:2,name:"coaches",cameraX:1.15,cameraZ:-5.4,
-    heightAboveSnowM:2.16,focusX:3.65,focusZ:-7.0,
-    focusAboveSnowM:1.32,fovDeg:34},
+  {id:2,name:"coaches",cameraX:-.52,cameraZ:2.04,
+    heightAboveSnowM:2.07,focusX:2.25,focusZ:1.42,
+    focusAboveSnowM:1.40,fovDeg:34},
   // 4. Official control table, live A+B display and true start wand.
-  {id:3,name:"technical-timing",cameraX:1.25,cameraZ:8.1,
-    heightAboveSnowM:2.55,focusX:-1.8,focusZ:3.15,
-    focusAboveSnowM:1.5,fovDeg:54},
+  {id:3,name:"technical-timing",cameraX:-.75,cameraZ:4.91,
+    heightAboveSnowM:2.30,focusX:-3.12,focusZ:3.45,
+    focusAboveSnowM:1.84,fovDeg:46},
   // 5. Real player concentration behind the contact wand.
   {id:4,name:"starter-closeup",cameraX:1.0,cameraZ:6.9,
     heightAboveSnowM:2.35,focusX:0,focusZ:3.0,
     focusAboveSnowM:1.48,fovDeg:35},
   // 6. Crossing the real wand and the first two push cycles.
-  {id:5,name:"launch",cameraX:-7.9,cameraZ:10.4,
-    heightAboveSnowM:3.25,focusX:0,focusZ:4.05,
-    focusAboveSnowM:.9,fovDeg:44},
+  {id:5,name:"launch",cameraX:-5.3,cameraZ:8.75,
+    heightAboveSnowM:3.20,focusX:0,focusZ:4.32,
+    focusAboveSnowM:1.10,fovDeg:42},
 ] as const;
 
 /** Broadcast stages fit the actual three-second countdown; on exit, the
