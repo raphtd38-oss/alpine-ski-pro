@@ -42,19 +42,26 @@ const shots: ReadonlyArray<StartBroadcastShot> = [
     focusAboveSnowM:1.10,fovDeg:42},
 ] as const;
 
-/** Broadcast stages fit the actual three-second countdown; on exit, the
- * user's pre-existing chase/TV camera is stage seven of the sequence. */
+/** Ten real seconds of continuous prestart coverage, with five unhurried
+ * camera shots and a sixth LAUNCH shot after GO. Last three seconds form the
+ * genuine 3–2–1 countdown; timing wand/race physics remain untouched. */
 export function planStartBroadcast(
   startPhase: number | undefined, z: number,
 ): StartBroadcastShot | null {
   if(startPhase===undefined || !Number.isFinite(startPhase) ||
-    !Number.isFinite(z) || z>=16 || startPhase<-3.02 || startPhase>=2.1)
+    !Number.isFinite(z) || z>=16 || startPhase<-10.02 || startPhase>=2.1)
     return null;
-  const phase=clamp(startPhase,-3,2.1);
-  const shot=phase< -2.58 ? shots[0] :
-    phase< -1.78 ? shots[1] :
-    phase< -1.37 ? shots[2] :
-    phase< -.84 ? shots[3] :
+  const phase=clamp(startPhase,-10,2.1);
+  // Real elapsed 0..10 seconds:
+  // 0.0–2.0  establishing / full compact start facade
+  // 2.0–4.6  waiting athlete / independent body warmup
+  // 4.6–7.0  coaches / encouragement (full-time, not sped-up)
+  // 7.0–8.2  official timing / final beep prelude
+  // 8.2–10   starter / final concentration and 3–2–1 GO
+  const shot=phase< -8.0 ? shots[0] :
+    phase< -5.4 ? shots[1] :
+    phase< -3.0 ? shots[2] :
+    phase< -1.8 ? shots[3] :
     phase<0 ? shots[4] : shots[5];
   if(shot.name==="launch"){
     const follow=clamp(z,0,12);
