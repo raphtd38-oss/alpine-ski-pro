@@ -40,12 +40,12 @@ test("real World Cup start paddock stages television cameras, people and live ti
   await expect(tv).toHaveClass(/active/);
   await expect(tv).toContainText("ESTABLISHING");
   await page.screenshot({path:"test-results/worldcup-start-tv-establishing.png"});
-  await page.evaluate(()=>(window as any).__ski.step(127,
+  await page.evaluate(()=>(window as any).__ski.step(300,
     {steer:0,tuck:false,brake:false,jump:false}));
   await page.waitForTimeout(400);
   await expect(tv).toContainText("ATHLETE QUEUE");
   await page.screenshot({path:"test-results/worldcup-start-tv-athletes-queue.png"});
-  await page.evaluate(()=>(window as any).__ski.step(25,
+  await page.evaluate(()=>(window as any).__ski.step(400,
     {steer:0,tuck:false,brake:false,jump:false}));
   await page.waitForTimeout(400);
   await expect(tv).toContainText("COACHES");
@@ -53,12 +53,17 @@ test("real World Cup start paddock stages television cameras, people and live ti
   const cheer=await page.evaluate(()=>(window as any).__ski.getState().worldCupStart);
   expect(cheer.coachCue).toBe("encourage");
   expect(cheer.coachClip).toBe("Cheer");
-  await page.evaluate(()=>(window as any).__ski.step(107,
+  await page.evaluate(()=>(window as any).__ski.step(190,
+    {steer:0,tuck:false,brake:false,jump:false}));
+  await page.waitForTimeout(400);
+  await expect(tv).toContainText("TECHNICAL TIMING");
+  await page.screenshot({path:"test-results/worldcup-start-tv-technical-timing.png"});
+  await page.evaluate(()=>(window as any).__ski.step(120,
     {steer:0,tuck:false,brake:false,jump:false}));
   await page.waitForTimeout(400);
   await expect(tv).toContainText("STARTER CLOSEUP");
   await page.screenshot({path:"test-results/worldcup-start-tv-starter-closeup.png"});
-  await page.evaluate(()=>(window as any).__ski.step(170,
+  await page.evaluate(()=>(window as any).__ski.step(230,
     {steer:0,tuck:false,brake:false,jump:false}));
   await page.waitForTimeout(400);
   await expect(tv).toContainText("LAUNCH");
