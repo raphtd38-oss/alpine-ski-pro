@@ -4,7 +4,7 @@ import {planStartBroadcast} from "../src/render/worldcup-start-broadcast";
 
 describe("World Cup television start area — shots and dimensions",()=>{
   it("stages waiting racer, coach, technical, close-up and launch shots",()=>{
-    const timeline=[-3,-2,-1.65,-1.20,-.46,.4].map(x=>
+    const timeline=[-9.5,-6.7,-4.1,-2.5,-1.0,.4].map(x=>
       planStartBroadcast(x,0)?.name);
     expect(timeline).toEqual([
       "establishing","athlete-queue","coaches",
@@ -24,7 +24,7 @@ describe("World Cup television start area — shots and dimensions",()=>{
     expect(START_HOUSE_DIMENSIONS.frontZ).toBeLessThan(4.05);
   });
   it("returns null after 16m and allows standard broadcast/chase to resume",()=>{
-    for(const t of [-4,2.1,7])
+    for(const t of [-10.03,2.1,7])
       expect(planStartBroadcast(t,0)).toBeNull();
     expect(planStartBroadcast(-.5,17)).toBeNull();
     expect(planStartBroadcast(undefined,0)).toBeNull();
@@ -41,16 +41,16 @@ describe("World Cup television start area — shots and dimensions",()=>{
     expect(p.cameraZ-p.focusZ).toBeLessThan(4);
     expect(planStartBroadcast(-2,0)!.focusZ).toBeGreaterThan(-.5);
     expect(p.fovDeg).toBeLessThanOrEqual(35);
-    expect(planStartBroadcast(-1.65,0)!.name).toBe("coaches");
+    expect(planStartBroadcast(-4.1,0)!.name).toBe("coaches");
     // The backup shoulder-level angle is deliberately wider: the former
     // closeup cut was occluded by an opaque tent panel in actual screenshots.
-    expect(planStartBroadcast(-1.65,0)!.fovDeg).toBeLessThan(50);
+    expect(planStartBroadcast(-4.1,0)!.fovDeg).toBeLessThan(50);
     expect(launch12.focusZ).toBeGreaterThan(launch0.focusZ);
     expect(launch12.cameraZ).toBeGreaterThan(launch0.cameraZ);
     expect(launch0.fovDeg).toBeGreaterThan(36);
   });
   it("only outputs valid finite camera coordinates, never drives race input",()=>{
-    for(let phase=-3;phase<2;phase+=.023){
+    for(let phase=-10;phase<2;phase+=.047){
       const x=planStartBroadcast(phase,0)!;
       for(const key of ["cameraX","cameraZ","heightAboveSnowM",
         "focusX","focusZ","focusAboveSnowM","fovDeg"] as const)
