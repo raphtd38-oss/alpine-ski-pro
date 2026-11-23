@@ -97,7 +97,7 @@ async function boot() {
       ? 0.78 : startDriveBlend(race.course.id, race.launchTime),
     startPhase: race.course.id === "SG"
       ? race.phase === "countdown" ? -Math.max(0.001, race.countdown) :
-        race.phase === "ready" ? -4 : race.launchTime : undefined,
+        race.phase === "ready" ? -11 : race.launchTime : undefined,
     startGateAngle: startGateAngle(race.course.id, state.z, state.x),
     finishReach: race.course.id === "SG"
       ? race.phase === "racing"
