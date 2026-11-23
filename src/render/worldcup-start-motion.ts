@@ -172,11 +172,11 @@ export function startStaffPose(
   const official = role==="referee";
   const broadcast = role==="camera";
   const s=startPhase!==undefined&&Number.isFinite(startPhase)?
-    clamp(startPhase,-3.5,3): -3.5;
-  // During the broadcast's COACHES cut (-1.78…-1.53), the front
-  // coach points towards the door and calls encouragement. The later
+    clamp(startPhase,-10,3): -10;
+  // During the full COACHES cut (-5.4…-3.0), the front
+  // coach can complete a natural, unhurried encouragement. The later
   // signal is separate, during the actual final departure countdown.
-  const cheer=isLead?envelope(s,-2.30,-1.04,.28):0;
+  const cheer=isLead?envelope(s,-5.55,-2.92,.38):0;
   const signal=isLead?envelope(s,-.82,.35,.23):0;
   const tablet=official||secondCoach;
   const leaning=tablet?7:cheer*6;
