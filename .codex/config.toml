@@ -1,0 +1,8 @@
+# PlayCanvas Editor MCP for Codex. Applies when this repository is opened as a trusted Codex project.
+# Requires Node.js >=22.18, PlayCanvas Editor signed in on this same computer,
+# and a browser-initiated MCP connection from the Editor (port 52000).
+# Windows configuration:
+[mcp_servers.playcanvas]
+command = "cmd"
+args = ["/c", "npx", "-y", "@playcanvas/editor-mcp-server"]
+startup_timeout_sec = 45
