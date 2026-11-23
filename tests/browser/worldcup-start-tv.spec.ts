@@ -63,7 +63,9 @@ test("real World Cup start paddock stages television cameras, people and live ti
   await page.waitForTimeout(400);
   await expect(tv).toContainText("STARTER CLOSEUP");
   await page.screenshot({path:"test-results/worldcup-start-tv-starter-closeup.png"});
-  await page.evaluate(()=>(window as any).__ski.step(230,
+  // Give the real player enough physically simulated time AFTER the
+  // ten-second countdown to strike the mechanical start wand (~0.7s).
+  await page.evaluate(()=>(window as any).__ski.step(290,
     {steer:0,tuck:false,brake:false,jump:false}));
   await page.waitForTimeout(400);
   await expect(tv).toContainText("LAUNCH");
