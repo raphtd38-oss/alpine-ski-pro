@@ -401,7 +401,8 @@ export class WorldCupStartCompound {
     }
     rig.anim?.baseLayer?.play("Idle");
     // Deliberate live human movements, not a rapid-fire cheer/wave.
-    rig.anim!.speed=role==="coach"?.34:role==="referee"?.29:.27;
+    // Natural acting speed: the cinematic is LONGER, gestures are not slow-motion.
+    rig.anim!.speed=role==="coach"?.97:role==="referee"?.90:.95;
     for(const c of rig.findComponents("render"))
       (c as pc.RenderComponent).castShadows=this.quality==="ultra";
     this.realStaff.push({rig,role,phase,active:"Idle",available:names});
@@ -657,7 +658,8 @@ export class WorldCupStartCompound {
   }
   update(startPhase:number|undefined,elapsed:number,dt:number){
     const phase=startPhase??-4;
-    const clock=phase<0?"T - "+Math.max(0,Math.ceil(-phase)):
+    const clock=phase< -10?"READY":phase<0?
+      "T - "+Math.max(0,Math.ceil(-phase)):
       "+ "+Math.max(0,elapsed).toFixed(2);
     const state=phase<0?"START READY":phase<1.5?"GO  /  COURSE":"RACING";
     const id=clock+"|"+state;
@@ -684,10 +686,10 @@ export class WorldCupStartCompound {
     for(const extra of this.extras){
       const j=extra.joints;
       if(extra.role==="racer" && j){
-        const reducedPhase=startPhase===undefined ? undefined :
-          startPhase<0 ? -3+(startPhase+3)*.58 : startPhase;
-        const p=waitingAthletePose(this.anim*.58,extra.phase,
-          reducedPhase);
+        // Full 7s authentic warm-up before 3-2-1, then final bracing.
+        // Do not freeze the character at -10 or stretch a 3s pose.
+        const p=waitingAthletePose(this.anim,extra.phase,
+          startPhase!==undefined&&startPhase>=-3?startPhase:undefined);
         const set=(bone:string,x:number,y=0,z=0)=>
           j[bone]?.setLocalEulerAngles(x,y,z);
         const pelvis=j.Hips??j.Pelvis;
