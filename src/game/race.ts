@@ -10,6 +10,10 @@ import type {
 import { angleDiff } from "./types";
 import { startGateAngle } from "./start-gate";
 import { finishReachAmount, lowHandLead, finishBeamFraction } from "./finish-timing";
+/** Ten real seconds of PRESTART television coverage before GO on Super-G.
+ * Keep the last 3 seconds as the actual starter countdown. The physics,
+ * race timer and contact wand still begin at the normal GO boundary. */
+export const SUPER_G_START_FILM_SECONDS = 10;
 export class Race {
   phase: RacePhase = "ready";
   time = 0;
@@ -38,6 +42,9 @@ export class Race {
     this.gateStatus = course.gates.map(() => "pending");
   }
   start() {
+    // One continuous 10-second broadcast; not 3 seconds of slowed gestures.
+    this.countdown = this.course.id === "SG"
+      ? SUPER_G_START_FILM_SECONDS : 3;
     this.phase = "countdown";
     this.startGateOpened = this.course.id !== "SG";
     this.launchTime = 0;
