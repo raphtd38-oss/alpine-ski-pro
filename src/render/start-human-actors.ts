@@ -1,7 +1,7 @@
 /**
  * World Cup start: source-validated clip planner for the owner's Ethan GLB.
  * Actual human body/motion comes from Microsoft Rocketbox/Avatar Studio (MIT);
- * this pure planner only chooses original mocap clips on the real 3s countdown.
+ * this pure planner gives human mocap time to play during an actual 10s scene.
  * The AssetSmith ski mesh has NO skeleton, and is never falsely animated here.
  */
 export type StaffTVRole = "coach" | "referee" | "camera";
@@ -13,13 +13,13 @@ export function staffTVClip(
   startPhase: number | undefined,
 ): HumanTVClip {
   const phase = startPhase !== undefined && Number.isFinite(startPhase)
-    ? startPhase : -3.1;
+    ? startPhase : -11;
   if (role === "camera") return "Idle";
   if (role === "referee") return "Phone";
   if (performer >= 1.5) return "Think";
-  // Enter CHEER a little before the COACHES broadcast camera cut so
-  // the authentic motion-capture gesture has already started on screen.
-  if (phase > -2.42 && phase < -1.06) return "Cheer";
+  // Give the full COACHES television segment (~2.4s) to real gestures.
+  // This extends actor screen time, NOT animation speed or frame rate.
+  if (phase > -5.75 && phase < -2.92) return "Cheer";
   // A separate restrained wave before the real portillon impulse.
   if (phase > -.84 && phase < .37) return "Wave";
   return "Idle";
