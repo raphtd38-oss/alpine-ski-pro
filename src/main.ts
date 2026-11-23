@@ -273,7 +273,10 @@ async function boot() {
       race.tickCountdown(dt);
       const count = Math.ceil(race.countdown);
       if (count !== lastCountdown) {
-        audio.tone(count === 0 ? 880 : 440);
+        // The first seven seconds are TV prestart ambience, not a sequence
+        // of nine beeps. Only 3–2–1–GO uses the actual starter sounds.
+        if (count <= 3 && count >= 0)
+          audio.tone(count === 0 ? 880 : 440);
         lastCountdown = count;
       }
       return;
