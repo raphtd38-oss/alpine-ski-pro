@@ -46,7 +46,7 @@ describe("articulated World Cup start-area actors",()=>{
     }
   });
   it("lead coach encourages on the coach camera cut then signals close to GO",()=>{
-    const cheer=startStaffPose(1,1,"coach",-1.65);
+    const cheer=startStaffPose(1,1,"coach",-4.1);
     const signal=startStaffPose(2.8,1,"coach",-.24);
     const after=startStaffPose(4,1,"coach",1);
     const marshal=startStaffPose(2.8,0,"referee",-.24);
