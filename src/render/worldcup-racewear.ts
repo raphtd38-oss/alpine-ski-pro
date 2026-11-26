@@ -78,7 +78,8 @@ export function applyWorldCupRacewear(
         // Multiplying the EXISTING white weave texture gives authentic
         // textile variations rather than a flat plastic shader.
         mat.diffuse.fromString(options.suitColor);
-        mat.gloss=.18;
+        mat.gloss=.06;
+        mat.specular.set(.06,.06,.06);
         mat.useMetalness=false;
         mat.update();
         mi.material=mat;materials.push(mat);result.suit=true;
