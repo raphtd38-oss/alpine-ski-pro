@@ -344,13 +344,16 @@ export class Renderer {
           // Straight-on camera like the owner's reference wide shot.
           // Do not use the oblique broadcast angle on portrait viewports:
           // even an extreme zoom-out framed only the booth's right wall.
+          // On portrait phones, an enormous 19.5 m camera distance
+          // made the athlete a 20-pixel speck. Frame the START GATE,
+          // not the entire tiny prefab cabin in an empty landscape.
           eye = new pc.Vec3(
-            0, terrainHeight(0, 19.5, this.course) + 8.25, 19.5,
+            0, terrainHeight(0, 8.55, this.course) + 4.1, 8.55,
           );
           look = new pc.Vec3(
-            0, terrainHeight(0, 2.65, this.course) + 1.8, 2.65,
+            0, terrainHeight(0, 3.1, this.course) + 1.65, 3.1,
           );
-          broadcastFov = 65;
+          broadcastFov = 61;
         } else {
           broadcastFov = Math.min(68, tvStart.fovDeg + 11);
         }
