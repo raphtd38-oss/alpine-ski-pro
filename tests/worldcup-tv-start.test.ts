@@ -35,13 +35,18 @@ describe("World Cup television start area — shots and dimensions",()=>{
     expect(planStartBroadcast(-.5,10)).not.toBeNull();
     const launch0=planStartBroadcast(.5,0)!;
     const launch12=planStartBroadcast(.5,12)!;
-    expect(p.cameraZ).toBeCloseTo(6.9,2);
+    expect(p.cameraZ).toBeCloseTo(4.64,2);
     expect(p.focusZ).toBeCloseTo(3,2);
     // Player spawn position comes from initialState().z = 3.0, not z = 0.
     expect(p.cameraZ-p.focusZ).toBeLessThan(4);
     expect(planStartBroadcast(-2,0)!.focusZ).toBeGreaterThan(-.5);
     expect(p.fovDeg).toBeLessThanOrEqual(35);
-    expect(planStartBroadcast(-4.1,0)!.name).toBe("coaches");
+    const coach=planStartBroadcast(-4.1,0)!;
+    const queue=planStartBroadcast(-6.6,0)!;
+    expect(coach.name).toBe("coaches");
+    expect(coach.focusX).toBeLessThan(-2.5);
+    expect(coach.cameraX).not.toBe(queue.cameraX);
+    expect(coach.focusZ).not.toBe(queue.focusZ);
     // The backup shoulder-level angle is deliberately wider: the former
     // closeup cut was occluded by an opaque tent panel in actual screenshots.
     expect(planStartBroadcast(-4.1,0)!.fovDeg).toBeLessThan(50);
