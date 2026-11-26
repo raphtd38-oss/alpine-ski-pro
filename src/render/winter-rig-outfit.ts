@@ -127,5 +127,45 @@ export function addRealSkiWinterUniform(
       "Close-fitting technical fleece neck collar",
       p,ids,collar);
   }
-  return {materials,parts:5};
+  // Winter headgear is attached to the REAL mocap head joint, not a
+  // second unanimated mannequin. This also removes the city-suit look.
+  const head=rig.findByName("mixamorig:Head") as pc.Entity|null;
+  if(head){
+    rig.syncHierarchy();
+    const headInv=head.getWorldTransform().clone().invert();
+    const modelToWorld=rig.getWorldTransform().clone();
+    const worldToHead=(x:number,y:number,z:number)=>{
+      const p=headInv.transformPoint(modelToWorld.transformPoint(
+        new pc.Vec3(x,y,z)));
+      return [p.x,p.y,p.z] as const;
+    };
+    const knit=make("technical knitted alpine beanie",
+      role==="referee"?"#50242f":phase===1?"#1c3542":"#2e3944");
+    const brim=make("dark ribbed thermal beanie hem","#1a2732");
+    const makeCap=(label:string,levels:readonly [number,number,number][],
+      mat:pc.Material)=>{
+      const verts:number[]=[],faces:number[]=[],n=24;
+      for(const [y,rx,rz] of levels)
+        for(let k=0;k<n;k++){
+          const a=k*TAU/n;
+          verts.push(...worldToHead(Math.cos(a)*rx,y,Math.sin(a)*rz));
+        }
+      for(let r=0;r<levels.length-1;r++)
+        for(let k=0;k<n;k++){
+          const a=r*n+k,b=r*n+(k+1)%n;
+          const c=(r+1)*n+k,d=(r+1)*n+(k+1)%n;
+          faces.push(a,c,b,b,c,d);
+        }
+      meshEntity(app.graphicsDevice,head,label,verts,faces,mat);
+    };
+    // Modest 3D fit. The REAL person's face stays exposed and expressive.
+    makeCap("Winter hat knitted crown attached to human 80-bone head",
+      [[1.77,.128,.138],[1.82,.146,.154],
+       [1.885,.141,.147],[1.94,.112,.113],
+       [1.982,.043,.052],[1.992,.001,.001]],knit);
+    makeCap("Close fitted dark wool cuff",
+      [[1.765,.133,.145],[1.79,.146,.154],
+       [1.816,.145,.153]],brim);
+  }
+  return {materials,parts:head?7:5};
 }
