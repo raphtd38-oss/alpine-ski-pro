@@ -569,6 +569,29 @@ async function boot() {
             normal: renderer.world.snow.normalMap?.name,
             normalDetail: renderer.world.snow.normalDetailMap?.name},
         }),
+        // Development-only, actual 3D projection diagnostics for TV shots.
+        // A green unit test is NOT proof that the subject is on screen.
+        getStartStageDiagnostics: () => {
+          const cast=renderer.world.worldCupStart?.root;
+          const cam=renderer.camera;
+          const subject=(name:string)=>{
+            const entity=cast?.findByName(name);
+            if(!entity)return null;
+            const p=entity.getPosition().clone().add(new Vec3(0,1.45,0));
+            const image=cam.camera?.worldToScreen(p);
+            return {name,world:p.toArray(),
+              projected:image?.toArray()??null};
+          };
+          return {
+            camera:cam.getPosition().toArray(),
+            look:renderer.smoothedLook?.toArray()??null,
+            canvas:[renderer.canvas.clientWidth,renderer.canvas.clientHeight],
+            leadCoach:subject("REAL Rocketbox human coach 1"),
+            secondCoach:subject("REAL Rocketbox human coach 2"),
+            referee:subject("REAL Rocketbox human referee 0"),
+            nextRacer:subject("Waiting athlete number 41 original 25-joint skinned human"),
+          };
+        },
         getAthletePose: () => {
           const athlete = renderer.athlete;
           const groundClearance = (name: string) => {
