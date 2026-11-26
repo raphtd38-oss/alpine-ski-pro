@@ -579,8 +579,13 @@ async function boot() {
             if(!entity)return null;
             const p=entity.getPosition().clone().add(new Vec3(0,1.45,0));
             const image=cam.camera?.worldToScreen(p);
+            const actualHead=entity.findByName("mixamorig:Head");
+            const headWorld=actualHead?.getPosition().clone()??null;
+            const headScreen=headWorld?cam.camera?.worldToScreen(headWorld):null;
             return {name,world:p.toArray(),
-              projected:image?.toArray()??null};
+              projected:image?.toArray()??null,
+              actualHead:headWorld?.toArray()??null,
+              actualHeadScreen:headScreen?.toArray()??null};
           };
           return {
             camera:cam.getPosition().toArray(),
