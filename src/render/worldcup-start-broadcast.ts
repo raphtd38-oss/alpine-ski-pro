@@ -27,13 +27,15 @@ const shots: ReadonlyArray<StartBroadcastShot> = [
     focusAboveSnowM:1.50,fovDeg:42},
   // 3. A genuine DISTINCT close-up on the lead coach's face and
   // ski jacket. Previous version repeated the queue angle identically.
-  {id:2,name:"coaches",cameraX:-1.11,cameraZ:1.05,
-    heightAboveSnowM:1.86,focusX:-2.82,focusZ:2.20,
-    focusAboveSnowM:1.58,fovDeg:39},
+  {id:2,name:"coaches",cameraX:-1.04,cameraZ:1.35,
+    heightAboveSnowM:1.89,focusX:-2.22,focusZ:.54,
+    focusAboveSnowM:1.54,fovDeg:39},
   // 4. Official control table, live A+B display and true start wand.
-  {id:3,name:"technical-timing",cameraX:-1.16,cameraZ:1.92,
-    heightAboveSnowM:2.00,focusX:-2.85,focusZ:1.32,
-    focusAboveSnowM:1.28,fovDeg:45},
+  // Official live display is outdoors on the face of the box:
+  // photograph the actual LED screen instead of a blank indoor tablet.
+  {id:3,name:"technical-timing",cameraX:-1.14,cameraZ:5.85,
+    heightAboveSnowM:2.02,focusX:-3.12,focusZ:3.45,
+    focusAboveSnowM:1.85,fovDeg:36},
   // 5. Real player concentration behind the contact wand.
   {id:4,name:"starter-closeup",cameraX:.46,cameraZ:4.64,
     heightAboveSnowM:1.97,focusX:0,focusZ:3.0,
