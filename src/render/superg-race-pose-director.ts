@@ -84,6 +84,14 @@ export interface SGDirectorDiagnostics {
   rightKneeFlexionDeg: number;
   leftLegLengthM: number;
   rightLegLengthM: number;
+  /** Per-segment residuals against the actual imported rest hierarchy. */
+  leftFemurLengthErrorM: number;
+  rightFemurLengthErrorM: number;
+  leftTibiaLengthErrorM: number;
+  rightTibiaLengthErrorM: number;
+  /** Geometric shin-to-boot angle, not a measured ankle-joint angle. */
+  leftShinBootAngleDeg: number;
+  rightShinBootAngleDeg: number;
   pelvisWorld: number[];
   leftFootWorld: number[];
   rightFootWorld: number[];
@@ -244,6 +252,8 @@ export class SuperGRacePoseDirector {
   private readonly head: pc.GraphNode;
   private readonly poleWeights: [number, number] = [0, 0];
   private visualFall = 0;
+  private previousFrame: { t: number; x: number; z: number } | null = null;
+  private readonly restLengths: Record<SkiSide, { femur: number; tibia: number }>;
   private humanHandError: [number,number] = [0,0];
   private lastPose: SGPose | null = null;
   private lastWarmup: PrestartWarmup = prestartWarmup(undefined);
@@ -292,6 +302,14 @@ export class SuperGRacePoseDirector {
         ankle: required("RAnkle"), foot: this.feetBySide.R,
       },
     };
+    const rest = (side: SkiSide) => {
+      const b = this.bones[side];
+      return {
+        femur: b.hip.getPosition().distance(b.knee.getPosition()),
+        tibia: b.knee.getPosition().distance(b.ankle.getPosition()),
+      };
+    };
+    this.restLengths = { L: rest("L"), R: rest("R") };
     if (actor.poles.length !== 2)
       throw new Error("Super-G player must have two real curved race poles");
   }
@@ -299,6 +317,7 @@ export class SuperGRacePoseDirector {
   reset(): void {
     this.model.reset();
     this.humanMotion.reset();
+    this.previousFrame = null;
     this.poleWeights[0] = this.poleWeights[1] = 0;
     this.visualFall = 0;
     this.lastPose = null;
@@ -574,6 +593,18 @@ export class SuperGRacePoseDirector {
    */
   update(f: Frame, c: Course, dt: number): void {
     const frame = f as SGSourceFrame;
+    // All stateful visual layers must reset together after seeking/restarting.
+    // Resetting only the edge model left the trunk, pole contacts and fall
+    // interpolation contaminated by the previous replay position.
+    const previous = this.previousFrame;
+    const discontinuity = !Number.isFinite(dt) || dt < 0 || dt > .25 ||
+      (previous !== null && (f.t < previous.t - .1 ||
+        Math.hypot(f.x - previous.x, f.z - previous.z) > 42));
+    if (discontinuity) {
+      this.reset();
+      dt = 1 / 60;
+    }
+    this.previousFrame = { t: f.t, x: f.x, z: f.z };
     const inputPose = this.model.sample(frame, dt);
     const pose = this.reconstructionMode
       ? this.humanMotion.sample(inputPose, frame, dt)
@@ -693,13 +724,27 @@ export class SuperGRacePoseDirector {
       const b = this.bones[side];
       const upper = b.knee.getPosition().clone().sub(b.hip.getPosition());
       const lower = b.ankle.getPosition().clone().sub(b.knee.getPosition());
-      return { flex: angleDegrees(upper, lower), length: upper.length() + lower.length() };
+      const rest = this.restLengths[side];
+      const bootUp = b.foot.getRotation().transformVector(axisUp);
+      return {
+        flex: angleDegrees(upper, lower),
+        length: upper.length() + lower.length(),
+        femurError: Math.abs(upper.length() - rest.femur),
+        tibiaError: Math.abs(lower.length() - rest.tibia),
+        shinBootAngle: angleDegrees(lower.clone().mulScalar(-1), bootUp),
+      };
     };
     const left = leg("L"), right = leg("R");
     const xyz = (node: pc.GraphNode) => { const v = node.getPosition(); return [v.x, v.y, v.z]; };
     return {
       leftKneeFlexionDeg: left.flex, rightKneeFlexionDeg: right.flex,
       leftLegLengthM: left.length, rightLegLengthM: right.length,
+      leftFemurLengthErrorM: left.femurError,
+      rightFemurLengthErrorM: right.femurError,
+      leftTibiaLengthErrorM: left.tibiaError,
+      rightTibiaLengthErrorM: right.tibiaError,
+      leftShinBootAngleDeg: left.shinBootAngle,
+      rightShinBootAngleDeg: right.shinBootAngle,
       pelvisWorld: xyz(this.pelvis), leftFootWorld: xyz(this.bones.L.foot),
       rightFootWorld: xyz(this.bones.R.foot),
       humanMode: this.humanMode,
