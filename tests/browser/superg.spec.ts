@@ -20,6 +20,7 @@ test("World-Cup-style Super-G start house, four-pole flags and terrain crest", a
   expect(setup.athleteHasAttachedSkis).toBe(true);
   expect(setup.athleteTexturedSurfaces).toBeGreaterThan(10);
   expect(setup.raceSkiTextureCount).toBe(1);
+  expect(setup.raceBibTextureCount).toBe(1);
   expect(setup.timingWands).toBe(1);
   expect(setup.pairedGatePoles).toBe(84);
   expect(setup.gateFlagCount).toBe(84);
