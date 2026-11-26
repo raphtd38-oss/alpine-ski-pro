@@ -34,7 +34,8 @@ test("ultimate Super-G: actual spotlights and independently pressured carved ski
     api.start();
     api.freezeSimulation(true);
     // Keep the same race simulator and race input, never teleport the athlete.
-    api.step(283,{steer:0,tuck:false,brake:false,jump:false});
+    // Preserve post-GO physics run-up while extending TV prestart from 3s to 10s.
+    api.step(1123,{steer:0,tuck:false,brake:false,jump:false});
     api.step(270,{steer:.85,tuck:true,brake:false,jump:false});
   });
   await page.waitForTimeout(280);
