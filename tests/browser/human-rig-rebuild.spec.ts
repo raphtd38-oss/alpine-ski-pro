@@ -18,7 +18,8 @@ test("human-v3 reduces frog-squat and gorilla back while preserving both skis",a
   await page.evaluate(()=>{
    const api=(window as any).__ski;
    api.start();api.freezeSimulation(true);
-   api.step(283,{steer:0,tuck:false,brake:false,jump:false});
+   // 10s broadcast countdown plus 193 racing ticks, matching former 3s start.
+   api.step(1123,{steer:0,tuck:false,brake:false,jump:false});
    api.step(270,{steer:.85,tuck:true,brake:false,jump:false});
   });
   await page.waitForTimeout(250);

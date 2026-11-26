@@ -16,29 +16,80 @@ test("real World Cup start paddock stages television cameras, people and live ti
   const state=await page.evaluate(()=>(window as any).__ski.getState());
   const compound=state.worldCupStart;
   expect(compound).toBeTruthy();
-  expect(compound.widthM).toBeGreaterThan(10);
-  expect(compound.depthM).toBeGreaterThan(20);
-  expect(compound.waitingRacers).toBeGreaterThanOrEqual(2);
+  expect(compound.widthM).toBeGreaterThan(7);
+  expect(compound.widthM).toBeLessThan(9);
+  expect(compound.depthM).toBeGreaterThan(4);
+  expect(compound.depthM).toBeLessThan(5);
+  expect(compound.waitingRacers).toBeGreaterThanOrEqual(1);
   expect(compound.coaches).toBeGreaterThanOrEqual(1);
   expect(compound.officials).toBeGreaterThanOrEqual(1);
   expect(compound.liveClocks).toBe(2);
+  expect(compound.animatedRacers).toBeGreaterThanOrEqual(1);
+  expect(compound.animatedCoaches).toBeGreaterThanOrEqual(1);
+  // This is the REAL GLB, not the former capsule-based mannequins.
+  expect(compound.realCoaches).toBeGreaterThanOrEqual(2);
+  expect(compound.realOfficials).toBeGreaterThanOrEqual(1);
+  expect(compound.staffMocapClips).toBeGreaterThanOrEqual(13);
+  // Static unrigged AssetSmith statue must not appear in live ski scene.
+  expect(compound.staticSkierModels).toBe(0);
+  // The real humans must wear joint-following ski kit, not a tinted suit.
+  expect(compound.winterOutfits).toBeGreaterThanOrEqual(3);
   expect(state.timingWands).toBe(1);
   expect(state.startGateOpened).toBe(false);
   const tv=page.locator("#worldcup-tv-start-lowerthird");
   await expect(tv).toHaveClass(/active/);
   await expect(tv).toContainText("ESTABLISHING");
   await page.screenshot({path:"test-results/worldcup-start-tv-establishing.png"});
-  await page.evaluate(()=>(window as any).__ski.step(127,
+  console.info("[TV_STAGE_QA:establishing]",JSON.stringify(
+    await page.evaluate(()=>(window as any).__ski.getStartStageDiagnostics())));
+  await page.evaluate(()=>(window as any).__ski.step(300,
     {steer:0,tuck:false,brake:false,jump:false}));
   await page.waitForTimeout(400);
   await expect(tv).toContainText("ATHLETE QUEUE");
   await page.screenshot({path:"test-results/worldcup-start-tv-athletes-queue.png"});
-  await page.evaluate(()=>(window as any).__ski.step(132,
+  console.info("[TV_STAGE_QA:athletes-queue]",JSON.stringify(
+    await page.evaluate(()=>(window as any).__ski.getStartStageDiagnostics())));
+  await page.evaluate(()=>(window as any).__ski.step(400,
+    {steer:0,tuck:false,brake:false,jump:false}));
+  await page.waitForTimeout(400);
+  await expect(tv).toContainText("COACHES");
+  await page.screenshot({path:"test-results/worldcup-start-tv-coach-encouragement.png"});
+  const cast=await page.evaluate(
+    ()=>(window as any).__ski.getStartStageDiagnostics());
+  console.info("[TV_STAGE_QA:coach-encouragement]",JSON.stringify(cast));
+  // Was the most important broken case: every coach rig animated at world
+  // (0,0,0) despite having distinct parent positions. Assert REAL bones.
+  const leader=cast.leadCoach.actualHead as number[];
+  const colleague=cast.secondCoach.actualHead as number[];
+  const onScreen=cast.leadCoach.actualHeadScreen as number[];
+  expect(Math.abs(leader[0]+2.22)).toBeLessThan(.20);
+  expect(Math.abs(colleague[0]+2.82)).toBeLessThan(.20);
+  expect(Math.abs(leader[0]-colleague[0])).toBeGreaterThan(.4);
+  expect(onScreen[2]).toBeGreaterThan(0);
+  expect(onScreen[0]).toBeGreaterThan(40);
+  expect(onScreen[0]).toBeLessThan(cast.canvas[0]-40);
+  expect(onScreen[1]).toBeGreaterThan(30);
+  expect(onScreen[1]).toBeLessThan(cast.canvas[1]-30);
+  const cheer=await page.evaluate(()=>(window as any).__ski.getState().worldCupStart);
+  expect(cheer.coachCue).toBe("encourage");
+  expect(cheer.coachClip).toBe("Cheer");
+  await page.evaluate(()=>(window as any).__ski.step(190,
+    {steer:0,tuck:false,brake:false,jump:false}));
+  await page.waitForTimeout(400);
+  await expect(tv).toContainText("TECHNICAL TIMING");
+  await page.screenshot({path:"test-results/worldcup-start-tv-technical-timing.png"});
+  console.info("[TV_STAGE_QA:technical-timing]",JSON.stringify(
+    await page.evaluate(()=>(window as any).__ski.getStartStageDiagnostics())));
+  await page.evaluate(()=>(window as any).__ski.step(120,
     {steer:0,tuck:false,brake:false,jump:false}));
   await page.waitForTimeout(400);
   await expect(tv).toContainText("STARTER CLOSEUP");
   await page.screenshot({path:"test-results/worldcup-start-tv-starter-closeup.png"});
-  await page.evaluate(()=>(window as any).__ski.step(170,
+  console.info("[TV_STAGE_QA:starter-closeup]",JSON.stringify(
+    await page.evaluate(()=>(window as any).__ski.getStartStageDiagnostics())));
+  // Give the real player enough physically simulated time AFTER the
+  // ten-second countdown to strike the mechanical start wand (~0.7s).
+  await page.evaluate(()=>(window as any).__ski.step(290,
     {steer:0,tuck:false,brake:false,jump:false}));
   await page.waitForTimeout(400);
   await expect(tv).toContainText("LAUNCH");

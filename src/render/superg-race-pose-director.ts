@@ -378,16 +378,25 @@ export class SuperGRacePoseDirector {
       // A shoulder-anchored, reach-limited wrist target: hands stay at the
       // grip zone, outside arm follows load, inside arm guards the chest.
       // Pole endpoints are subsequently attached to the ACTUAL wrist bone.
-      const lateral = outward * (
+      // In the ten-second PRESTART the athlete holds compact poles ahead
+      // of the chest and adjusts gear. The former race-only IK target placed
+      // fists on the hips with elbows pointing sideways like a gorilla.
+      // Racing dynamics below are unchanged once startPhase >= 0.
+      const prestart=pose.startPhase<0;
+      const lateral = outward * (prestart ? .175 : (
         .255 + .025 * load + .025 * landing - .055 * tuck
         + .015 * outside
-      );
-      const height = .095 + .064 * tuck - .025 * outside * load
+      ));
+      const height = (prestart ? .205 : (
+        .095 + .064 * tuck - .025 * outside * load
         + .025 * inside * release + .08 * stroke
-        + .095 * flight - .26 * finishHand + warmup.armOffsetY[i];
-      const fore = .215 + .13 * tuck + .045 * outside * load
+        + .095 * flight - .26 * finishHand
+      )) + warmup.armOffsetY[i];
+      const fore = (prestart ? .287 : (
+        .215 + .13 * tuck + .045 * outside * load
         + .045 * release - .16 * stroke + .11 * flight
-        + .18 * finishHand + warmup.armForwardM[i];
+        + .18 * finishHand
+      )) + warmup.armForwardM[i];
       const target = pelvis.clone().add(yaw.transformVector(
         new pc.Vec3(lateral, height, fore)));
 

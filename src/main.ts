@@ -97,7 +97,7 @@ async function boot() {
       ? 0.78 : startDriveBlend(race.course.id, race.launchTime),
     startPhase: race.course.id === "SG"
       ? race.phase === "countdown" ? -Math.max(0.001, race.countdown) :
-        race.phase === "ready" ? -4 : race.launchTime : undefined,
+        race.phase === "ready" ? -11 : race.launchTime : undefined,
     startGateAngle: startGateAngle(race.course.id, state.z, state.x),
     finishReach: race.course.id === "SG"
       ? race.phase === "racing"
@@ -273,7 +273,10 @@ async function boot() {
       race.tickCountdown(dt);
       const count = Math.ceil(race.countdown);
       if (count !== lastCountdown) {
-        audio.tone(count === 0 ? 880 : 440);
+        // The first seven seconds are TV prestart ambience, not a sequence
+        // of nine beeps. Only 3–2–1–GO uses the actual starter sounds.
+        if (count <= 3 && count >= 0)
+          audio.tone(count === 0 ? 880 : 440);
         lastCountdown = count;
       }
       return;
@@ -566,6 +569,40 @@ async function boot() {
             normal: renderer.world.snow.normalMap?.name,
             normalDetail: renderer.world.snow.normalDetailMap?.name},
         }),
+        // Development-only, actual 3D projection diagnostics for TV shots.
+        // A green unit test is NOT proof that the subject is on screen.
+        getStartStageDiagnostics: () => {
+          const cast=renderer.world.worldCupStart?.root;
+          const cam=renderer.camera;
+          const subject=(name:string)=>{
+            const entity=cast?.findByName(name);
+            if(!entity)return null;
+            const p=entity.getPosition().clone().add(new Vec3(0,1.45,0));
+            const image=cam.camera?.worldToScreen(p);
+            const rigRoot=entity.children[0];
+            const rigRootLocal=rigRoot?.getLocalPosition();
+            const rigRootWorld=rigRoot?.getPosition();
+            const actualHead=entity.findByName("mixamorig:Head");
+            const headWorld=actualHead?.getPosition().clone()??null;
+            const headScreen=headWorld?cam.camera?.worldToScreen(headWorld):null;
+            return {name,world:p.toArray(),
+              projected:image?.toArray()??null,
+              actualHead:headWorld?.toArray()??null,
+              actualHeadScreen:headScreen?.toArray()??null,
+              rigRootLocal:rigRootLocal?.toArray()??null,
+              rigRootWorld:rigRootWorld?.toArray()??null,
+              headParent:actualHead?.parent?.name??null};
+          };
+          return {
+            camera:cam.getPosition().toArray(),
+            look:renderer.smoothedLook?.toArray()??null,
+            canvas:[renderer.canvas.clientWidth,renderer.canvas.clientHeight],
+            leadCoach:subject("REAL Rocketbox human coach 1"),
+            secondCoach:subject("REAL Rocketbox human coach 2"),
+            referee:subject("REAL Rocketbox human referee 0"),
+            nextRacer:subject("Waiting athlete number 41 original 25-joint skinned human"),
+          };
+        },
         getAthletePose: () => {
           const athlete = renderer.athlete;
           const groundClearance = (name: string) => {
@@ -678,7 +715,12 @@ async function boot() {
           athleteSeamless: renderer.athlete.isSeamless,
           athleteVariant: renderer.racerVariant,
           athleteHasAttachedSkis: !!renderer.athlete.rig.findByName("LEFTFOOT/Top glossy curved topsheet") && !!renderer.athlete.rig.findByName("RIGHTFOOT/Top glossy curved topsheet"),
-          raceSkiTextureCount: renderer.athlete.ownedTextures.length,
+          // The NEW 3D cloth-bib has its own texture. Don't count it
+          // as an extra SKI topsheet and misreport equipment coverage.
+          raceSkiTextureCount: renderer.athlete.ownedTextures.filter(t =>
+            t.name.includes("racing ski topsheet")).length,
+          raceBibTextureCount: renderer.athlete.ownedTextures.filter(t =>
+            t.name.includes("race bib")).length,
           cameraTerrainClearance: (() => {
             const p = renderer.camera.getPosition();
             return p.y - terrainHeight(p.x, p.z, race.course);

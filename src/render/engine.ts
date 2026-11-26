@@ -20,6 +20,8 @@ import { AdaptiveQuality } from "../game/performance";
 import { cameraShake, speedFov } from "../game/camera-rig";
 import { planSuperGBroadcastShot, broadcastFlightFraming } from "./superg-broadcast-shot";
 import { planStartBroadcast } from "./worldcup-start-broadcast";
+import { HUMAN_START_ASSETS } from "./start-human-actors";
+import { applyWorldCupRacewear } from "./worldcup-racewear";
 export const CAMERAS = ["Poursuite", "Rapprochée", "Subjective", "Télévision"];
 export class Renderer {
   app: pc.Application;
@@ -34,6 +36,8 @@ export class Renderer {
   effects!: SnowEffects;
   asset!: pc.Asset;
   seamlessAsset: pc.Asset | null = null;
+  realCoachAsset: pc.Asset | null = null;
+  assetSmithWaitingSkierAsset: pc.Asset | null = null;
   racerVariant: "classic" | "mobile" | "full" = "classic";
   course!: Course;
   cameraMode = 0;
@@ -156,6 +160,33 @@ export class Renderer {
         this.racerVariant = "classic";
       }
     }
+    // Stage performers are deliberately optional: a corrupt GLB or network
+    // error must not prevent the racing simulator from loading.
+    const loadStartActor = async (name: string, url: string): Promise<pc.Asset | null> => {
+      const file = new pc.Asset(name,"container",{
+        url: import.meta.env.BASE_URL + url,
+      });
+      return new Promise((resolve) => {
+        file.ready(()=>resolve(file));
+        file.once("error", (err:unknown)=>{
+          console.warn("Start actor GLB unavailable, keep visual fallback:",name,err);
+          resolve(null);
+        });
+        this.app.assets.add(file);
+        this.app.assets.load(file);
+      });
+    };
+    // The static AssetSmith statue has no joints and is intentionally hidden
+    // in gameplay; do not waste 4 MB and GLB parse time on every iPhone start.
+    // Keep an explicit opt-in for asset inspection / future rigging.
+    const inspectAssetSmith=new URLSearchParams(
+      window.location.search).has("debug-assetsmith");
+    [this.realCoachAsset,this.assetSmithWaitingSkierAsset] = await Promise.all([
+      loadStartActor("Ethan 80-bone Rocketbox coach",HUMAN_START_ASSETS.coach),
+      inspectAssetSmith
+        ? loadStartActor("Owner AssetSmith static waiting skier",HUMAN_START_ASSETS.skier)
+        : Promise.resolve<pc.Asset|null>(null),
+    ]);
   }
   build(c: Course, e: Equipment, quality: Quality, weather: Weather, adaptive = true) {
     this.physics?.destroy();
@@ -196,9 +227,18 @@ export class Renderer {
     this.sun.light!.color = color(weather === "clear"
       ? (day ? "#fff3db" : "#ffd5ad") : "#dce4f5");
     this.world = new World(this.app, c, quality, this.alpineAssets,
-      this.seamlessAsset ?? this.asset);
+      this.seamlessAsset ?? this.asset,
+      this.realCoachAsset,this.assetSmithWaitingSkierAsset);
     if (this.ammoEnabled) this.physics = new AmmoGateSensors(this.app, c);
     this.athlete = new Athlete(this.app, this.seamlessAsset ?? this.asset, e);
+    if(this.athlete.isSeamless){
+      // Numbered original fabric bib stays attached to the real skinned
+      // body through the entire jump/carving race. User can still choose
+      // the colour of the main speed suit in Settings.
+      applyWorldCupRacewear(this.app,this.athlete.rig,{
+        bibNumber:27,helmetColor:"#bb2034",
+      },this.athlete.ownedMaterials,this.athlete.ownedTextures);
+    }
     this.ghost = new Athlete(this.app, this.asset, e, true);
     this.ghost.root.enabled = false;
     this.effects = new SnowEffects(this.app, c, quality);
@@ -302,6 +342,29 @@ export class Renderer {
         tvStart.focusZ,
       );
       broadcastFov = tvStart.fovDeg;
+      // A portrait iPhone has less than half the horizontal framing of a
+      // landscape TV camera. The previous 390px screenshot showed only the
+      // navy side wall; widen this shot WITHOUT moving the player or physics.
+      const portrait = window.innerHeight > window.innerWidth * 1.16;
+      if (portrait) {
+        if (tvStart.name === "establishing") {
+          // Straight-on camera like the owner's reference wide shot.
+          // Do not use the oblique broadcast angle on portrait viewports:
+          // even an extreme zoom-out framed only the booth's right wall.
+          // On portrait phones, an enormous 19.5 m camera distance
+          // made the athlete a 20-pixel speck. Frame the START GATE,
+          // not the entire tiny prefab cabin in an empty landscape.
+          eye = new pc.Vec3(
+            0, terrainHeight(0, 8.55, this.course) + 4.1, 8.55,
+          );
+          look = new pc.Vec3(
+            0, terrainHeight(0, 3.1, this.course) + 1.65, 3.1,
+          );
+          broadcastFov = 61;
+        } else {
+          broadcastFov = Math.min(68, tvStart.fovDeg + 11);
+        }
+      }
     } else if (this.cameraMode === 2) {
       eye = target.clone().add(new pc.Vec3(0, 0.45, 0.2));
       look = eye
@@ -421,7 +484,9 @@ export class Renderer {
     // Preserve the corrected, unshaken position for the next chase frame.
     this.cleanCameraPos = this.camera.getPosition().clone();
     this.camera.lookAt(this.smoothedLook!);
-    if (!this.menu && active) {
+    if (!this.menu && active && !tvStart) {
+      // Live TV tripod and dolly shots stay stable: snow chatter belongs
+      // to the skier chase cameras, not to fixed broadcast lenses.
       const jitter = cameraShake(s.chatter, s.pressure, speed, f.t);
       this.camera.translateLocal(jitter.x, jitter.y, jitter.z);
     }

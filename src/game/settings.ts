@@ -10,7 +10,8 @@ export function readSettings(): Settings {
     sound: true,
     ghost: true,
     edges: true,
-    suit: "#1688b0",
+    // Cortina reference: competition crimson (still fully customizable).
+    suit: "#b71d38",
   };
   try {
     const v = JSON.parse(localStorage.getItem(KEY) ?? "null");

@@ -1,3 +1,13 @@
+## 26 novembre 2026 — Nouveau départ Super-G TV de 10 secondes (PR #60)
+
+- La séquence de départ dure **dix secondes réelles avant le GO** : 2 s d'établissement, 2,6 s de réserviste, 2,4 s d'entraîneurs, 1,2 s de chronométrage, 1,8 s de concentration. Le portillon et le chronométrage de course restent physiques, **indépendants de cette réalisation TV**.
+- Échauffement du skieur principal : cinq mouvements corporels distincts répartis sur les dix secondes, à vitesse naturelle ; correction des coudes trop écartés en préparation. Le skieur principal et le réserviste conservent le GLB articulé 25 os ; dossards textiles originaux et combinaison rouge, sans modifier la géométrie physique.
+- Les deux entraîneurs et l'officiel réutilisent les 13 clips de mocap du modèle Rocketbox Ethan du propriétaire. **Bug majeur résolu** : leurs squelettes étaient tous rendus à l'origine (0,0,0) malgré des parents placés ailleurs. Les personnages réels sont désormais répartis dans la cabine, avec vérification Playwright des positions de tête projetées à l'écran.
+- Suppression des faux cylindres de veste, contrôle de la silhouette, vêtements d'hiver mats sur le modèle skinné et accessoires ajustés aux véritables os, arrière-plan de compétition original, écran chronomètre filmé, plans TV améliorés et cadrage mobile rapproché.
+- Le GLB AssetSmith fourni n'ayant ni squelette ni animation, sa statue est désactivée dans la scène normale et n'est pas téléchargée inutilement sur mobile ; vérification via `?debug-assetsmith`.
+- Captures réelles bureau/mobile produites par `.github/workflows/preview.yml`, compilation et tests de scène de départ validés. **Le rendu reste un jeu 3D stylisé, pas une reproduction photoréaliste exacte de la retransmission réelle.** Les marques olympiques protégées ne sont pas reprises.
+- Prépublication : les tests complets de la branche doivent encore passer après correction de la métrique de textures séparant skis et dossard. Ne pas considérer cette note comme la preuve d'une publication sur `main`.
+
 ## 22 novembre 2026 — Nouvelle zone de départ World Cup TV (PR de développement)
 
 La petite cabane a été remplacée dans le code par une **start arena de 11,3 × 21,6 m** (toit à pans, vitrages, préparation intérieure, bancs, casiers, skis de réserve, bureau jury, monitors timing A/B, caméras de reportage, garde-corps), générée par `src/render/worldcup-start-compound.ts`. Les 1–3 skieurs en attente sont des instanciations du modèle de course déjà licencié si disponible (dossards fictifs 41, 52, 63), complétés par deux coachs, officiel de départ et technicien caméra selon le niveau de détails. **La zone de portillon reste dégagée**, l'unique tige de départ utilise toujours les constantes et le simulateur 120 Hz.
@@ -383,3 +393,13 @@ Les coefficients sont des choix d'animation guidés par des séquences filmées,
 ## 21 novembre 2026 — PR #56 : reconstruction du mouvement humain du skieur
 
 Ajout d'un nouveau contrôleur de mouvement biomécanique multi-phases pour le skieur monobloc à 25 os, et réalignement de la chaîne ski-sol -> bassin -> jambes IK -> bras IK -> bâtons. L'ancien contrôleur est conservé via ?pose=human-v3 et l'historique via ?pose=legacy. Aucune acquisition de motion capture externe n'est revendiquée. Les nouveaux tests d'articulation et les captures A/B doivent être validés par CI et revue visuelle avant publication. Détails dans BIOMECHANICS_RECONSTRUCTION_2026-11-21.md.
+
+
+## 22 novembre 2026 — départ TV avec seconds coureurs et coaches articulés (PR #60, en revue)
+
+- Référence réellement inspectée : vidéo fournie de 74,17 s avec premier skieur sous habillage intérieur bleu foncé, personnel à proximité, entrée lumineuse sur neige, puis images de course. L'extérieur complet de la cabane ne peut pas être relevé précisément dans ce seul extrait.
+- Ajout de `src/render/worldcup-start-motion.ts` : performance squelettique indépendante des réservistes sur le GLB 25 os, avec rotation du cou, regard, épaules, buste, bassin, flexion genou/cheville, prise en main du matériel et attente. Les temps de mouvements sont désynchronisés entre acteurs. **Ce sont des mouvements procéduraux, pas une mocap humaine acquise.**
+- Le personnel 3D bénéficie désormais de pivots hiérarchiques épaule/coude, hanche/genou et buste ; un coach lève le bras avant la poussée, l'autre suit le chronométrage.
+- Décor de tissu coupe-vent bleu original ajouté à la cabine existante, sans logo olympique, ni ressource tierce. Réalisation TV étendue avec plan coaches, revenant ensuite aux caméras existantes.
+- Premier CI sur PR #60 : 203 tests unitaires réussis sur 204, défaut de temps `NaN/Infinity` détecté dans un mouvement respiratoire. Correctif appliqué puis nouvelle validation demandée. **La compilation, Playwright et la comparaison visuelle ne sont pas encore validés au moment de ce compte rendu**. Branche de travail non fusionnée : jeu public inchangé.
+- Aucun changement dans les 42 portes, les règles de contact, le moteur physique 120 Hz, la simulation de départ, les records ou replays.

@@ -3,11 +3,21 @@ import {prestartWarmup} from "../src/render/prestart-warmup";
 
 describe("World Cup racer pre-start warm-up choreography",()=>{
   it("contains distinct breathing, arm shake, leg flexion and shoulder roll",()=>{
-    const phases=[-2.9,-2.15,-1.4,-.75,-.15];
+    // Sample the full 10-second story, NOT the previous three-second clip.
+    const phases=[-9.3,-6.8,-4.5,-2.2,-.15];
     const names=phases.map(p=>prestartWarmup(p).beat);
     expect(names).toEqual([
       "breath","shake-arms","flex-legs","shoulder-roll","ready"
     ]);
+  });
+  it("keeps meaningful movement through the first seven seconds",()=>{
+    const early=Array.from({length:70},(_,i)=>prestartWarmup(-10+i*.10));
+    const body=early.map(p=>p.trunkPitchDeg);
+    const arms=early.map(p=>p.armOffsetY[0]+p.armOffsetY[1]);
+    expect(Math.max(...body)-Math.min(...body)).toBeGreaterThan(4);
+    expect(Math.max(...arms)-Math.min(...arms)).toBeGreaterThan(.13);
+    expect(prestartWarmup(-9).beat).toBe("breath");
+    expect(prestartWarmup(-4.5).beat).toBe("flex-legs");
   });
   it("does not animate the warm-up during racing or old replays",()=>{
     for(const p of [undefined,0,1.3,20]){
@@ -20,7 +30,7 @@ describe("World Cup racer pre-start warm-up choreography",()=>{
   });
   it("is deterministic and bounded so neither ski nor the real race state changes",()=>{
     for(let i=0;i<100;i++){
-      const p=-3+i*.03,a=prestartWarmup(p),b=prestartWarmup(p);
+      const p=-10+i*.10,a=prestartWarmup(p),b=prestartWarmup(p);
       expect(a).toEqual(b);
       expect(a.pelvisBounceM).toBeGreaterThanOrEqual(-.09);
       expect(Math.abs(a.trunkRollDeg)).toBeLessThan(8);
@@ -31,7 +41,7 @@ describe("World Cup racer pre-start warm-up choreography",()=>{
     }
   });
   it("moves actual body channels rather than only UI/camera",()=>{
-    const frames=Array.from({length:200},(_,i)=>prestartWarmup(-4+i*.02));
+    const frames=Array.from({length:500},(_,i)=>prestartWarmup(-10+i*.02));
     expect(Math.min(...frames.map(x=>x.pelvisBounceM))).toBeLessThan(-.014);
     expect(Math.max(...frames.map(x=>x.armOffsetY[0]))).toBeGreaterThan(.10);
     expect(Math.max(...frames.map(x=>x.armOffsetY[1]))).toBeGreaterThan(.10);
