@@ -40,7 +40,9 @@ describe("World Cup television start area — shots and dimensions",()=>{
     // Player spawn position comes from initialState().z = 3.0, not z = 0.
     expect(p.cameraZ-p.focusZ).toBeLessThan(4);
     expect(planStartBroadcast(-2,0)!.focusZ).toBeGreaterThan(-.5);
-    expect(p.fovDeg).toBeLessThanOrEqual(35);
+    // The camera is physically closer to the racer; a 43° lens shows
+    // the head and poles without cutting off the skinned race bib.
+    expect(p.fovDeg).toBeLessThanOrEqual(45);
     const coach=planStartBroadcast(-4.1,0)!;
     const queue=planStartBroadcast(-6.6,0)!;
     expect(coach.name).toBe("coaches");
