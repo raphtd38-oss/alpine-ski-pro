@@ -131,6 +131,38 @@ export class WorldCupStartCompound {
         new pc.Vec3(side*w,h(0,b)+3.20,b),.056,olive);
     }
     wall("Solid compact start cabin rear wind curtain",-w,w,a,a,interior);
+    // A television start hut needs actual fabric event graphics behind the
+    // athletes, not a featureless empty navy-blue wall. These are original
+    // game marks, without reproducing protected Olympic rings/sponsors.
+    const rearArt=document.createElement("canvas");
+    rearArt.width=1024;rearArt.height=512;
+    const bg=rearArt.getContext("2d")!;
+    const dark=bg.createLinearGradient(0,0,1024,512);
+    dark.addColorStop(0,"#11223d");dark.addColorStop(1,"#223d5a");
+    bg.fillStyle=dark;bg.fillRect(0,0,1024,512);
+    bg.strokeStyle="rgba(220,239,245,.6)";bg.lineWidth=8;
+    bg.beginPath();
+    bg.moveTo(90,250);bg.lineTo(255,104);bg.lineTo(355,190);
+    bg.lineTo(465,65);bg.lineTo(618,247);bg.lineTo(762,123);
+    bg.lineTo(934,254);bg.stroke();
+    bg.fillStyle="#e6f0ef";bg.textAlign="center";
+    bg.font="bold 82px Arial";
+    bg.fillText("ALPINE SKI PRO",512,351);
+    bg.fillStyle="#a2c86e";bg.fillRect(136,377,752,10);
+    bg.font="bold 35px Arial";bg.fillStyle="#d7e5ed";
+    bg.fillText("CORTINA  /  SUPER-G  /  2026",512,438);
+    const rearTex=new pc.Texture(this.app.graphicsDevice,{
+      name:"Original 2026 Cortina competition fabric interior backdrop",
+      mipmaps:true,
+    });
+    rearTex.setSource(rearArt);this.textures.push(rearTex);
+    const rearMat=this.mat("Matte signed World Cup athlete start-tent backdrop",
+      "#ffffff",0,.09);
+    rearMat.diffuseMap=rearTex;rearMat.emissiveMap=rearTex;
+    rearMat.emissive.set(.035,.035,.035);rearMat.cull=pc.CULLFACE_NONE;
+    rearMat.update();
+    this.box("Original woven race-start athlete media wall",
+      0,h(0,a)+1.87,a+.075,5.50,2.32,.03,rearMat);
     // Front facade is a large original navy+lime graphic with just one
     // narrow opening at x +/- 1.13m. Athlete starts at z=3, contact z=4.05.
     const openingHalf=1.13;
