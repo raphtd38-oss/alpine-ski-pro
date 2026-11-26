@@ -715,7 +715,12 @@ async function boot() {
           athleteSeamless: renderer.athlete.isSeamless,
           athleteVariant: renderer.racerVariant,
           athleteHasAttachedSkis: !!renderer.athlete.rig.findByName("LEFTFOOT/Top glossy curved topsheet") && !!renderer.athlete.rig.findByName("RIGHTFOOT/Top glossy curved topsheet"),
-          raceSkiTextureCount: renderer.athlete.ownedTextures.length,
+          // The NEW 3D cloth-bib has its own texture. Don't count it
+          // as an extra SKI topsheet and misreport equipment coverage.
+          raceSkiTextureCount: renderer.athlete.ownedTextures.filter(t =>
+            t.name.includes("racing ski topsheet")).length,
+          raceBibTextureCount: renderer.athlete.ownedTextures.filter(t =>
+            t.name.includes("race bib")).length,
           cameraTerrainClearance: (() => {
             const p = renderer.camera.getPosition();
             return p.y - terrainHeight(p.x, p.z, race.course);
