@@ -1,3 +1,13 @@
+## 26 novembre 2026 — Nouveau départ Super-G TV de 10 secondes (PR #60)
+
+- La séquence de départ dure **dix secondes réelles avant le GO** : 2 s d'établissement, 2,6 s de réserviste, 2,4 s d'entraîneurs, 1,2 s de chronométrage, 1,8 s de concentration. Le portillon et le chronométrage de course restent physiques, **indépendants de cette réalisation TV**.
+- Échauffement du skieur principal : cinq mouvements corporels distincts répartis sur les dix secondes, à vitesse naturelle ; correction des coudes trop écartés en préparation. Le skieur principal et le réserviste conservent le GLB articulé 25 os ; dossards textiles originaux et combinaison rouge, sans modifier la géométrie physique.
+- Les deux entraîneurs et l'officiel réutilisent les 13 clips de mocap du modèle Rocketbox Ethan du propriétaire. **Bug majeur résolu** : leurs squelettes étaient tous rendus à l'origine (0,0,0) malgré des parents placés ailleurs. Les personnages réels sont désormais répartis dans la cabine, avec vérification Playwright des positions de tête projetées à l'écran.
+- Suppression des faux cylindres de veste, contrôle de la silhouette, vêtements d'hiver mats sur le modèle skinné et accessoires ajustés aux véritables os, arrière-plan de compétition original, écran chronomètre filmé, plans TV améliorés et cadrage mobile rapproché.
+- Le GLB AssetSmith fourni n'ayant ni squelette ni animation, sa statue est désactivée dans la scène normale et n'est pas téléchargée inutilement sur mobile ; vérification via `?debug-assetsmith`.
+- Captures réelles bureau/mobile produites par `.github/workflows/preview.yml`, compilation et tests de scène de départ validés. **Le rendu reste un jeu 3D stylisé, pas une reproduction photoréaliste exacte de la retransmission réelle.** Les marques olympiques protégées ne sont pas reprises.
+- Prépublication : les tests complets de la branche doivent encore passer après correction de la métrique de textures séparant skis et dossard. Ne pas considérer cette note comme la preuve d'une publication sur `main`.
+
 ## 22 novembre 2026 — Nouvelle zone de départ World Cup TV (PR de développement)
 
 La petite cabane a été remplacée dans le code par une **start arena de 11,3 × 21,6 m** (toit à pans, vitrages, préparation intérieure, bancs, casiers, skis de réserve, bureau jury, monitors timing A/B, caméras de reportage, garde-corps), générée par `src/render/worldcup-start-compound.ts`. Les 1–3 skieurs en attente sont des instanciations du modèle de course déjà licencié si disponible (dossards fictifs 41, 52, 63), complétés par deux coachs, officiel de départ et technicien caméra selon le niveau de détails. **La zone de portillon reste dégagée**, l'unique tige de départ utilise toujours les constantes et le simulateur 120 Hz.
