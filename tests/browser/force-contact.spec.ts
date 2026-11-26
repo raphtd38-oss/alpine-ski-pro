@@ -9,7 +9,8 @@ test('real rendered feet follow takeoff, landing and edge reversal', async({page
   const frames:any[]=[];
   await page.evaluate(()=>{
     const api=(window as any).__ski;api.start();api.freezeSimulation(true);
-    api.step(850,{steer:0,tuck:true,brake:false,jump:false});
+    // 10s prestart (1200 physics ticks) + the same 490-tick run-up as before.
+    api.step(1690,{steer:0,tuck:true,brake:false,jump:false});
   });
   // Capture the simulated manual jump, not a fabricated height frame.
   await page.evaluate(()=>{
