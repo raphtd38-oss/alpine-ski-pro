@@ -39,7 +39,8 @@ test("World-Cup-style Super-G start house, four-pole flags and terrain crest", a
   const firstPush = await page.evaluate(() => {
     const api = (window as any).__ski;
     const neutral = { steer: 0, tuck: false, brake: false, jump: false };
-    api.step(361, neutral);
+    // First actual pole stroke occurs just AFTER the 1200-tick, 10s TV prestart.
+    api.step(1201, neutral);
     api.step(15, neutral);
     return api.getState();
   });
