@@ -54,8 +54,22 @@ test("real World Cup start paddock stages television cameras, people and live ti
   await page.waitForTimeout(400);
   await expect(tv).toContainText("COACHES");
   await page.screenshot({path:"test-results/worldcup-start-tv-coach-encouragement.png"});
-  console.info("[TV_STAGE_QA:coach-encouragement]",JSON.stringify(
-    await page.evaluate(()=>(window as any).__ski.getStartStageDiagnostics())));
+  const cast=await page.evaluate(
+    ()=>(window as any).__ski.getStartStageDiagnostics());
+  console.info("[TV_STAGE_QA:coach-encouragement]",JSON.stringify(cast));
+  // Was the most important broken case: every coach rig animated at world
+  // (0,0,0) despite having distinct parent positions. Assert REAL bones.
+  const leader=cast.leadCoach.actualHead as number[];
+  const colleague=cast.secondCoach.actualHead as number[];
+  const onScreen=cast.leadCoach.actualHeadScreen as number[];
+  expect(Math.abs(leader[0]+2.22)).toBeLessThan(.20);
+  expect(Math.abs(colleague[0]+2.82)).toBeLessThan(.20);
+  expect(Math.abs(leader[0]-colleague[0])).toBeGreaterThan(.4);
+  expect(onScreen[2]).toBeGreaterThan(0);
+  expect(onScreen[0]).toBeGreaterThan(40);
+  expect(onScreen[0]).toBeLessThan(cast.canvas[0]-40);
+  expect(onScreen[1]).toBeGreaterThan(30);
+  expect(onScreen[1]).toBeLessThan(cast.canvas[1]-30);
   const cheer=await page.evaluate(()=>(window as any).__ski.getState().worldCupStart);
   expect(cheer.coachCue).toBe("encourage");
   expect(cheer.coachClip).toBe("Cheer");
