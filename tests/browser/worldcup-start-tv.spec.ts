@@ -40,16 +40,22 @@ test("real World Cup start paddock stages television cameras, people and live ti
   await expect(tv).toHaveClass(/active/);
   await expect(tv).toContainText("ESTABLISHING");
   await page.screenshot({path:"test-results/worldcup-start-tv-establishing.png"});
+  console.info("[TV_STAGE_QA:establishing]",JSON.stringify(
+    await page.evaluate(()=>(window as any).__ski.getStartStageDiagnostics())));
   await page.evaluate(()=>(window as any).__ski.step(300,
     {steer:0,tuck:false,brake:false,jump:false}));
   await page.waitForTimeout(400);
   await expect(tv).toContainText("ATHLETE QUEUE");
   await page.screenshot({path:"test-results/worldcup-start-tv-athletes-queue.png"});
+  console.info("[TV_STAGE_QA:athletes-queue]",JSON.stringify(
+    await page.evaluate(()=>(window as any).__ski.getStartStageDiagnostics())));
   await page.evaluate(()=>(window as any).__ski.step(400,
     {steer:0,tuck:false,brake:false,jump:false}));
   await page.waitForTimeout(400);
   await expect(tv).toContainText("COACHES");
   await page.screenshot({path:"test-results/worldcup-start-tv-coach-encouragement.png"});
+  console.info("[TV_STAGE_QA:coach-encouragement]",JSON.stringify(
+    await page.evaluate(()=>(window as any).__ski.getStartStageDiagnostics())));
   const cheer=await page.evaluate(()=>(window as any).__ski.getState().worldCupStart);
   expect(cheer.coachCue).toBe("encourage");
   expect(cheer.coachClip).toBe("Cheer");
@@ -58,11 +64,15 @@ test("real World Cup start paddock stages television cameras, people and live ti
   await page.waitForTimeout(400);
   await expect(tv).toContainText("TECHNICAL TIMING");
   await page.screenshot({path:"test-results/worldcup-start-tv-technical-timing.png"});
+  console.info("[TV_STAGE_QA:technical-timing]",JSON.stringify(
+    await page.evaluate(()=>(window as any).__ski.getStartStageDiagnostics())));
   await page.evaluate(()=>(window as any).__ski.step(120,
     {steer:0,tuck:false,brake:false,jump:false}));
   await page.waitForTimeout(400);
   await expect(tv).toContainText("STARTER CLOSEUP");
   await page.screenshot({path:"test-results/worldcup-start-tv-starter-closeup.png"});
+  console.info("[TV_STAGE_QA:starter-closeup]",JSON.stringify(
+    await page.evaluate(()=>(window as any).__ski.getStartStageDiagnostics())));
   // Give the real player enough physically simulated time AFTER the
   // ten-second countdown to strike the mechanical start wand (~0.7s).
   await page.evaluate(()=>(window as any).__ski.step(290,
