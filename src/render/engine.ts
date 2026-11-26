@@ -176,9 +176,16 @@ export class Renderer {
         this.app.assets.load(file);
       });
     };
+    // The static AssetSmith statue has no joints and is intentionally hidden
+    // in gameplay; do not waste 4 MB and GLB parse time on every iPhone start.
+    // Keep an explicit opt-in for asset inspection / future rigging.
+    const inspectAssetSmith=new URLSearchParams(
+      window.location.search).has("debug-assetsmith");
     [this.realCoachAsset,this.assetSmithWaitingSkierAsset] = await Promise.all([
       loadStartActor("Ethan 80-bone Rocketbox coach",HUMAN_START_ASSETS.coach),
-      loadStartActor("Owner AssetSmith static waiting skier",HUMAN_START_ASSETS.skier),
+      inspectAssetSmith
+        ? loadStartActor("Owner AssetSmith static waiting skier",HUMAN_START_ASSETS.skier)
+        : Promise.resolve<pc.Asset|null>(null),
     ]);
   }
   build(c: Course, e: Equipment, quality: Quality, weather: Weather, adaptive = true) {
@@ -477,7 +484,9 @@ export class Renderer {
     // Preserve the corrected, unshaken position for the next chase frame.
     this.cleanCameraPos = this.camera.getPosition().clone();
     this.camera.lookAt(this.smoothedLook!);
-    if (!this.menu && active) {
+    if (!this.menu && active && !tvStart) {
+      // Live TV tripod and dolly shots stay stable: snow chatter belongs
+      // to the skier chase cameras, not to fixed broadcast lenses.
       const jitter = cameraShake(s.chatter, s.pressure, speed, f.t);
       this.camera.translateLocal(jitter.x, jitter.y, jitter.z);
     }
