@@ -89,3 +89,41 @@ describe("real connected human 25-bone skeleton",()=>{
   });
  }
 });
+describe("anatomical integrity during motion and replay", () => {
+  it("preserves each imported femur and tibia through edge changes, tuck, flight and landing", () => {
+    const actor = original25BoneActor();
+    const director = new SuperGRacePoseDirector(actor, EQUIPMENT.SG, true);
+    for (let i = 0; i < 720; i++) {
+      const t = i / 120;
+      const edge = Math.sin(t * 2.7) * .98;
+      const height = i >= 300 && i < 360 ? .8 * Math.sin((i - 300) / 60 * Math.PI) : 0;
+      const f: Frame = { ...fixture(edge), t, z: 160 + t * 25,
+        vx: 4, vz: 5.5 + 32 * (i / 720), height,
+        landingShock: i >= 360 && i < 380 ? (380 - i) / 20 : 0,
+        tuck: i % 180 < 90 ? 1 : 0, startPhase: t + 3 };
+      director.update(f, COURSES.SG, 1 / 120);
+      const p = director.getDiagnostics()!;
+      for (const error of [p.leftFemurLengthErrorM, p.rightFemurLengthErrorM,
+        p.leftTibiaLengthErrorM, p.rightTibiaLengthErrorM]) {
+        expect(error).toBeLessThan(.001);
+      }
+      for (const angle of [p.leftShinBootAngleDeg, p.rightShinBootAngleDeg]) {
+        expect(Number.isFinite(angle)).toBe(true);
+        expect(angle).toBeGreaterThanOrEqual(0);
+        expect(angle).toBeLessThanOrEqual(180);
+      }
+    }
+  });
+  it("does not carry the previous turn or pole contact into a replay restart", () => {
+    const used = new SuperGRacePoseDirector(original25BoneActor(), EQUIPMENT.SG, true);
+    const fresh = new SuperGRacePoseDirector(original25BoneActor(), EQUIPMENT.SG, true);
+    for (let i = 0; i < 120; i++) used.update({ ...fixture(.95), t: 10 + i / 60 }, COURSES.SG, 1 / 60);
+    const restart: Frame = { ...fixture(0), t: 0, x: 0, z: 0, vx: 0, vz: 0,
+      pressure: 1, lateralAcceleration: 0, load: .5, startPhase: -3 };
+    used.update(restart, COURSES.SG, 1 / 60);
+    fresh.update(restart, COURSES.SG, 1 / 60);
+    const a = used.getDiagnostics()!, b = fresh.getDiagnostics()!;
+    for (const key of ["bodyBankDeg", "pelvisHeightM", "leftKneeFlexionDeg", "rightKneeFlexionDeg"] as const)
+      expect(a[key]).toBeCloseTo(b[key], 5);
+  });
+});
