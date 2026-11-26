@@ -1,3 +1,9 @@
+## 26 novembre 2026 — Contraintes anatomiques du skieur (PR #61)
+
+Le solveur IK du rig 25 os conserve un plan de flexion orthogonal même en cas de singularité ; la projection du bassin tient compte des deux limites de portée de chaque jambe, et les bâtons sont repositionnés après les transformations de chute. Le directeur réinitialise conjointement ses filtres après un saut temporel de replay. Le diagnostic expose séparément les écarts de longueur fémur/tibia gauche/droite et l'angle géométrique tibia/axe vertical de chaussure (ce dernier n'est pas une mesure clinique de cheville). Des tests de singularités et un scénario de 720 poses sur le GLB existant couvrent la conservation des longueurs, les changements de carres, la réception et le redémarrage.
+
+**Statut : code poussé sur la branche de développement ; validation CI et revue visuelle non confirmées.** Aucun nouveau maillage, rig anatomique maître, muscle, visage, mocap ni homologation FIS n'a été produit. Aucun changement des portes, de la trajectoire, du chronomètre ni de la physique 120 Hz. Le modèle 25 os reste le modèle actif. Le futur portage PC/Steam n'est pas réalisé.
+
 ## 22 novembre 2026 — Nouvelle zone de départ World Cup TV (PR de développement)
 
 La petite cabane a été remplacée dans le code par une **start arena de 11,3 × 21,6 m** (toit à pans, vitrages, préparation intérieure, bancs, casiers, skis de réserve, bureau jury, monitors timing A/B, caméras de reportage, garde-corps), générée par `src/render/worldcup-start-compound.ts`. Les 1–3 skieurs en attente sont des instanciations du modèle de course déjà licencié si disponible (dossards fictifs 41, 52, 63), complétés par deux coachs, officiel de départ et technicien caméra selon le niveau de détails. **La zone de portillon reste dégagée**, l'unique tige de départ utilise toujours les constantes et le simulateur 120 Hz.

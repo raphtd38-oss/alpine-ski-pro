@@ -1,3 +1,9 @@
+## 26 novembre 2026 — Reconstruction humaine, prochaine étape
+
+PR #61 : renforcer les invariants du rig existant, exécuter la CI et comparer les poses aux références du propriétaire. Mesurer chaque longueur osseuse séparément ; instrumenter l'orientation tibia/chaussure et calibrer les limites sur le modèle et la chaussure réels avant de les imposer. Ne pas confondre la conservation des longueurs avec la correction visuelle du skinning.
+
+Le modèle maître anatomique (environ 206 os, musculature de référence), le rig biomécanique et le modèle de rendu doivent rester trois couches distinctes. Priorité de production : nouveau maillage équipé avec topologie articulaire et pivots fiables, correctifs de déformation, retarget de mouvements Super-G sous licence commerciale, comparaisons latérales/frontales et intégration progressive. Conserver l'asset 25 os comme repli jusqu'à la validation du nouveau. Préparer un pipeline GLB et des contrôleurs indépendants du moteur de rendu pour le futur exécutable PC, sans annoncer une version Steam avant test réel.
+
 ## 22 novembre 2026 — Start house télévision World Cup
 
 Nouveau compound de départ, 5 caméras planifiées, 2 tableaux de chrono, skieurs d'attente avec dossards, entraîneurs/staff : suivre la PR World Cup TV et inspecter les captures Playwright à chaque niveau de qualité. Suite à améliorer après cette intégration : vrais coachs et personnel riggés en GLB, variations de combinaisons, lèvres/blendshapes et vrai retarget d'animations FBX/GLB envoyées par le propriétaire, ambiance sonore du pré-départ (radio, vent, starter) sous licences vérifiées ; optimiser le nombre de draw calls sur iPhone réel. Les prises de vue sont artistiques et non mesurées de l'installation olympique.
