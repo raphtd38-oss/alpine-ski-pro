@@ -161,8 +161,15 @@ export function solve25BoneLegKnee(
   const sideX = side === "L" ? -0.08 : 0.08;
   const pole = new pc.Vec3(sideX, -0.22, -1.0);
   pole.sub(line.clone().mulScalar(pole.dot(line)));
-  if (pole.length() < 0.003) pole.set(0, 0, -1);
-  const bendDirection = normalized(pole, new pc.Vec3(0, 0, -1));
+  // A fallback must also lie in the plane perpendicular to the hip-ankle
+  // axis. An unprojected fallback changes the actual segment lengths.
+  if (pole.length() < 0.003) {
+    const fallback = Math.abs(line.x) < 0.8
+      ? new pc.Vec3(side === "L" ? -1 : 1, 0, 0)
+      : new pc.Vec3(0, 1, 0);
+    pole.copy(fallback).sub(line.clone().mulScalar(fallback.dot(line)));
+  }
+  const bendDirection = pole.normalize();
   const kneePelvis = hipPelvis.clone().add(
     line.clone().mulScalar(projected)).add(
     bendDirection.mulScalar(bend));
@@ -456,16 +463,31 @@ export class SuperGRacePoseDirector {
   private constrainPelvis(): void {
     // Project pelvis into both reach spheres before rotating bones. This
     // prevents a strong bank from pulling the outside ski off its target.
-    for (let pass = 0; pass < 6; pass++) {
+    // Use the very same flexion bounds as the analytic knee solver.
+    // Project onto both inner and outer reach limits: too-close targets
+    // otherwise silently displace the boot when the knee solver clamps.
+    for (let pass = 0; pass < 12; pass++) {
+      let maxError = 0;
       for (const side of ["L", "R"] as const) {
         const b = this.bones[side];
-        const reach = b.knee.getLocalPosition().length() +
-          b.ankle.getLocalPosition().length() - 0.014;
+        const upper = b.knee.getLocalPosition().length();
+        const lower = b.ankle.getLocalPosition().length();
+        const minReach = Math.sqrt(upper * upper + lower * lower +
+          2 * upper * lower * Math.cos(145 / RAD)) + 0.001;
+        const maxReach = Math.min(upper + lower - 0.014,
+          Math.sqrt(upper * upper + lower * lower +
+            2 * upper * lower * Math.cos(8 / RAD)) - 0.001);
         const delta = this.targets[side].ankle.clone().sub(b.hip.getPosition());
         const distance = delta.length();
-        if (distance > reach) this.pelvis.setPosition(
-          this.pelvis.getPosition().clone().add(delta.mulScalar((distance - reach) / distance)));
+        const error = distance - bounded(distance, minReach, maxReach);
+        maxError = Math.max(maxError, Math.abs(error));
+        if (Math.abs(error) > 1e-6) {
+          const direction = normalized(delta, new pc.Vec3(0, -1, 0));
+          this.pelvis.setPosition(this.pelvis.getPosition().clone()
+            .add(direction.mulScalar(error)));
+        }
       }
+      if (maxError < 1e-5) break;
     }
   }
 
@@ -653,6 +675,9 @@ export class SuperGRacePoseDirector {
         -pose.rightArm.shoulderPitchDeg - 24 * brace,
         0, pose.rightArm.shoulderRollDeg + 26 * brace,
       );
+      // Crash transforms move the wrists after the normal grip solve.
+      // Reattach poles to the final wrist positions without advancing filters.
+      this.setPoles(pose, 0, c);
     }
     this.actor.visualBank = pose.bankDeg + crash.bodyRollDeg;
     this.actor.visualEdge = pose.edge;
