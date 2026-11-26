@@ -1,3 +1,14 @@
+## 26 novembre 2026 — Plan de finition du départ World Cup
+
+- [x] Conserver la cabine compacte, les 42 portes, la physique de ski à 120 Hz et les chronomètres authentiques.
+- [x] Réaliser un **vrai prélude de 10 secondes** avec 5 plans de préparation et un plan de lancement, sans ralentir artificiellement les animations.
+- [x] Replacer les **vrais squelettes** des entraîneurs sur leurs positions distinctes ; tester les coordonnées des têtes à l'écran.
+- [x] Retirer les costumes fortement stylisés et les faux manteaux tubulaires, habiller les personnages skinnés en vêtements d'hiver plus cohérents.
+- [x] Ajouter la combinaison de compétition rouge, le dossard textile, le cadrage chronomètre et le plan mobile rapproché.
+- [ ] Remplacer progressivement les modèles et animation de ski restants par des assets autorisés de meilleure qualité (visage, lunettes, tissus skinnés, mains et bâtons), avec tests de la vraie scène à chaque étape.
+- [ ] Affiner et retargeter une motion capture réelle de départ à la minute, avec vraie gestuelle de concentration et poussée. Les clips actuels sont limités et la retransmission d'origine n'est pas reproduite à l'identique.
+- [ ] Ne publier que si la compilation, la suite de tests unitaires, les tests 120 Hz/contacts, les tests navigateurs PC/mobile et la revue visuelle passent.
+
 ## 22 novembre 2026 — Start house télévision World Cup
 
 Nouveau compound de départ, 5 caméras planifiées, 2 tableaux de chrono, skieurs d'attente avec dossards, entraîneurs/staff : suivre la PR World Cup TV et inspecter les captures Playwright à chaque niveau de qualité. Suite à améliorer après cette intégration : vrais coachs et personnel riggés en GLB, variations de combinaisons, lèvres/blendshapes et vrai retarget d'animations FBX/GLB envoyées par le propriétaire, ambiance sonore du pré-départ (radio, vent, starter) sous licences vérifiées ; optimiser le nombre de draw calls sur iPhone réel. Les prises de vue sont artistiques et non mesurées de l'installation olympique.
