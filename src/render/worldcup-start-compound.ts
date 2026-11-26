@@ -11,6 +11,7 @@ import {ALPINE_START_GATE} from "../game/start-gate";
 import {waitingAthletePose,startStaffPose} from "./worldcup-start-motion";
 import {staffTVClip,type HumanTVClip,type StaffTVRole} from "./start-human-actors";
 import {addRealSkiWinterUniform} from "./winter-rig-outfit";
+import {applyWorldCupRacewear} from "./worldcup-racewear";
 
 export const START_HOUSE_DIMENSIONS=Object.freeze({
   halfWidth:4.05,backZ:-1.12,frontZ:3.33,eaveHeight:3.18,ridgeHeight:3.26,
@@ -425,6 +426,11 @@ export class WorldCupStartCompound {
       .instantiateRenderEntity();
     parent.addChild(rig);
     if(rig.findByName("LeftUpLeg"))rig.setLocalEulerAngles(0,180,0);
+    // The actual skinned competitor wears a red FIS-style racing kit with
+    // a soft original numbered bib and helmet. No rigid white chest board.
+    applyWorldCupRacewear(this.app,rig,{
+      bibNumber:num,suitColor:"#b91e36",helmetColor:"#bf2539",
+    },this.materials,this.textures);
     for(const renderer of rig.findComponents("render"))
       (renderer as pc.RenderComponent).castShadows=false;
     // The old flat 43cm "BIB 41" box was attached backwards to the
