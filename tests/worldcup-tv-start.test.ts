@@ -46,7 +46,8 @@ describe("World Cup television start area — shots and dimensions",()=>{
     const coach=planStartBroadcast(-4.1,0)!;
     const queue=planStartBroadcast(-6.6,0)!;
     expect(coach.name).toBe("coaches");
-    expect(coach.focusX).toBeLessThan(-2.5);
+    // Lead coach moved to a proven on-screen position, not behind the vinyl.
+    expect(coach.focusX).toBeCloseTo(-2.22,2);
     expect(coach.cameraX).not.toBe(queue.cameraX);
     expect(coach.focusZ).not.toBe(queue.focusZ);
     // The backup shoulder-level angle is deliberately wider: the former
