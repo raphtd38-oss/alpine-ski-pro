@@ -21,6 +21,7 @@ import { cameraShake, speedFov } from "../game/camera-rig";
 import { planSuperGBroadcastShot, broadcastFlightFraming } from "./superg-broadcast-shot";
 import { planStartBroadcast } from "./worldcup-start-broadcast";
 import { HUMAN_START_ASSETS } from "./start-human-actors";
+import { applyWorldCupRacewear } from "./worldcup-racewear";
 export const CAMERAS = ["Poursuite", "Rapprochée", "Subjective", "Télévision"];
 export class Renderer {
   app: pc.Application;
@@ -223,6 +224,14 @@ export class Renderer {
       this.realCoachAsset,this.assetSmithWaitingSkierAsset);
     if (this.ammoEnabled) this.physics = new AmmoGateSensors(this.app, c);
     this.athlete = new Athlete(this.app, this.seamlessAsset ?? this.asset, e);
+    if(this.athlete.isSeamless){
+      // Numbered original fabric bib stays attached to the real skinned
+      // body through the entire jump/carving race. User can still choose
+      // the colour of the main speed suit in Settings.
+      applyWorldCupRacewear(this.app,this.athlete.rig,{
+        bibNumber:27,helmetColor:"#bb2034",
+      },this.athlete.ownedMaterials,this.athlete.ownedTextures);
+    }
     this.ghost = new Athlete(this.app, this.asset, e, true);
     this.ghost.root.enabled = false;
     this.effects = new SnowEffects(this.app, c, quality);
