@@ -323,8 +323,10 @@ export class WorldCupStartCompound {
     const jobs=[
       // Lead coach takes the clearly visible left-side position formerly
       // occupied by the official. Camera can now frame his REAL face.
-      {x:-2.82,z:2.20,role:"coach" as const,p:1},
-      {x:-2.22,z:.54,role:"coach" as const,p:2},
+      // The near-camera coach at (-2.22,.54) is visibly unobstructed
+      // in browser captures: assign him the LEAD mocap performance.
+      {x:-2.22,z:.54,role:"coach" as const,p:1},
+      {x:-2.82,z:2.20,role:"coach" as const,p:2},
       {x:2.25,z:1.42,role:"referee" as const,p:0},
       {x:4.65,z:4.36,role:"camera" as const,p:3},
     ];
