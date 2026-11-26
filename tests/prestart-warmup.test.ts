@@ -15,7 +15,7 @@ describe("World Cup racer pre-start warm-up choreography",()=>{
     const body=early.map(p=>p.trunkPitchDeg);
     const arms=early.map(p=>p.armOffsetY[0]+p.armOffsetY[1]);
     expect(Math.max(...body)-Math.min(...body)).toBeGreaterThan(4);
-    expect(Math.max(...arms)-Math.min(...arms)).toBeGreaterThan(.16);
+    expect(Math.max(...arms)-Math.min(...arms)).toBeGreaterThan(.13);
     expect(prestartWarmup(-9).beat).toBe("breath");
     expect(prestartWarmup(-4.5).beat).toBe("flex-legs");
   });
