@@ -160,12 +160,12 @@ export function addRealSkiWinterUniform(
     };
     // Modest 3D fit. The REAL person's face stays exposed and expressive.
     makeCap("Winter hat knitted crown attached to human 80-bone head",
-      [[1.77,.128,.138],[1.82,.146,.154],
-       [1.885,.141,.147],[1.94,.112,.113],
-       [1.982,.043,.052],[1.992,.001,.001]],knit);
+      [[1.785,.105,.112],[1.815,.116,.128],
+       [1.867,.113,.127],[1.907,.090,.095],
+       [1.941,.035,.040],[1.948,.001,.001]],knit);
     makeCap("Close fitted dark wool cuff",
-      [[1.765,.133,.145],[1.79,.146,.154],
-       [1.816,.145,.153]],brim);
+      [[1.782,.107,.115],[1.802,.119,.129],
+       [1.824,.119,.129]],brim);
   }
   return {materials,parts:head?7:5};
 }
