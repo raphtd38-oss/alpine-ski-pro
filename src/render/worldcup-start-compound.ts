@@ -400,8 +400,12 @@ export class WorldCupStartCompound {
     // Strip the source business-shirt/tie diffuse artwork and tint the suit
     // base uniformly; a close-fitting exterior technical zip shell will
     // cover the lapel and neck geometry completely.
-    const originalCoat=rig.findByName("Outfit_formal") as pc.Entity|null;
-    if(originalCoat){
+    // Formal suit GLB has separate torso and sleeve surfaces: the
+    // Skin_formal material was still visibly RED on the arms. Recolour BOTH
+    // skinned layers to the same dark technical outerwear, keeping face/hair.
+    for(const garment of ["Outfit_formal","Skin_formal"]){
+      const originalCoat=rig.findByName(garment) as pc.Entity|null;
+      if(!originalCoat)continue;
       for(const renderer of originalCoat.findComponents("render"))
         for(const mesh of (renderer as pc.RenderComponent).meshInstances){
           if(!(mesh.material instanceof pc.StandardMaterial))continue;
@@ -414,7 +418,7 @@ export class WorldCupStartCompound {
             role==="referee"?.45:phase===1?.23:.29,
             role==="referee"?.23:phase===1?.34:.39,
             role==="referee"?.27:phase===1?.40:.45);
-          winterMaterial.gloss=.13;
+          winterMaterial.gloss=.09;
           winterMaterial.useMetalness=false;
           winterMaterial.update();
           mesh.material=winterMaterial;
