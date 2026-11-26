@@ -367,17 +367,24 @@ export class WorldCupStartCompound {
     const tracks=resource.animations;
     if(!tracks?.length)return false;
     const parent=new pc.Entity("REAL Rocketbox human "+role+" "+phase);
-    parent.setPosition(x,this.h(x,z),z);
-    // Real source faces +Z. Lead coach should look toward the real skier AND
-    // toward the coach TV camera at x=-.52, z=2.04; +105 turned his BACK.
-    const yaw=role==="coach"?(phase===1?125:x>0?-68:58):
-      role==="referee"?-68: -35;
-    parent.setLocalEulerAngles(0,yaw,0);
-    const scale=role==="referee"?1.03:phase===2?.974:1;
-    parent.setLocalScale(scale,scale,scale);
+    // Attach imported glTF at IDENTITY before moving the parent.
+    // The earlier code moved the parent first. PlayCanvas preserved the
+    // imported skin's original world transform (0,0,0) when reparented:
+    // THREE separate coaches all rendered on top of each other at origin.
     this.root.addChild(parent);
     const rig=resource.instantiateRenderEntity();
     parent.addChild(rig);
+    rig.setLocalPosition(0,0,0);
+    rig.setLocalEulerAngles(0,0,0);
+    rig.setLocalScale(1,1,1);
+    // Real source faces +Z; lead should face skier and TV camera.
+    const yaw=role==="coach"?(phase===1?125:x>0?-68:58):
+      role==="referee"?-68: -35;
+    const scale=role==="referee"?1.03:phase===2?.974:1;
+    parent.setLocalPosition(x,this.h(x,z),z);
+    parent.setLocalEulerAngles(0,yaw,0);
+    parent.setLocalScale(scale,scale,scale);
+    parent.syncHierarchy();
     for(const garment of [
       "Outfit_formal","Outfit_original","Skin_formal","Skin_original",
       "Top_shirt","Top_tee","Skin_shirt","Skin_tee","Trousers","Shoes",
