@@ -203,6 +203,7 @@ h1 em {
 }
 .hero-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 14px;
   align-items: center;
   margin-top: 30px;
@@ -1192,28 +1193,6 @@ meter {
   .splits {
     gap: 18px;
   }
-  #touch-controls {
-    display: flex;
-    position: absolute;
-    bottom: 140px;
-    left: 20px;
-    right: 20px;
-    justify-content: space-between;
-    pointer-events: none;
-  }
-  #touch-controls button {
-    width: 60px;
-    height: 60px;
-    background: #12304488;
-    border: 1px solid #c3e2f38c;
-    border-radius: 50%;
-    font-size: 18px;
-    touch-action: none;
-    user-select: none;
-  }
-  #touch-controls [data-touch="brake"] {
-    font-size: 9px;
-  }
   #toast {
     bottom: 220px;
     font-size: 10px;
@@ -1298,6 +1277,48 @@ footer button span {
   .course-preview {
     bottom: 16%;
   }
+}
+
+@media (max-width: 760px), (hover: none) and (pointer: coarse) {
+  #touch-controls {
+    display: flex;
+    position: absolute;
+    bottom: 140px;
+    left: 20px;
+    right: 20px;
+    justify-content: space-between;
+    pointer-events: none;
+  }
+  #touch-controls button {
+    width: 60px;
+    height: 60px;
+    background: #12304488;
+    border: 1px solid #c3e2f38c;
+    border-radius: 50%;
+    font-size: 18px;
+    touch-action: none;
+    user-select: none;
+  }
+  #touch-controls [data-touch="brake"] {
+    font-size: 9px;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  header { height: 50px; }
+  .hero { top: 58px; left: 5%; width: 57%; max-width: none; }
+  .hero h1 { font-size: clamp(37px, 11vh, 54px); margin: 8px 0; }
+  .hero p { font-size: 12px; line-height: 1.4; margin: 8px 0; }
+  .hero .eyebrow, .hero .hint { display: none; }
+  .hero-actions { margin-top: 12px; gap: 8px; }
+  .hero-actions button { min-height: 44px; padding: 10px 14px; }
+  .course-preview { left: auto; right: 4%; top: 64px; bottom: auto; width: 29%; padding: 14px; }
+  .course-title { margin-top: 12px; }
+  .course-title h2 { font-size: 22px; margin-bottom: 8px; }
+  .course-stats { padding: 8px 0; }
+  .course-link { display: none; }
+  footer { height: 32px; }
+  #touch-controls { bottom: 84px; }
 }
 
 /* V1.2: Replay analysis is a compact overlay rather than a second screen. */
@@ -1389,6 +1410,14 @@ footer button span {
   white-space: normal;
 }
 #worldcup-tv-start-lowerthird.active { display: block; }
+body.tv-presentation .timing,
+body.tv-presentation .race-bottom,
+body.tv-presentation #touch-controls { visibility: hidden; }
+body.tv-presentation #worldcup-tv-start-lowerthird {
+  padding: 6px 12px;
+  border-left-width: 3px;
+  font-size: clamp(13px, 1.5vw, 17px);
+}
 body.tv-start-active #countdown {
   /* The real countdown is still visible on the 3D timing displays and
      TV lower-third; don't cover the athlete's helmet with giant numerals. */

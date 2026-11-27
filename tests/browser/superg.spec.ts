@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { waitForGameFrame } from "./render-frame";
 
 test("World-Cup-style Super-G start house, four-pole flags and terrain crest", async ({ page }) => {
   const errors: string[] = [];
@@ -45,7 +46,7 @@ test("World-Cup-style Super-G start house, four-pole flags and terrain crest", a
   });
   expect(firstPush.startLaunchTime).toBeGreaterThan(0);
   expect(firstPush.startLaunchTime).toBeLessThan(0.40);
-  await page.waitForTimeout(180);
+  await waitForGameFrame(page);
   await page.screenshot({ path: "test-results/superg-FIRST-pole-push.png" });
   const state = await page.evaluate(() => {
     const api = (window as any).__ski;
@@ -59,7 +60,7 @@ test("World-Cup-style Super-G start house, four-pole flags and terrain crest", a
   expect(state.startGateOpened).toBe(true);
   expect(state.startGateImpulseTime).not.toBeNull();
   expect(state.startGateDegrees).toBeGreaterThanOrEqual(20);
-  await page.waitForTimeout(300);
+  await waitForGameFrame(page);
   expect((await page.evaluate(() => (window as any).__ski.getState())).timingWandAngle)
     .toBeGreaterThan(10);
   await page.screenshot({ path: "test-results/superg-start-push.png" });

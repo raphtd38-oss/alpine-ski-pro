@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { writeFileSync } from 'node:fs';
+import { waitForGameFrame } from './render-frame';
 
 test('real rendered feet follow takeoff, landing and edge reversal', async({page})=>{
   const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
@@ -17,7 +18,7 @@ test('real rendered feet follow takeoff, landing and edge reversal', async({page
     api.step(1,{steer:0,tuck:true,brake:false,jump:true});
     api.step(20,{steer:0,tuck:true,brake:false,jump:false});
   });
-  await page.waitForTimeout(450);
+  await waitForGameFrame(page);
   const air=await page.evaluate(()=>{const a=(window as any).__ski;return {state:a.getState(),pose:a.getAthletePose().competitionPose};});
   frames.push({name:'air',...air});
   expect(air.state.height).toBeGreaterThan(.15);
@@ -34,7 +35,7 @@ test('real rendered feet follow takeoff, landing and edge reversal', async({page
       if(api.getState().height===0) break;
     }
   });
-  await page.waitForTimeout(450);
+  await waitForGameFrame(page);
   const landed=await page.evaluate(()=>{const a=(window as any).__ski;return {state:a.getState(),pose:a.getAthletePose().competitionPose};});
   frames.push({name:'landing',...landed});
   expect(landed.state.height).toBe(0);
@@ -45,7 +46,7 @@ test('real rendered feet follow takeoff, landing and edge reversal', async({page
   for(const sign of [1,-1]){
     for(let i=0;i<6;i++){
       await page.evaluate(sign=>(window as any).__ski.step(12,{steer:sign*.85,tuck:true,brake:false,jump:false}),sign);
-      await page.waitForTimeout(160);
+      await waitForGameFrame(page);
       const sample=await page.evaluate(()=>{const a=(window as any).__ski;return {state:a.getState(),pose:a.getAthletePose().competitionPose};});
       frames.push({name:`turn-${sign}-${i}`,...sample});
       if(sample.state.height===0 && sample.state.fallen===0){

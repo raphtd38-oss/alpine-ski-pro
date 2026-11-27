@@ -1,4 +1,5 @@
 import * as pc from "playcanvas";
+import { numberRaceBib } from "./race-bib";
 import type { Course, Equipment, Frame } from "../game/types";
 import { terrainHeight, gradient } from "../game/course";
 import { shape, material, meshEntity } from "./geometry";
@@ -74,6 +75,11 @@ export class Athlete {
     // This gives the athlete a legible presence on the snow on desktop and
     // mobile while keeping the linked ski/boot meshes intact.
     if (this.isSeamless && !ghost) {
+      const bib = numberRaceBib(app.graphicsDevice, this.rig, 27);
+      if (bib) {
+        this.ownedMaterials.push(bib.material);
+        this.ownedTextures.push(bib.texture);
+      }
       for (const component of this.rig.findComponents("render")) {
         const render = component as pc.RenderComponent;
         render.castShadows =
@@ -353,11 +359,11 @@ export class Athlete {
       }
     }
   }
-  update(f: Frame, c: Course, dt: number) {
+  update(f: Frame, c: Course, dt: number, televisionStart = false) {
     // Never execute legacy rotations after the 3D director: the feet, bindings,
     // and tips need to retain their own world direction and edge angle.
     if (this.competitionDirector) {
-      this.competitionDirector.update(f, c, dt);
+      this.competitionDirector.update(f, c, dt, televisionStart);
       return;
     }
     const y = terrainHeight(f.x, f.z, c) + f.height;

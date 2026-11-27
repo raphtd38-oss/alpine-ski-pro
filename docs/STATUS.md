@@ -1,3 +1,7 @@
+## 27 novembre 2026 — Départ TV jouable sur la branche de test
+
+Le menu propose un départ télévisé de dix secondes. Le dernier plan cadre le dossard, les deux mains, les skis et la tige du portillon. Le chronométrage sportif commence au franchissement de la tige. Les 202 tests unitaires et les 12 scénarios Chromium ont réussi. [Film et captures du jeu](references/depart-tv/README.md)
+
 ## 22 novembre 2026 — Nouvelle zone de départ World Cup TV (PR de développement)
 
 La petite cabane a été remplacée dans le code par une **start arena de 11,3 × 21,6 m** (toit à pans, vitrages, préparation intérieure, bancs, casiers, skis de réserve, bureau jury, monitors timing A/B, caméras de reportage, garde-corps), générée par `src/render/worldcup-start-compound.ts`. Les 1–3 skieurs en attente sont des instanciations du modèle de course déjà licencié si disponible (dossards fictifs 41, 52, 63), complétés par deux coachs, officiel de départ et technicien caméra selon le niveau de détails. **La zone de portillon reste dégagée**, l'unique tige de départ utilise toujours les constantes et le simulateur 120 Hz.

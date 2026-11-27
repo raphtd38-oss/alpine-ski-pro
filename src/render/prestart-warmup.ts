@@ -1,8 +1,9 @@
 /**
  * Cinematic pre-start warm-up authored for Alpine Ski Pro.
  * Pure function: reproducible in 120-Hz replays, without moving the skis.
- * Timeline is the three seconds of the race's actual start countdown.
+ * The final three seconds are shared with the standard race countdown.
  */
+import { TV_START_SECONDS } from "./worldcup-start-broadcast";
 export type WarmupBeat =
   | "breath" | "shake-arms" | "flex-legs" | "shoulder-roll" | "ready";
 export interface PrestartWarmup {
@@ -26,7 +27,22 @@ const ease=(v:number)=>{const x=sat(v);return x*x*(3-2*x);};
 const pulse=(x:number,start:number,end:number,fade=.16)=>
   ease((x-start)/fade)*ease((end-x)/fade);
 
-export function prestartWarmup(startPhase:number | undefined):PrestartWarmup {
+export function prestartWarmup(startPhase:number | undefined, television = false):PrestartWarmup {
+  if (television && startPhase !== undefined && startPhase < -3) {
+    const t = TV_START_SECONDS + startPhase;
+    const envelope = pulse(t, 0, TV_START_SECONDS - 3, .4);
+    const breath = envelope * (.5 - .5 * Math.cos(t * 2.6));
+    const shift = envelope * Math.sin(t * 2.7);
+    const flex = pulse(t, 1.1, 2.2, .45) + pulse(t, 4.1, 5.4, .55);
+    return {
+      active: true, beat: flex > .25 ? "flex-legs" : "breath", intensity: envelope,
+      breath, pelvisBounceM: -.075 * flex, lateralWeightM: .033 * shift,
+      trunkPitchDeg: 4.8 * flex, trunkRollDeg: 2.4 * shift,
+      headNodDeg: 2.4 * breath - 1.9 * flex,
+      armOffsetY: [.035 * shift, -.035 * shift],
+      armForwardM: [.05 * flex, .05 * flex], fistEnergy: 0,
+    };
+  }
   const elapsed=clamp(3+(startPhase??-3),0,3);
   const active=startPhase!==undefined&&startPhase<0;
   const early=pulse(elapsed,.05,.87);

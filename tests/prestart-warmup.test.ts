@@ -2,6 +2,14 @@ import {describe,it,expect} from "vitest";
 import {prestartWarmup} from "../src/render/prestart-warmup";
 
 describe("World Cup racer pre-start warm-up choreography",()=>{
+  it("adds weight transfer and flexions ahead of the original three-second preparation", () => {
+    const early = [-9, -8.3, -7, -5.2].map(t => prestartWarmup(t, true));
+    expect(Math.min(...early.map(p => p.pelvisBounceM))).toBeLessThan(-.06);
+    expect(Math.max(...early.map(p => Math.abs(p.lateralWeightM)))).toBeGreaterThan(.02);
+    for (const time of [-3, -2.35, -1.14, -.33, 0]) {
+      expect(prestartWarmup(time, true)).toEqual(prestartWarmup(time));
+    }
+  });
   it("contains distinct breathing, arm shake, leg flexion and shoulder roll",()=>{
     const phases=[-2.9,-2.15,-1.4,-.75,-.15];
     const names=phases.map(p=>prestartWarmup(p).beat);

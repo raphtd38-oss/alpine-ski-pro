@@ -8,6 +8,7 @@ import type {Course,Quality} from "../game/types";
 import {terrainHeight} from "../game/course";
 import {material,shape,meshEntity,beam} from "./geometry";
 import {ALPINE_START_GATE} from "../game/start-gate";
+import {numberRaceBib} from "./race-bib";
 
 export const START_HOUSE_DIMENSIONS=Object.freeze({
   halfWidth:5.65,backZ:-16.4,frontZ:5.2,eaveHeight:3.74,ridgeHeight:5.32,
@@ -57,12 +58,11 @@ export class WorldCupStartCompound {
     const ctx=canvas.getContext("2d")!;
     ctx.fillStyle=bg;ctx.fillRect(0,0,1024,256);
     ctx.textAlign="center";ctx.textBaseline="middle";
-    const lightBackground=bg==="#ecf3f6";
-    ctx.fillStyle=lightBackground?"#226180":"#86cbe4";
+    ctx.fillStyle="#86cbe4";
     ctx.font="bold 33px Arial";
     ctx.fillText("ALPINE SKI PRO  •  CORTINA SUPER-G",512,55);
     ctx.fillStyle="#ef674c";ctx.fillRect(80,91,864,7);
-    ctx.fillStyle=lightBackground?"#11334d":"#f8fbfd";
+    ctx.fillStyle="#f8fbfd";
     ctx.font="bold 80px Arial";
     ctx.fillText(text,512,171);
     const texture=new pc.Texture(this.app.graphicsDevice,{name,mipmaps:true});
@@ -334,14 +334,10 @@ export class WorldCupStartCompound {
     if(rig.findByName("LeftUpLeg"))rig.setLocalEulerAngles(0,180,0);
     for(const renderer of rig.findComponents("render"))
       (renderer as pc.RenderComponent).castShadows=false;
-    const chest=rig.findByName("Chest") as pc.Entity|null;
-    if(chest){
-      const sign=this.panel("White bib of waiting racer "+num,
-        "BIB "+num,"#ecf3f6");
-      // Actual cloth follows the same chest bone as the athlete.
-      const cloth=this.box("Reserve competitor numbered bib "+num,
-        0,-.07,-.214,.43,.48,.016,sign.m,chest);
-      cloth.render!.castShadows=false;
+    const bib = numberRaceBib(this.app.graphicsDevice, rig, num);
+    if (bib) {
+      this.materials.push(bib.material);
+      this.textures.push(bib.texture);
     }
     this.extras.push({head:rig.findByName("Head"),
       leftArm:rig.findByName("LeftUpperArm")??rig.findByName("LeftShoulder"),
@@ -432,7 +428,7 @@ export class WorldCupStartCompound {
       new pc.Vec3(x+.27,this.h(x,z)+.06,z-.5),.015,rubber);
     return hinge;
   }
-  update(startPhase:number|undefined,elapsed:number,dt:number){
+  update(startPhase:number|undefined,elapsed:number,dt:number,paddockTime?:number){
     const phase=startPhase??-4;
     const clock=phase<0?"T - "+Math.max(0,Math.ceil(-phase)):
       "+ "+Math.max(0,elapsed).toFixed(2);
@@ -455,7 +451,7 @@ export class WorldCupStartCompound {
         board.texture.upload();
       }
     }
-    this.anim+=Math.max(0,Math.min(.07,dt));
+    this.anim = paddockTime ?? (this.anim + Math.max(0, Math.min(.07, dt)));
     for(const extra of this.extras){
       const x=this.anim*1.9+extra.phase;
       const sway=Math.sin(x);

@@ -3,6 +3,15 @@ import {START_HOUSE_DIMENSIONS} from "../src/render/worldcup-start-compound";
 import {planStartBroadcast} from "../src/render/worldcup-start-broadcast";
 
 describe("World Cup television start area — shots and dimensions",()=>{
+  it("holds each pre-race television shot for its own duration", () => {
+    const phases = [-10, -7.801, -7.8, -5.2, -3.4, -.001, 0];
+    expect(phases.map(t => planStartBroadcast(t, 3, true)?.name)).toEqual([
+      "establishing", "establishing", "athlete-queue", "technical-timing",
+      "starter-closeup", "starter-closeup", "launch",
+    ]);
+    expect(planStartBroadcast(-7, 3)).toBeNull();
+    expect(planStartBroadcast(2.1, 14, true)).toBeNull();
+  });
   it("stages five broadcast shots in deterministic countdown/launch order",()=>{
     const timeline=[-3,-2,-1.20,-.46,.4].map(x=>
       planStartBroadcast(x,0)?.name);

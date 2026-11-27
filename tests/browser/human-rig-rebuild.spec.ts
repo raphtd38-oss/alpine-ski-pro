@@ -1,5 +1,6 @@
 import {test,expect} from "@playwright/test";
 import {writeFileSync} from "node:fs";
+import {waitForGameFrame} from "./render-frame";
 
 /**
  * Compare two exact identical races on the ACTUAL 25-bone GLB skinned body.
@@ -21,7 +22,7 @@ test("human-v3 reduces frog-squat and gorilla back while preserving both skis",a
    api.step(283,{steer:0,tuck:false,brake:false,jump:false});
    api.step(270,{steer:.85,tuck:true,brake:false,jump:false});
   });
-  await page.waitForTimeout(250);
+  await waitForGameFrame(page);
   const read=()=>page.evaluate(()=>{
    const api=(window as any).__ski;
    return {state:api.getState(),visual:api.getAthletePose()};
@@ -53,7 +54,7 @@ test("human-v3 reduces frog-squat and gorilla back while preserving both skis",a
   };
   await page.screenshot({path:"test-results/human-rig-"+style+"-loaded.png"});
   await page.keyboard.press("c");
-  await page.waitForTimeout(220);
+  await waitForGameFrame(page);
   await page.screenshot({path:"test-results/human-rig-"+style+"-close.png"});
  }
  const a=results.old,b=results["human-v3"];

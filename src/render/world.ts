@@ -672,8 +672,8 @@ export class World {
     this.resources.push(...production.textures);
   }
   updateStartProduction(startPhase: number | undefined, raceTime: number,
-    dt: number) {
-    this.worldCupStart?.update(startPhase, raceTime, dt);
+    dt: number, paddockTime?: number) {
+    this.worldCupStart?.update(startPhase, raceTime, dt, paddockTime);
   }
   getStartProductionStats() {
     return this.worldCupStart?.stats ?? null;

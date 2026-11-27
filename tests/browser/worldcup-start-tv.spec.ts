@@ -1,5 +1,32 @@
 import {test,expect} from "@playwright/test";
 
+test("ten-second TV start pauses at the gate and hands timing back to the race", async ({page}) => {
+  await page.goto("/?quality=low&racer=mobile&renderer=webgl2");
+  await expect(page.locator("#loading")).toHaveCount(0, {timeout: 90000});
+  const overlay = page.locator("#worldcup-tv-start-lowerthird");
+  await page.locator("#tv-start").click();
+  await expect(overlay).toHaveAttribute("data-shot", "establishing");
+  await page.locator("#pause").click();
+  const race = () => page.evaluate(() => {
+    const s = (window as any).__ski.getState();
+    return { countdown: s.countdown, time: s.time, z: s.z, gate: s.startGateOpened };
+  });
+  const paused = await race();
+  expect(paused.countdown).toBeGreaterThan(3);
+  expect(paused.gate).toBe(false);
+  expect(paused.time).toBe(0);
+  await page.waitForTimeout(600);
+  expect(await race()).toEqual(paused);
+  await page.locator("#continue").click();
+  await expect(overlay).toHaveAttribute("data-shot", "starter-closeup", {timeout: 18000});
+  expect((await race()).time).toBe(0);
+  await expect(overlay).toContainText("GO", {timeout: 10000});
+  await expect.poll(async () => (await race()).time, {timeout: 12000}).toBeGreaterThan(0);
+  expect((await race()).gate).toBe(true);
+  await expect(overlay).not.toHaveClass(/active/, {timeout: 20000});
+  await expect(page.locator("#gates")).toContainText("/ 42");
+});
+
 test("real World Cup start paddock stages television cameras, people and live timer",async({page})=>{
   test.setTimeout(230000);
   const errors:string[]=[];

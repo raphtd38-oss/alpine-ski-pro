@@ -19,7 +19,7 @@ import { cortinaLightingMode, cortinaHorizonHex } from "./cortina-sky-profile";
 import { AdaptiveQuality } from "../game/performance";
 import { cameraShake, speedFov } from "../game/camera-rig";
 import { planSuperGBroadcastShot, broadcastFlightFraming } from "./superg-broadcast-shot";
-import { planStartBroadcast } from "./worldcup-start-broadcast";
+import { planStartBroadcast, TV_START_SECONDS } from "./worldcup-start-broadcast";
 export const CAMERAS = ["Poursuite", "Rapprochée", "Subjective", "Télévision"];
 export class Renderer {
   app: pc.Application;
@@ -216,6 +216,7 @@ export class Renderer {
     dt: number,
     active: boolean,
     ghostFrame: Frame | null,
+    televisionStart = false,
   ) {
     this.fps += (1 / Math.max(0.001, dt) - this.fps) * Math.min(1, dt * 2);
     const update = this.adaptiveQuality?.sample(
@@ -232,12 +233,14 @@ export class Renderer {
       this.app.resizeCanvas();
     }
     dt = Math.min(0.1, dt);
-    this.athlete.update(f, this.course, dt);
+    this.athlete.update(f, this.course, dt, televisionStart);
     this.world.updateCortinaLights(f.z);
     this.physics?.sync(f, this.course);
     if (this.course.id === "SG") {
       this.world.updateStartWands(f.startGateAngle ?? 0, dt);
-      this.world.updateStartProduction(f.startPhase, f.t, dt);
+      const paddockTime = televisionStart && f.startPhase !== undefined
+        ? TV_START_SECONDS + f.startPhase : undefined;
+      this.world.updateStartProduction(f.startPhase, f.t, dt, paddockTime);
     }
     // Keep the banner visible on the start line, hide it once accelerating
     // so it cannot obstruct the chase view; restore it for the next start.
@@ -259,11 +262,12 @@ export class Renderer {
     let eye: pc.Vec3, look: pc.Vec3;
     let broadcastFov = 42;
     let broadcastCut = false;
-    const tvStart = !this.menu && this.cameraMode !== 2 &&
+    const tvStart = !this.menu && (this.cameraMode !== 2 || televisionStart) &&
       this.course.id === "SG" && f.fallen <= 0
-      ? planStartBroadcast(f.startPhase, f.z) : null;
+      ? planStartBroadcast(f.startPhase, f.z, televisionStart) : null;
     const previousStartShot = this.lastTVStartShotId;
     document.body.classList.toggle("tv-start-active", Boolean(tvStart));
+    document.body.classList.toggle("tv-presentation", televisionStart && !!tvStart && tvStart.name !== "launch");
     if (tvStart) {
       this.lastTVStartShotId = tvStart.id;
       broadcastCut = previousStartShot !== tvStart.id;
@@ -272,10 +276,13 @@ export class Renderer {
       const timerText = countdown
         ? "T − " + Math.max(0, Math.ceil(-f.startPhase!))
         : "+" + Math.max(0, f.t).toFixed(2);
-      this.startTVOverlay.textContent =
-        "● DIRECT   SUPER-G  |  CORTINA    DOSSARD 27    " + timerText +
+      this.startTVOverlay.textContent = televisionStart
+        ? "CORTINA  ·  SUPER-G     " + (countdown ? timerText : "GO")
+        : "● DIRECT   SUPER-G  |  CORTINA    DOSSARD 27    " + timerText +
         "   •   " + tvStart.name.toUpperCase().replace(/-/g, " ");
+      if (previousStartShot !== tvStart.id) this.startTVOverlay.dataset.shot = tvStart.name;
     } else {
+      if (previousStartShot >= 0) delete this.startTVOverlay.dataset.shot;
       this.lastTVStartShotId = -1;
       if (previousStartShot >= 0) broadcastCut = true;
       this.startTVOverlay.classList.remove("active");
@@ -412,7 +419,8 @@ export class Renderer {
     // Reapply contact clearance after smoothing, before camera shake.
     if (this.course.id === "SG" && (this.cameraMode !== 2 || crashCam) && !this.menu) {
       const pos = this.camera.getPosition().clone();
-      const floor = terrainHeight(pos.x, pos.z, this.course) + 1.9;
+      const clearance = televisionStart && tvStart ? .8 : 1.9;
+      const floor = terrainHeight(pos.x, pos.z, this.course) + clearance;
       if (pos.y < floor) {
         pos.y = floor;
         this.camera.setPosition(pos);
@@ -425,13 +433,14 @@ export class Renderer {
       const jitter = cameraShake(s.chatter, s.pressure, speed, f.t);
       this.camera.translateLocal(jitter.x, jitter.y, jitter.z);
     }
-    const targetFov = this.menu ? 62 : this.cameraMode === 2
+    const targetFov = this.menu ? 62 : televisionStart && tvStart ? broadcastFov : this.cameraMode === 2
       ? (crashCam ? 56 : 76) :
       crashCam ? 54 : (tvStart || this.cameraMode === 3)
         ? broadcastFov : speedFov(this.cameraMode === 0 ? 51 : 55, speed);
-    this.camera.camera!.fov += (targetFov - this.camera.camera!.fov) *
-      (1 - Math.exp(-dt * 5));
-    this.athlete.root.enabled = this.menu || this.cameraMode !== 2 || crashCam;
+    if (televisionStart && tvStart && snap) this.camera.camera!.fov = targetFov;
+    else this.camera.camera!.fov += (targetFov - this.camera.camera!.fov) *
+        (1 - Math.exp(-dt * 5));
+    this.athlete.root.enabled = this.menu || this.cameraMode !== 2 || !!tvStart || crashCam;
     // Optional CC0 scenery has camera-range LOD with hysteresis; the
     // original cheap batched alpine background remains continuously visible.
     this.alpineAssets.updateVisuals(dt, this.camera.getPosition(), this.quality);

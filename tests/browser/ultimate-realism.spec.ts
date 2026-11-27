@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { waitForGameFrame } from "./render-frame";
 
 test("ultimate Super-G: actual spotlights and independently pressured carved skis", async ({page}) => {
   const pageErrors: string[] = [];
@@ -37,7 +38,7 @@ test("ultimate Super-G: actual spotlights and independently pressured carved ski
     api.step(283,{steer:0,tuck:false,brake:false,jump:false});
     api.step(270,{steer:.85,tuck:true,brake:false,jump:false});
   });
-  await page.waitForTimeout(280);
+  await waitForGameFrame(page);
   const athlete=await page.evaluate(()=>(window as any).__ski.getAthletePose());
   expect(athlete.seamless).toBe(true);
   const pose=athlete.competitionPose;

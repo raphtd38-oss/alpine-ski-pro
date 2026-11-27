@@ -27,6 +27,7 @@ import { readSettings, writeSettings } from "./game/settings";
 import { Progress } from "./game/storage";
 import { SkiAudio } from "./game/audio";
 import { createRenderer } from "./render/engine";
+import { TV_START_SECONDS } from "./render/worldcup-start-broadcast";
 import { PRO_POLE } from "./render/equipment-specs";
 import { LAYERID_SKYBOX, Vec3 } from "playcanvas";
 import { UI, type Settings } from "./ui/ui";
@@ -71,6 +72,12 @@ async function boot() {
     lastCountdown = 4;
   let poles = new PoleSimulation(COURSES[settings.course]);
   const clock = new FixedClock();
+  let televisionStart = false;
+  let lastPresentationFrame: number | null = null;
+  function resetClock() {
+    clock.reset();
+    lastPresentationFrame = null;
+  }
   let lastFrames: Frame[] = [];
   let lastResult: ReturnType<typeof Object.assign> | null = null;
   const snapshot = (time: number): Frame => ({
@@ -124,11 +131,13 @@ async function boot() {
     ui.updateCourse();
     audio.setEnabled(settings.sound);
   };
-  function start(training = false) {
+  function start(training = false, television = false) {
     state = initialState();
     previous = { ...state };
     race = new Race(COURSES[settings.course], settings.equipment, training);
     race.start();
+    televisionStart = television && !training && race.course.id === "SG";
+    if (televisionStart) race.countdown = TV_START_SECONDS;
     poles = new PoleSimulation(race.course);
     playing = true;
     replaying = false;
@@ -137,7 +146,7 @@ async function boot() {
     celebrationTime = 0;
     celebrationPending = false;
     lastCountdown = 4;
-    clock.reset();
+    resetClock();
     renderer.menu = false;
     renderer.cameraReady = false;
     renderer.effects.reset();
@@ -160,7 +169,7 @@ async function boot() {
       .catch(() => ui.toast("Le son est indisponible dans ce navigateur."));
   }
   ui.start = start;
-  ui.restart = () => start(race.training);
+  ui.restart = () => start(race.training, televisionStart);
   ui.pause = () => {
     if (!playing || paused) return;
     paused = true;
@@ -170,10 +179,11 @@ async function boot() {
   };
   ui.resume = () => {
     paused = false;
-    clock.reset();
+    resetClock();
   };
   ui.home = () => {
     playing = false;
+    televisionStart = false;
     paused = false;
     replaying = false;
     celebrationTime = 0;
@@ -181,7 +191,7 @@ async function boot() {
     renderer.menu = true;
     state = initialState();
     previous = { ...state };
-    clock.reset();
+    resetClock();
     renderer.effects.reset();
     if (renderer.world.trainingGuide) renderer.world.trainingGuide.enabled = false;
     ui.setReplayUI(false);
@@ -190,6 +200,7 @@ async function boot() {
   };
   ui.replay = () => {
     if (!lastFrames.length) return;
+    televisionStart = false;
     replaying = true;
     replayTime = 0;
     replaySpeed = 1;
@@ -216,7 +227,7 @@ async function boot() {
     if (!writeSettings(settings))
       ui.toast("Préférences conservées pour cette session uniquement.");
     build();
-    if (playing) start(race.training);
+    if (playing) start(race.training, televisionStart);
   };
   input.onAction = (key) => {
     if (key === "KeyR" && playing) ui.restart();
@@ -268,14 +279,17 @@ async function boot() {
     b.addEventListener("pointerup", clear);
     b.addEventListener("pointercancel", clear);
   });
+  function advanceCountdown(seconds: number) {
+    race.tickCountdown(seconds);
+    const count = Math.ceil(race.countdown);
+    if (count <= 3 && count !== lastCountdown) {
+      audio.tone(count === 0 ? 880 : 440);
+      lastCountdown = count;
+    }
+  }
   function fixed(dt: number, control: Controls) {
     if (race.phase === "countdown") {
-      race.tickCountdown(dt);
-      const count = Math.ceil(race.countdown);
-      if (count !== lastCountdown) {
-        audio.tone(count === 0 ? 880 : 440);
-        lastCountdown = count;
-      }
+      advanceCountdown(dt);
       return;
     }
     if (race.phase !== "racing") return;
@@ -449,7 +463,17 @@ async function boot() {
           ui.results(race.result!, best, race.training);
         }
       } else {
-        alpha = clock.advance(realDt, (d) => fixed(d, control));
+        let raceDt = realDt;
+        if (televisionStart && race.phase === "countdown") {
+          // Presentation uses elapsed screen time. Only the part of this frame
+          // after GO can advance skis, open the wand or enter a replay.
+          const now = performance.now();
+          const elapsed = lastPresentationFrame === null ? 0 : (now - lastPresentationFrame) / 1000;
+          lastPresentationFrame = now;
+          raceDt = Math.max(0, elapsed - race.countdown);
+          advanceCountdown(elapsed);
+        }
+        alpha = clock.advance(raceDt, (d) => fixed(d, control));
         frame = snapshot(race.time);
         if (race.phase === "racing") {
           frame.x = previous.x + (state.x - previous.x) * alpha;
@@ -490,6 +514,7 @@ async function boot() {
       realDt,
       playing && !paused && !replaying && race.phase === "racing",
       ghost,
+      televisionStart,
     );
     renderer.world.updateGates(race.gateStatus, poles.poles, realDt, state.z);
     audio.update(
@@ -618,6 +643,7 @@ async function boot() {
         getState: () => ({
           ...state,
           phase: race.phase,
+          countdown: race.countdown,
           time: race.time,
           gate: race.nextGate,
           missed: race.missed,
@@ -678,7 +704,9 @@ async function boot() {
           athleteSeamless: renderer.athlete.isSeamless,
           athleteVariant: renderer.racerVariant,
           athleteHasAttachedSkis: !!renderer.athlete.rig.findByName("LEFTFOOT/Top glossy curved topsheet") && !!renderer.athlete.rig.findByName("RIGHTFOOT/Top glossy curved topsheet"),
-          raceSkiTextureCount: renderer.athlete.ownedTextures.length,
+          raceSkiTextureCount: renderer.athlete.ownedTextures.filter(
+            texture => texture === renderer.athlete.material.diffuseMap,
+          ).length,
           cameraTerrainClearance: (() => {
             const p = renderer.camera.getPosition();
             return p.y - terrainHeight(p.x, p.z, race.course);
@@ -702,7 +730,7 @@ async function boot() {
           for (let i = 0; i < n; i++) fixed(FIXED_DT, control);
         },
         // DEV only: frame-perfect photographic inspection without advancing wall-clock physics.
-        freezeSimulation: (frozen: boolean) => { paused = frozen; clock.reset(); },
+        freezeSimulation: (frozen: boolean) => { paused = frozen; resetClock(); },
         getCourse: () => race.course,
         getResult: () => lastResult,
       },

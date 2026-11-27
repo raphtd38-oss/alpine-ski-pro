@@ -550,13 +550,13 @@ export class SuperGRacePoseDirector {
    * Do NOT call the previous hand-written knee and ski loops after it.
    * The 18-joint fallback keeps its original motion unchanged.
    */
-  update(f: Frame, c: Course, dt: number): void {
+  update(f: Frame, c: Course, dt: number, televisionStart = false): void {
     const frame = f as SGSourceFrame;
     const inputPose = this.model.sample(frame, dt);
     const pose = this.reconstructionMode
       ? this.humanMotion.sample(inputPose, frame, dt)
       : this.humanMode ? humanRacerPose(inputPose, frame) : inputPose;
-    const warmup = prestartWarmup(this.reconstructionMode ? frame.startPhase : undefined);
+    const warmup = prestartWarmup(this.reconstructionMode ? frame.startPhase : undefined, televisionStart);
     this.lastWarmup = warmup;
     if (warmup.active) {
       pose.pelvisHeightM += warmup.pelvisBounceM;

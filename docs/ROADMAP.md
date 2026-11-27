@@ -1,3 +1,7 @@
+## 27 novembre 2026 — Vérification du stade de départ
+
+Essayer le départ TV en paysage sur iPhone et comparer les silhouettes au film de référence. La version de test du portillon sert de point de comparaison pour la cabine et les personnages de la scène expérimentale dans PlayCanvas Editor. [Captures de jeu](references/depart-tv/README.md)
+
 ## 22 novembre 2026 — Start house télévision World Cup
 
 Nouveau compound de départ, 5 caméras planifiées, 2 tableaux de chrono, skieurs d'attente avec dossards, entraîneurs/staff : suivre la PR World Cup TV et inspecter les captures Playwright à chaque niveau de qualité. Suite à améliorer après cette intégration : vrais coachs et personnel riggés en GLB, variations de combinaisons, lèvres/blendshapes et vrai retarget d'animations FBX/GLB envoyées par le propriétaire, ambiance sonore du pré-départ (radio, vent, starter) sous licences vérifiées ; optimiser le nombre de draw calls sur iPhone réel. Les prises de vue sont artistiques et non mesurées de l'installation olympique.

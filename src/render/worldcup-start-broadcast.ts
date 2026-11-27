@@ -1,10 +1,12 @@
 /**
  * Original multi-camera TV director for World Cup-inspired pre-start.
- * 3 seconds prestart + 1.8 seconds of the launch. Render-only decisions:
- * entirely independent of physical 120Hz game time and wand impulse.
+ * Short race countdown and optional ten-second television presentation.
  */
 export type StartShotName =
   "establishing"|"athlete-queue"|"technical-timing"|"starter-closeup"|"launch";
+export const TV_START_SECONDS = 10;
+const shortCuts = {start: -3, queue: -2.30, official: -1.56, skier: -.86};
+const televisionCuts = {start: -TV_START_SECONDS, queue: -7.8, official: -5.2, skier: -3.4};
 export interface StartBroadcastShot {
   id:number; name:StartShotName; cameraX:number; cameraZ:number;
   heightAboveSnowM:number; focusX:number; focusZ:number;
@@ -35,17 +37,27 @@ const shots:ReadonlyArray<StartBroadcastShot>=[
     focusAboveSnowM:.9,fovDeg:44},
 ] as const;
 
+const televisionOfficial: StartBroadcastShot = {
+  ...shots[2], cameraX: .65, cameraZ: 7.65, heightAboveSnowM: 2.15,
+  focusX: -2.75, focusZ: 3.65, focusAboveSnowM: 1.6, fovDeg: 42,
+};
+const televisionSkier: StartBroadcastShot = {
+  ...shots[3], cameraX: -.85, cameraZ: 6.4, heightAboveSnowM: 1.42,
+  focusX: .12, focusZ: 3.30, focusAboveSnowM: .90, fovDeg: 43,
+};
+
 /** Switch scenes only on planned boundaries, never on frame rate. */
-export function planStartBroadcast(startPhase:number | undefined,z:number):
+export function planStartBroadcast(startPhase:number | undefined,z:number,television = false):
   StartBroadcastShot | null {
+  const cuts = television ? televisionCuts : shortCuts;
   if(startPhase===undefined||!Number.isFinite(startPhase)||
-    !Number.isFinite(z)||z>=16||startPhase<-3.02||startPhase>=2.1)
+    !Number.isFinite(z)||z>=16||startPhase<cuts.start-.02||startPhase>=2.1)
     return null;
-  const phase=clamp(startPhase,-3,2.1);
-  const shot=phase< -2.30?shots[0]:
-    phase< -1.56?shots[1]:
-    phase< -.86?shots[2]:
-    phase<0?shots[3]:shots[4];
+  const phase=clamp(startPhase,cuts.start,2.1);
+  const shot=phase<cuts.queue ? shots[0]:
+    phase<cuts.official ? shots[1]:
+    phase<cuts.skier ? (television ? televisionOfficial : shots[2]):
+    phase<0 ? (television ? televisionSkier : shots[3]) : shots[4];
   // Only last launch shot slowly tracks the actual physical player;
   // no teleports before this and no camera changes to the 120Hz solver.
   if(shot.id===4){
